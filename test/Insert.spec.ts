@@ -126,8 +126,8 @@ describe('Select', () => {
           .as('people')
       )
       .into(Task)
-      .values(({ people }, { def }) => [
-        def(),
+      .values(({ people }, { defaults }) => [
+        defaults(),
         'Task #1',
         false,
         null,
@@ -148,15 +148,15 @@ describe('Select', () => {
           .as('people')
       )
       .into(Task)
-      .values(({ people }, { def }) => [{
-        id: def(),
+      .values(({ people }, { defaults }) => [{
+        id: defaults(),
         name: 'Task #1',
         done: false,
         doneAt: null,
         parentId: null,
         assignee: people.id
       }, {
-        id: def(),
+        id: defaults(),
         name: 'Task #1 Child',
         done: false,
         doneAt: null,
@@ -177,8 +177,8 @@ describe('Select', () => {
           .as('people')
       )
       .into(Task)
-      .values(({ people }, { def }) => [
-        def(),
+      .values(({ people }, { defaults }) => [
+        defaults(),
         'Task #1',
         false,
         null,
@@ -201,8 +201,8 @@ describe('Select', () => {
           .as('people')
       )
       .into(Task)
-      .values(({ people }, { def }) => [
-        def(),
+      .values(({ people }, { defaults }) => [
+        defaults(),
         'Task #1',
         false,
         null,
@@ -224,8 +224,8 @@ describe('Select', () => {
           .as('people')
       )
       .into(Task)
-      .values(({ people }, { def }) => [
-        def(),
+      .values(({ people }, { defaults }) => [
+        defaults(),
         'Task #1',
         false,
         null,
@@ -248,8 +248,8 @@ describe('Select', () => {
           .as('people')
       )
       .into(Task)
-      .values(({ people }, { def }) => [
-        def(),
+      .values(({ people }, { defaults }) => [
+        defaults(),
         'Task #1',
         false,
         null,
@@ -274,8 +274,8 @@ describe('Select', () => {
           .as('people')
       )
       .into(Task)
-      .values(({ people }, { def }) => [
-        def(),
+      .values(({ people }, { defaults }) => [
+        defaults(),
         'Task #1',
         false,
         null,

@@ -55,7 +55,7 @@ export class ExprFactory<T extends Sources, S extends Selects>
     return new ExprRaw(raw);
   }
 
-  public def<V>(): Expr<V> {
+  public defaults<V>(): Expr<V> {
     return new ExprDefault();
   }
 

@@ -9,6 +9,103 @@ The most advanced TypeScript query builder available! It can generate SQL, be tr
 - Ships with a *runtime implementation*, given `{ [tables: string]: object[] }` it can run queries on local data.
 - Provides a common interface for operations and functions.
 
+### Example
+
+```typescript
+// This translates data types to TypeScript types
+const Task = defineSource({
+  name: 'task',
+  fields: {
+    id: 'INT',
+    name: ['VARCHAR', 64],
+    done: 'BOOLEAN',
+    doneAt: 'TIMESTAMP',
+    parentId: 'INT',
+  },
+});
+
+// SELECT
+// Query keeps track of from/joins and the types
+// As you select more the return type is built
+const q = query()
+  .from(Task)
+  // Can be Task.all(), Task.except(...), Task.only(...)
+  .select(Task.all())
+  // Dynamic select values
+  .select(({ task }, exprs, { lower }) => [
+    // You can use expressions and functions to select dynamic values
+    lower(task.name).as('lowerName'),
+    // Subquery that returns single value
+    query().from(Task).count().as('taskCount'),
+  ])
+  // Everything after from & select has access to from/joined fields
+  // even if they are subqueries. Exprs contains all expressions you
+  // can use. The following is an object containing all the functions.
+  // All type safe!
+  .where(({ task }, exprs, { currentTime, dateAddDays }, { taskCount }) => [
+    task.doneAt.isNotNull(),
+    task.doneAt.between( currentTime(), dateAddDays( currentTime(), 10 ) ),
+    // We can access select expressions here!
+    taskCount.gt(10)
+  ])
+  // You can't normally order by a computed value defined in the 
+  // select value, but we can!
+  .orderBy('lowerName', 'DESC') 
+;
+
+/**
+ * q = Array<{
+ *  id: number,
+ *  name: string,
+ *  done: boolean,
+ *  doneAt: Date,
+ *  parentId: number,
+ *  lowerName: string,
+ *  taskCount: number,
+ * }>
+ * 
+ * q.row() = [number, string, boolean, Date, number, string, number]
+ * q.first() = result
+ * q.max('lowerName') = string
+ * q.list('name') = string[]
+ * q.value('doneAt') = Date
+ * q.exists() = 1 | null
+ */
+
+// INSERT
+const q = insert()
+  // WITH syntax
+  .with(
+    query()
+      .from(People)
+      .select(People.all())
+      .as('people')
+  )
+  // Specify all fields
+  .into(Task)
+  // Or specific fields
+  .into(Task, ['name', 'parentId'])
+  // Can pass SELECT, single tuple/object, or list of tuple/objects.
+  // This types here are based on the with/into above.
+  .values(({ people }, { defaults }) => [
+    defaults(),
+    'Task #1',
+    false,
+    null,
+    null,
+    people.id
+  ])
+  // Can specify to return all, certain fields, or expressions
+  .returning('*')
+  .returning(['id', 'name'])
+  .returning(({ task }, exprs, { lower }) => [
+    lower(task.name).as('lower'),
+    ...task.all()
+  ])
+;
+
+```
+
 ### TODO
 - for SQL transformers...
   - which char wraps aliases + policy (always, reserved)
