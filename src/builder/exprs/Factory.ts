@@ -1,7 +1,7 @@
 import { DataTypeInputs, DataTypeInputType } from '../../DataTypes';
 import { isArray, isFunction } from '../../fns';
 import { fns, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions } from '../../Functions';
-import { AggregateType, ConditionBinaryType, ConditionUnaryType, JoinTuples, OperationBinaryType, OperationUnaryType, Selects, SelectsExprs, Sources } from '../../_Types';
+import { AggregateType, ConditionBinaryListType, ConditionBinaryType, ConditionUnaryType, JoinTuples, OperationBinaryType, OperationUnaryType, Selects, SelectsExprs, Sources } from '../../_Types';
 import { QuerySelect } from '../query/Select';
 import { ExprAggregate } from './Aggregate';
 import { ExprBetween } from './Between';
@@ -24,6 +24,7 @@ import { ExprRaw } from './Raw';
 import { SourcesFieldsFactory } from '../sources/Source';
 import { ExprRow } from './Row';
 import { ExprDefault } from './Default';
+import { ExprConditionBinaryList } from './ConditionBinaryList';
 
 
 
@@ -165,6 +166,24 @@ export class ExprFactory<T extends Sources, S extends Selects>
     } else {
       return new ExprConditionBinary(a2, Expr.parse(a1), Expr.parse(a3));
     }
+  }
+
+  public any<V>(value: ExprInput<V>, op: ConditionBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): Expr<boolean> {
+    return new ExprConditionBinaryList(op, 'ANY', 
+      Expr.parse( value ),
+      isArray(values) 
+        ? (values as any[]).map( Expr.parse ) 
+        : Expr.parse( values )
+    );
+  }
+
+  public all<V>(value: ExprInput<V>, op: ConditionBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): Expr<boolean> {
+    return new ExprConditionBinaryList(op, 'ALL', 
+      Expr.parse( value ),
+      isArray(values) 
+        ? (values as any[]).map( Expr.parse ) 
+        : Expr.parse( values )
+    );
   }
 
   public isNull<V>(value: ExprInput<V>): Expr<boolean> {

@@ -1,5 +1,5 @@
 import { isArray, isFunction, isString } from '../../fns';
-import { AppendObjects, AggregateType, JoinType, Selects, Sources, Name, SourceInstance, OrderDirection, ObjectFromSelects, PartialChildren, AppendTuples, MergeObjects, SelectsKeys, Simplify, ArrayToTuple } from '../../_Types';
+import { AppendObjects, AggregateType, JoinType, Selects, Sources, Name, SourceInstance, OrderDirection, ObjectFromSelects, PartialChildren, AppendTuples, MergeObjects, SelectsKeys, Simplify, ArrayToTuple, LockType } from '../../_Types';
 import { ExprAggregate } from '../exprs/Aggregate';
 import { ExprProvider, ExprFactory } from '../exprs/Factory';
 import { Expr, ExprInput, ExprType } from '../exprs/Expr';
@@ -27,6 +27,8 @@ export class QuerySelect<T extends Sources, S extends Selects> extends QuerySele
   public static create<T extends Sources = {}, S extends Selects = []>(): QuerySelect<T, S> {
     return new QuerySelect<T, S>();
   }
+
+  public _lock: LockType = 'none';
 
   public constructor(extend?: QuerySelect<T, S>) {
     super(extend);
@@ -178,6 +180,12 @@ export class QuerySelect<T extends Sources, S extends Selects> extends QuerySele
     this._offset = offset;
 
     return this;    
+  }
+
+  public lock(type: LockType): this {
+    this._lock = type;
+
+    return this;
   }
 
   public aggregate(type: AggregateType, value?: Expr<any>, distinct: boolean = false): QuerySelectFirstValue<{}, [Select<any, number>], number> {

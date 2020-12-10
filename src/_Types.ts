@@ -103,6 +103,9 @@ export type JoinType = 'INNER' | 'LEFT' | 'RIGHT' | 'OUTER';
 export type OrderDirection = 'ASC' | 'DESC';
 export type AggregateType = 'COUNT' | 'AVG' | 'SUM'| 'MIN' | 'MAX' | 'STDEV' | 'VAR';
 export type SetOperation = 'UNION' | 'INTERSECT' | 'EXCEPT';
+export type LockType = 'update' | 'share' | 'none';
+export type ConditionBinaryListType = '>' | '>=' | '<' | '<=' | '=' | '!=' | '<>';
+export type ConditionBinaryListPass = 'ANY' | 'ALL';
 
 export type Name = string | number | symbol;
 

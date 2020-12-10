@@ -1,4 +1,4 @@
-import { ConditionBinaryType, ConditionUnaryType, OperationBinaryType, OperationUnaryType, Simplify } from '../../_Types';
+import { ConditionBinaryListType, ConditionBinaryType, ConditionUnaryType, OperationBinaryType, OperationUnaryType, Simplify } from '../../_Types';
 import { DataTypeInputs, DataTypeInputType } from '../../DataTypes';
 import { ExprBetween } from './Between';
 import { ExprCase } from './Case';
@@ -13,6 +13,7 @@ import { ExprOperationBinary } from './OperationBinary';
 import { Select as Select } from '../select/Select';
 import { SelectExpr as SelectExpr } from '../select/Expr';
 import { isArray } from '../../fns';
+import { ExprConditionBinaryList } from './ConditionBinaryList';
 
 
 export type ExprInput<T> = Expr<T> | T;
@@ -90,6 +91,24 @@ export class Expr<T>
     } else {
       return new ExprConditionBinary(a1, this, Expr.parse(a2));
     }
+  }
+
+  public any(op: ConditionBinaryListType, values: ExprInput<T>[] | ExprInput<T[]>): Expr<boolean> {
+    return new ExprConditionBinaryList(op, 'ANY', 
+      this,
+      isArray(values) 
+        ? (values as any[]).map( Expr.parse ) 
+        : Expr.parse( values )
+    );
+  }
+
+  public all(op: ConditionBinaryListType, values: ExprInput<T>[] | ExprInput<T[]>): Expr<boolean> {
+    return new ExprConditionBinaryList(op, 'ALL', 
+      this,
+      isArray(values) 
+      ? (values as any[]).map( Expr.parse ) 
+        : Expr.parse( values )
+    );
   }
 
   public eq(test: ExprInput<T>): Expr<boolean> {

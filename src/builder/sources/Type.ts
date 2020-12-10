@@ -15,6 +15,7 @@ export interface SourceTypeInput<A extends Name, F extends DataTypeInputMap>
 {
   name: A;
   table?: string;
+  primary?: Array<keyof F>;
   fields: F;
   fieldColumn?: {
     [P in keyof F]?: string;
@@ -26,6 +27,7 @@ export class SourceType<A extends Name, T, F extends DataTypeInputMap> extends S
 {
 
   public table: Name;
+  public primary: Name[];
   public fields: F;
   public fieldColumn: { [P in keyof F]?: string };
   public select: SourceFields<T>;
@@ -36,6 +38,7 @@ export class SourceType<A extends Name, T, F extends DataTypeInputMap> extends S
     this.fields = input.fields;
     this.fieldColumn = input.fieldColumn || {};
     this.table = input.table || input.name;
+    this.primary = input.primary || [Object.keys(input.fields)[0]];
     this.select = Object.create(null);
     for (const field in input.fields) {
       (this.select as any)[field] = new ExprField(input.name, field);
