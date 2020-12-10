@@ -29,7 +29,22 @@ const Task = defineSource({
 // As you select more the return type is built
 const q = query()
   .from(Task)
-  // Can be Task.all(), Task.except(...), Task.only(...)
+  // Any source (type, subquery, constants) can be aliased and referenced down below
+  .from(Task.as('parentTask'))
+  // Join any source
+  .joinInner(
+     query()
+      .from(TaskList.as('list'))
+      .select(({ list }, { count }) => [
+          count().as('taskCount'),
+          list.id 
+      ])
+      .groupBy('id')
+      .as('listAndCount'),
+     // ON
+     ({ task, listAndCount }) => task.listId.eq( listAndCount.id )
+  )
+  // Can be Task.all(), Task.except(...), Task.only(...), [ Task.select."field", ... ]
   .select(Task.all())
   // Dynamic select values
   .select(({ task }, exprs, { lower }) => [
