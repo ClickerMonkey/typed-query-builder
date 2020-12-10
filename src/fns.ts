@@ -31,3 +31,8 @@ export function mapRecord<M, O>(map: M, mapper: <K extends keyof M>(value: M[K],
   
   return mapped;
 }
+
+export function keys<T>(object: T): Array<keyof T>
+{
+  return Object.keys(object) as Array<keyof T>;
+}
