@@ -101,10 +101,11 @@ export type ConditionBinaryListPass = 'ANY' | 'ALL';
 
 export type Name = string | number | symbol;
 
-export type SourceInstance = { [field: string]: any };
-export type Sources = { [source: string]: SourceInstance };
-
 export type Selects = Select<Name, any>[];
+
+export type Sources = { [source: string]: Selects };
+
+
 
 export type ObjectKeys<T> = 
   UnionToTuple<keyof T> extends Array<keyof T>
@@ -138,12 +139,6 @@ export type SelectWithKey<S extends Selects, K> = {
       : never
     : never
 }[number];
-
-export type SourceInstanceFromSelects<T extends Selects> = 
-  ObjectFromSelects<T> extends SourceInstance 
-    ? ObjectFromSelects<T> 
-    : never
-;
 
 export type SelectsExprs<T extends Selects> =
   Required<Simplify<UnionToIntersection<{

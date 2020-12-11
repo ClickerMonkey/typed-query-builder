@@ -1,6 +1,6 @@
 import { DataTypeInputMap, DataTypeInputMapTypes } from '../DataTypes';
 import { isArray } from '../fns';
-import { AppendObjects, Name, Simplify, UnionToTuple } from '../Types';
+import { AppendObjects, Name, Selects, Simplify, UnionToTuple } from '../Types';
 import { ExprField } from '../exprs/Field';
 import { SourceBase } from './Base';
 import { SourceFields } from './Source';
@@ -23,7 +23,7 @@ export interface SourceTypeInput<A extends Name, F extends DataTypeInputMap>
 }
 
 
-export class SourceType<A extends Name, T, F extends DataTypeInputMap> extends SourceBase<A, T> 
+export class SourceType<A extends Name, T extends Selects, F extends DataTypeInputMap> extends SourceBase<A, T> 
 {
 
   public table: Name;

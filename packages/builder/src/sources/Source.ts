@@ -1,18 +1,18 @@
 import { isArray } from '../fns';
-import { Name, SourceInstance, Sources, UnionToIntersection, UnionToTuple } from '../Types';
+import { Name, Selects, ObjectFromSelects, Sources, UnionToIntersection, UnionToTuple } from '../Types';
 import { ExprField } from '../exprs/Field';
-import { Select } from '../select/Select';
+
 
 
 export type SourcesSelects<S extends Sources> = {
-  [K in keyof S]: {
-    [F in keyof S[K]]: Select<F, S[K][F]>;
-  }
+  [K in keyof S]: S[K] extends Source<any, infer X> ? X : never;
 };
 
 export type SourceFields<T> = {
   [P in keyof T]: ExprField<P, T[P]>;
 };
+
+export type SourceFieldsFromSelects<S extends Selects> = SourceFields<ObjectFromSelects<S>>;
 
 export type SourcesFields<S extends Sources> = {
   [P in keyof S]: SourceFields<S[P]>
@@ -38,8 +38,8 @@ export interface SourceFieldsFunctions<T>
 
 export type SourceFieldsFactory<T> = SourceFields<T> & SourceFieldsFunctions<T>;
 
-export type SourceForType<T> = { 
-  [K in keyof T]: Source<K, T[K]> 
+export type SourceForType<T extends Sources> = { 
+  [K in keyof T]: T[K] extends Selects ? Source<K, T[K]> : never;
 };
 
 
@@ -49,12 +49,12 @@ export type SourceInstanceFromTuple<S extends Source<any, any>[]> = UnionToInter
     : never;
 }[number]>;
 
-export interface Source<A extends Name, T extends SourceInstance>
+export interface Source<A extends Name, S extends Selects>
 {
   alias: A;
-  inferredType?: T[];
+  inferredType?: ObjectFromSelects<S>[];
   
-  getFields(): SourceFields<T>;
+  getFields(): SourceFieldsFromSelects<S>;
 }
 
 export function createFieldsFactory<T>(fields: SourceFields<T>): SourceFieldsFactory<T> {

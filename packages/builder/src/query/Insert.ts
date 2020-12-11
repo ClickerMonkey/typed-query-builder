@@ -1,25 +1,23 @@
 import { isArray, isString } from '../fns';
-import { AppendObjects, Name, Selects, SourceInstance, Sources, SourceInstanceFromSelects, ObjectKeys, ArrayToTuple, ColumnsToTuple, Simplify } from '../Types';
+import { AppendObjects, Name, Selects, SourceInstance, Sources, SourceInstanceFromSelects, ObjectKeys, ArrayToTuple, ColumnsToTuple, Simplify, SelectsKeys, SelectWithKey } from '../Types';
 import { Expr, ExprFactory, ExprInput, ExprProvider } from '../exprs';
 import { Select } from '../select';
-import { createFieldsFactory, SourcesFieldsFactory, SourceType } from '../sources';
+import { createFieldsFactory, SourcesFieldsFactory, SourcesSelects, SourceType } from '../sources';
 import { SourceQuery } from '../sources/Query';
 
 
 export type QueryInsertReturning<
-  T extends SourceInstance = never,
-  C extends Array<keyof T> = []
+  T extends Selects = [],
+  C extends SelectsKeys<T> = never
 > = {
-  [I in keyof C]: C[I] extends keyof T
-    ? Select<C[I], T[C[I]]>
-    : never;
+  [I in keyof C]: SelectWithKey<T, C[I]>
 };
 
 export type QueryInsertReturningColumns<
-  T extends SourceInstance = never,
-  C extends Array<keyof T> = []
-> = QueryInsertReturning<T, ColumnsToTuple<T, C>> extends Selects
-  ? QueryInsertReturning<T, ColumnsToTuple<T, C>>
+  T extends Selects = [],
+  C extends SelectsKeys<T> = never
+> = QueryInsertReturning<T, C> extends Selects
+  ? QueryInsertReturning<T, C>
   : never;
 
 export type QueryInsertValuesArray<
@@ -66,8 +64,8 @@ C extends Array<keyof T> = [],
 export class QueryInsert<
   W extends Sources = {}, 
   I extends Name = never,
-  T extends SourceInstance = never, 
-  C extends Array<keyof T> = [],
+  T extends Selects = [], 
+  C extends SelectsKeys<T> = never,
   R extends Selects = []
 > extends Expr<R>
 {
@@ -105,9 +103,9 @@ export class QueryInsert<
     return this as any;
   }
 
-  public into<IN extends Name, IT extends SourceInstance>(into: SourceType<IN, IT, any>): QueryInsert<W, IN, IT, ObjectKeys<IT>, []>
-  public into<IN extends Name, IT extends SourceInstance, IC extends Array<keyof IT>>(into: SourceType<IN, IT, any>, columns: IC): QueryInsert<W, IN, IT, ColumnsToTuple<IT, IC>, []>
-  public into<IN extends Name, IT extends SourceInstance, IC extends Array<keyof IT>>(into: SourceType<IN, IT, any>, columns?: IC): QueryInsert<W, IN, IT, IC, []>
+  public into<IN extends Name, IT extends Selects>(into: SourceType<IN, IT, any>): QueryInsert<W, IN, IT, SelectsKeys<IT>, []>
+  public into<IN extends Name, IT extends Selects, IC extends SelectsKeys<IT>>(into: SourceType<IN, IT, any>, columns: IC): QueryInsert<W, IN, IT, IC, []>
+  public into<IN extends Name, IT extends Selects, IC extends SelectsKeys<IT>>(into: SourceType<IN, IT, any>, columns?: IC): QueryInsert<W, IN, IT, IC, []>
   {
     (this as any)._into = into;
     (this as any)._columns = columns || Object.keys(into.fields);
@@ -130,8 +128,8 @@ export class QueryInsert<
     return this;
   }
 
-  public returning(output: '*'): QueryInsert<W, I, T, C, QueryInsertReturning<T, C>>
-  public returning<RC extends Array<keyof T>>(output: RC): QueryInsert<W, I, T, C, QueryInsertReturningColumns<T, RC>>
+  public returning(output: '*'): QueryInsert<W, I, T, C, T>
+  public returning<RC extends SelectsKeys<T>>(output: RC): QueryInsert<W, I, T, C, QueryInsertReturningColumns<T, RC>>
   public returning<RS extends Selects>(output: ExprProvider<AppendObjects<W, Record<I, T>>, [], RS>): QueryInsert<W, I, T, C, ArrayToTuple<RS>>
   public returning<RS extends Selects>(output: RS | '*' | Array<keyof T>): QueryInsert<W, I, T, C, RS>
   {
