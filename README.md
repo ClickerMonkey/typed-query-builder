@@ -184,28 +184,26 @@ RETURNING (* | scalar, ...)
 </p>
 </details>
 
-
-
-### TODO
-- avoid SourceInstance/T(objects) and just use Selects for Sources. Rename Selects?
-- Change SourceType to return all fields at base, add _ avoid potential conflicts: _table, _primary, _fields, _fieldColumn, _as, _extend, _all, _only, _except
+### SQL Features TODO
 - recursive with  (pgsql, mysql)
 - priority to sources for evaluation (withs, froms, joins)
 - partitions? (pgsql, mysql)
 - windows? (pgsql, mysql)
+  1. specify window (name, [partition by, ...], [order by, ...])
+    - frame: {RANGE|ROWS|GROUPS} [BETWEEN rel AND ] {UNBOUNDED PRECEDING|offset PRECEDINGI|CURRENT ROW|offset FOLLOWING|UNBOUNDED FOLLOWING} [EXCLUDE {CURRENT ROW|GROUP|TIES|NO OTHERS}]
+  2. in select, window is available in ExprAggregate to call .over(windowName)
 - rollup?
 - lock rules per table?
+- grouping sets?
+- FROM [ONLY] syntax, for pgsql's table inheritance
 - allow user to define their own functions which returns a ExprUserFunction defineFunction(name, args): (...Expr[]) => Expr
-- for SQL transformers...
-  - which char wraps aliases + policy (always, reserved)
-  - which char wraps table/columns + policy
+- add filter to aggregate expr
+- add orderby to aggregate expr when type is array_agg or string_agg
 - [ { UNION | INTERSECT | EXCEPT } [ ALL | DISTINCT ] select ]
 - row constructor (ie tuple) takes comma delimited list of values, or source.* (use JoinTuples)
 - row comparisons (row op row, row IS [NOT] NULL)
    - op: =, !=, <>, <, <=, >, >=, IS DISTINCT FROM, IS NOT DISTINCT FROM
 - select `DISTINCT` and `DISTINCT ON (value, ...) alias` 
-- join type comes down to A, AB, and B (what the results should be).
- - if join type does not include A, then iterate on B first
 - UPDATE source, ... SET 
      field = value, ... 
      (field, ...) = ROW(value, ...)
@@ -213,6 +211,15 @@ RETURNING (* | scalar, ...)
    WHERE condition 
    RETURNING [* | value, ...]
 - DELETE FROM source WHERE condition
+
+### Refined TODO
+- avoid SourceInstance/T(objects) and just use Selects for Sources. Rename Selects?
+- Change SourceType to return all fields at base, add _ avoid potential conflicts: _table, _primary, _fields, _fieldColumn, _as, _extend, _all, _only, _except
+- for SQL transformers...
+  - which char wraps aliases + policy (always, reserved)
+  - which char wraps table/columns + policy
+- join type comes down to A, AB, and B (what the results should be).
+ - if join type does not include A, then iterate on B first
 - Query value iteration
 - Add Database which has...
    - run(query): RunResult
@@ -230,7 +237,6 @@ RETURNING (* | scalar, ...)
    - CASE WHEN (a = b) or (a IS NULL AND b IS NULL) THEN 1 ELSE 0 END = 1
    - NOT A <=> B = IS DISTINCT FROM
 - != is always converted to <>
-- add Query.with(query, source, expr, fn)
 - certain joins result in types that are partialed
 - when using if to join and search, outside the if maybe have those joins/froms partialed?
 - add optional default to QuerySelect.value()
