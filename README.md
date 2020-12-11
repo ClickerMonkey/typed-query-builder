@@ -121,7 +121,73 @@ const q = insert()
 
 ```
 
+## Syntax
+
+### Basics
+- `expression`: anything that returns a value (ie table field, function, constant)
+- `scalar`: an expression with simple value result (string, number, etc)
+- `scalar[]`: an expression with a list of scalar results
+- `condition`: an expression with a boolean result
+- `row`: an expression with a tuple result (ie `[string, number, string]`)
+- `with`: a SELECT or INSERT, UPDATE, DELETE with returning that returns rows.
+- `source`: an expression which returns a list of rows/objects
+  - `table`: a table name, or a table with an alias (ie `persons` or `persons as "alias"`)
+  - `query`: a subquery with an alias (ie `QUERY as "alias"`)
+  - `constant`: a constant set of rows (ie `[[1, true], [2, false]] as "alias"`)
+  - `with`: the name of the with
+- `x, ...`: There could be a comma separated list of "x"
+- `[x]`: x is optional
+- `{x | y}`: either x or y can be used
+
+<details>
+<summary>SELECT syntax</summary>
+<p>
+
+```
+WITH [RECURSIVE] "with_alias" as with, ...
+DISTINCT [ON (scalar, ...)]
+FROM source, ...
+JOIN source ON condition, ...
+SELECT scalar AS "select_alias", ...
+WHERE condition[]
+GROUP BY {scalar | "select_alias"}, ...
+HAVING condition
+ORDER BY {scalar | "select_alias"} [DESC | ASC] [NULLS {FIRST | LAST}], ...
+OFFSET offset
+LIMIT limit
+LOCK lock_type
+
+...
+
+QUERY -- order by below uses select names from first query
+{UNION | INTERSECT | EXCEPT} [ALL] QUERY, ...
+ORDER BY "select_alias" [DESC | ASC] [NULLS (FIRST | LAST)], ...
+LIMIT limit
+OFFSET offset
+```
+
+</p>
+</details>
+
+
+<details>
+<summary>INSERT syntax</summary>
+<p>
+
+```
+WITH query as "alias", ...
+INSERT INTO table [column, ...]
+[VALUES] source
+RETURNING (* | scalar, ...)
+```
+
+</p>
+</details>
+
+
+
 ### TODO
+- avoid SourceInstance/T(objects) and just use Selects for Sources. Rename Selects?
 - for SQL transformers...
   - which char wraps aliases + policy (always, reserved)
   - which char wraps table/columns + policy

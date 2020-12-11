@@ -1,0 +1,42 @@
+{
+  "name": "@typed-query-builder/builder",
+  "license": "GPL-3.0-or-later",
+  "version": "1.0.0",
+  "description": "A fully-featured fully-typed single-interface query builder for any database.",
+  "main": "dist/typed-query-builder.js",
+  "typings": "typings/index.d.ts",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "https://www.github.com/ClickerMonkey/typed-query-builder"
+  },
+  "authors": [
+    "Philip Diffenderfer <pdiffenderfer@gmail.com>"
+  ],
+  "engines": {
+    "node": ">=6.9"
+  },
+  "scripts": {
+    "build": "yarn bundle:prod",
+    "bundle:prod": "webpack --mode production",
+    "bundle:dev": "webpack --mode development --devtool source-map",
+    "prepack": "yarn build",
+    "test": "jest",
+    "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
+    "test:watch": "npm test -- --watch",
+    "test:coverage": "npm test -- --coverage",
+    "test:only-changed": "npm test -- --bail --onlyChanged",
+    "prebuild": "npm run verify",
+    "docs": "typedoc -p . --readme README.md --theme minimal --mode file --target 'es5' --excludeNotExported --excludePrivate --ignoreCompilerErrors --exclude \"**/test/**/*.*\" --out ../typed-query-builder-pages/docs src/ && cp -R examples ../typed-query-builder-pages/ && cp -R umd ../typed-query-builder-pages/",
+    "verify": "npm test",
+    "circular": "madge --circular --extensions ts,tsx ./src",
+    "cz": "git-cz",
+    "release:npm": "npm publish",
+    "release:preflight": "irish-pub",
+    "release:preflight:package": "npm pack",
+    "size": "shx echo \"Gzipped Size:\" && cross-var strip-json-comments --no-whitespace $npm_package_main | gzip-size"
+  },
+  "tslint": {
+    "extends": "../../tslint.json"
+  }
+}

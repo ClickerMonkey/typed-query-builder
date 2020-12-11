@@ -1,24 +1,5 @@
-const path = require('path');
-
-const ROOT = path.resolve( __dirname, 'src' );
-const DESTINATION = path.resolve( __dirname, 'dist' );
-
 module.exports = {
-    context: ROOT,
-
-    entry: {
-        'typed-query-builder': './index.ts'
-    },
     
-    output: {
-        filename: '[name].js',
-        path: DESTINATION,
-        libraryTarget: 'umd',
-        library: '[name]',
-    },
-
-    mode: 'development',
-
     optimization: {
       usedExports: true,
       mangleExports: false,
@@ -52,7 +33,4 @@ module.exports = {
             }
         ]
     },
-
-    devtool: 'source-map',
-    devServer: {}
 };
