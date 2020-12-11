@@ -188,11 +188,19 @@ RETURNING (* | scalar, ...)
 
 ### TODO
 - avoid SourceInstance/T(objects) and just use Selects for Sources. Rename Selects?
+- Change SourceType to return all fields at base, add _ avoid potential conflicts: _table, _primary, _fields, _fieldColumn, _as, _extend, _all, _only, _except
+- recursive with  (pgsql, mysql)
+- priority to sources for evaluation (withs, froms, joins)
+- partitions? (pgsql, mysql)
+- windows? (pgsql, mysql)
+- rollup?
+- lock rules per table?
+- allow user to define their own functions which returns a ExprUserFunction defineFunction(name, args): (...Expr[]) => Expr
 - for SQL transformers...
   - which char wraps aliases + policy (always, reserved)
   - which char wraps table/columns + policy
 - [ { UNION | INTERSECT | EXCEPT } [ ALL | DISTINCT ] select ]
-- row constructor (ie tuple) takes comma delimited list of values, or source.*
+- row constructor (ie tuple) takes comma delimited list of values, or source.* (use JoinTuples)
 - row comparisons (row op row, row IS [NOT] NULL)
    - op: =, !=, <>, <, <=, >, >=, IS DISTINCT FROM, IS NOT DISTINCT FROM
 - select `DISTINCT` and `DISTINCT ON (value, ...) alias` 
