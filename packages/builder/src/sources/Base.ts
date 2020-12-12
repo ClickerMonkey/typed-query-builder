@@ -1,11 +1,11 @@
-import { Name, SourceInstance } from '../Types';
-import { Source, SourceFields } from './Source';
+import { Name, ObjectFromSelects, Selects } from '../Types';
+import { Source, SourceFieldsFromSelects } from './Source';
 
 
-export class SourceBase<A extends Name, T extends SourceInstance> implements Source<A, T>
+export abstract class SourceBase<A extends Name, T extends Selects> implements Source<A, T>
 {
 
-  public inferredType?: T[];
+  public inferredType?: ObjectFromSelects<T>[];
 
   public constructor(
     public alias: A,
@@ -13,8 +13,6 @@ export class SourceBase<A extends Name, T extends SourceInstance> implements Sou
 
   }
 
-  public getFields(): SourceFields<T> {
-    return Object.create(null);
-  }
+  public abstract getFields(): SourceFieldsFromSelects<T>;
 
 }

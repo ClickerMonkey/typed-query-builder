@@ -1,13 +1,13 @@
-import { Expr, Select, ExprValueObjects, ExprValueTuples, MergeObjects, UndefinedKeys, SelectWithKey, UnionToIntersection, UnionToTuple, ArrayToTuple, ColumnsToTuple, AppendTuples, ObjectKeys, SelectsKeys, SelectsValues, SelectsNameless, ObjectFromSelects, SelectsExprs, JoinTuples, SourceFieldsFunctions, createFieldsFactory, ExprField } from '../src/';
+import { Expr, Select, ExprValueObjects, ExprValueTuples, MergeObjects, UndefinedKeys, SelectWithKey, UnionToIntersection, UnionToTuple, ArrayToTuple, ColumnsToTuple, AppendTuples, ObjectKeys, SelectsKeys, SelectsValues, SelectsNameless, ObjectFromSelects, SelectsExprs, JoinTuples, SourceFieldsFunctions, createFieldsFactory, ExprField, SelectsFromObject } from '../src/';
 import { expectType, expectTypeMatch } from './helper';
 
 
 describe('Types', () => {
 
     it('MergeObjects', () => {
-        expectTypeMatch<{ x: Number, y: number }, MergeObjects<{x: Number }, { y: number }>>(true);
-        expectTypeMatch<{ x: Number, y: string }, MergeObjects<{x: Number, y: number }, { y: string }>>(true);
-        expectTypeMatch<{ x: Number, y: string | undefined }, MergeObjects<{x: Number, y: number }, { y?: string }>>(true);
+        expectTypeMatch<{ x: number, y: number }, MergeObjects<{x: number }, { y: number }>>(true);
+        expectTypeMatch<{ x: number, y: string }, MergeObjects<{x: number, y: number }, { y: string }>>(true);
+        expectTypeMatch<{ x: number, y: string | undefined }, MergeObjects<{x: number, y: number }, { y?: string }>>(true);
         expectTypeMatch<{}, MergeObjects<{}, {}>>(true);
         expectTypeMatch<{ x: number }, MergeObjects<{}, { x: number }>>(true);
         expectTypeMatch<{ x: number }, MergeObjects<{ x: number }, {}>>(true);
@@ -132,9 +132,38 @@ describe('Types', () => {
             age: new ExprField('person', 'age'),
         });
 
-        expectType<[ExprField<"id", number>, ExprField<"name", string>, ExprField<"age", number>]>(fn.all());
+        expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number>]>(fn.all());
         expectType<[ExprField<"id", number>, ExprField<"age", number>]>(fn.only(['age', 'id']));
         expectType<[ExprField<"id", number>, ExprField<"name", string>]>(fn.except(['age']));
+    });
+    
+    type AB = SourceFieldsFunctions<[Select<'name', string>, Select<'id', number>, Select<'done', boolean>]>;
+const ab: AB = null as any;
+const ac = ab.all();
+const ah = ab.only();
+const ad = ab.only('name', 'id');
+const ae = ab.only(['name', 'done']);
+const al = ab.except('id');
+const am = ab.except(['name']);
+const af = ab.except();
+const ag = ab.except([]);
+const ai = ab.mapped({ 'New Name': 'name' });
+const aj = ab.mapped({ 'New Name': 'name', 'New Done': 'done' });
+const ak = ab.mapped({});
+
+
+    it('SelectsFromObject', () => {
+      type A = {};
+      type B = { x: number };
+      type C = { y: string, x: number };
+      type D = { x: number } | { x: number, y: string };
+      type E = { y: string, w?: number };
+
+      expectTypeMatch<[], SelectsFromObject<A>>(true);
+      expectTypeMatch<[Select<"x", number>], SelectsFromObject<B>>(true);
+      expectTypeMatch<[Select<"x", number>, Select<"y", string>], SelectsFromObject<C>>(true);
+      expectTypeMatch<[Select<"x", number>, Select<"y", string>], SelectsFromObject<D>>(true);
+      expectTypeMatch<[Select<"y", string>, Select<"w", number>], SelectsFromObject<E>>(true);
     });
 
 });

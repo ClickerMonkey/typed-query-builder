@@ -1,34 +1,26 @@
 import { Name, Selects, SourceInstanceFromSelects } from '../Types';
 import { Expr } from '../exprs';
-import { ExprField } from '../exprs/Field';
-import { QuerySelectBase } from '../query/Base';
 import { SourceBase } from './Base';
 import { SourceFields } from './Source';
 
 
-export class SourceQuery<A extends Name, S extends Selects> extends SourceBase<A, SourceInstanceFromSelects<S>> 
+export class SourceRecursive<A extends Name, S extends Selects> extends SourceBase<A, S> 
 {
-
-  public select: SourceFields<SourceInstanceFromSelects<S>>;
 
   public constructor(
     alias: A,
-    public query: QuerySelectBase<any, S, any>
+    public initial: Expr<S[] | S>, // insert returning, delete returning, select, update returning
+    public recursive: Expr<S[]>
   ) {
     super( alias );
-
-    this.select = Object.create(null);
-    for (const select of query._selects) {
-      (this.select as any)[select.alias] = new ExprField(alias, select.alias);
-    }
   }
 
   public getFields(): SourceFields<SourceInstanceFromSelects<S>> {
-    return this.select;
+    this.initial.getFields();
   }
 
   public getExpr(): Expr<S[]> {
-    return this.query;
+    return this.initial.getExpr();
   }
 
 }

@@ -1,10 +1,10 @@
-import { Name, JoinType, SourceInstance } from '../Types';
+import { Name, JoinType, Selects } from '../Types';
 import { Expr } from '../exprs/Expr';
 import { SourceBase } from './Base';
-import { Source, SourceFields } from './Source';
+import { Source, SourceFieldsFromSelects } from './Source';
 
 
-export class SourceJoin<A extends Name, T extends SourceInstance> extends SourceBase<A, T> 
+export class SourceJoin<A extends Name, T extends Selects> extends SourceBase<A, T> 
 {
 
   public constructor(
@@ -15,7 +15,7 @@ export class SourceJoin<A extends Name, T extends SourceInstance> extends Source
     super( source.alias );
   }
 
-  public getFields(): SourceFields<T> {
+  public getFields(): SourceFieldsFromSelects<T> {
     return this.source.getFields();
   }
 
