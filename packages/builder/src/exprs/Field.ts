@@ -1,9 +1,10 @@
 import { Name } from '../Types';
 import { Select } from '../select/Select';
-import { Expr } from './Expr';
+import { ExprScalar } from './Scalar';
+import { ExprKind } from '../Kind';
 
 
-export class ExprField<F extends Name, T> extends Expr<T> implements Select<F, T>
+export class ExprField<F extends Name, T> extends ExprScalar<T> implements Select<F, T>
 {
   
   public static readonly id = 'field';
@@ -15,11 +16,15 @@ export class ExprField<F extends Name, T> extends Expr<T> implements Select<F, T
     super();
   }
 
+  public getKind(): ExprKind {
+    return ExprKind.FIELD;
+  }
+
   public isSimple(): boolean {
     return true;
   }
 
-  public getExpr(): Expr<T> {
+  public getExpr(): ExprScalar<T> {
     return this;
   }
 

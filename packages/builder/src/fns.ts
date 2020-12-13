@@ -1,3 +1,5 @@
+import { Name, SourceFieldsFromSelects } from '.';
+import { ExprField } from './exprs';
 import { Select } from './select';
 import { SelectAliased } from './select/Aliased';
 import { ObjectKeys, Selects, SelectsRecord, SourceFields, SourceFieldsFactory, SourceFieldsFunctions } from './Types';
@@ -49,43 +51,47 @@ export function keys<T>(object: T): ObjectKeys<T>
   return Object.keys(object) as ObjectKeys<T>;
 }
 
-export function createFieldsFactory<T extends Selects>(selects: T): SourceFieldsFactory<T> 
+export function createFields<S extends Selects>(source: Name, selects: S): SourceFieldsFromSelects<S>
 {
-  const selectMap = selects.reduce((map, select) => {
-    map[select.alias as string] = select;
+  return selects.reduce((fields, select) => 
+  {
+    fields[select.alias] = new ExprField(source, select.alias);
 
-    return map;
-  }, Object.create(null) as SelectsRecord<T>);
+    return fields;
+  }, {} as SourceFieldsFromSelects<S>);
+}
 
-  const all: SourceFieldsFunctions<T>['all'] = () => selects;
+export function createFieldsFactory<S extends Selects>(selects: S, fields: SourceFieldsFromSelects<S>): SourceFieldsFactory<S> 
+{
+  const all: SourceFieldsFunctions<S>['all'] = () => selects;
 
-  const only: SourceFieldsFunctions<T>['only'] = (...onlyInput: any[]) => 
+  const only: SourceFieldsFunctions<S>['only'] = (...onlyInput: any[]) => 
   {
     const _only = isArray(onlyInput[0]) ? onlyInput[0] : onlyInput;
 
-    return _only.map( (field) => selectMap[field] ) as any;
+    return _only.map( (field) => fields[field] ) as any;
   };
 
-  const except: SourceFieldsFunctions<T>['except'] = (...exceptInput: any[]) => 
+  const except: SourceFieldsFunctions<S>['except'] = (...exceptInput: any[]) => 
   {
     const _except = isArray(exceptInput[0]) ? exceptInput[0] : exceptInput;
 
     return selects.filter( s => _except.indexOf(s.alias) === -1 ) as any;
   };
 
-  const mapped: SourceFieldsFunctions<T>['mapped'] = (map) =>
+  const mapped: SourceFieldsFunctions<S>['mapped'] = (map) =>
   {
     const out = [];
 
     for (const prop in map)
     {
-      out.push(new SelectAliased(prop, selectMap[map[prop] as any]));
+      out.push(new SelectAliased(prop, fields[map[prop] as any]));
     }
 
     return out as any;
   };
 
-  const fns: SourceFieldsFunctions<T> = {
+  const fns: SourceFieldsFunctions<S> = {
     all,
     _all: all,
     only,
@@ -96,5 +102,5 @@ export function createFieldsFactory<T extends Selects>(selects: T): SourceFields
     _mapped: mapped,
   };
 
-  return Object.assign(fns, selectMap) as any;
+  return Object.assign(fns, fields) as any;
 }

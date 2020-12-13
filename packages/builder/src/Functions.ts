@@ -1,6 +1,7 @@
-import { Expr, ExprInput } from './exprs/Expr';
+import { Expr } from './exprs/Expr';
 import { ExprFunction } from './exprs/Function';
 import { DataTypeBox, DataTypeCircle, DataTypeLine, DataTypePath, DataTypePoint, DataTypePolygon, DataTypeSegment } from './DataTypes';
+import { ExprScalar, ExprInput } from './exprs/Scalar';
 
 
 export type FunctionArguments<F extends keyof Functions> = 
@@ -10,7 +11,7 @@ export type FunctionArguments<F extends keyof Functions> =
 
 export type FunctionArgumentValues<F extends keyof Functions> = 
   Functions[F] extends (...args: infer A) => any
-    ? { [P in keyof A]: Expr<A[P]> }
+    ? { [P in keyof A]: ExprScalar<A[P]> }
     : never;
 
 export type FunctionArgumentInputs<F extends keyof Functions> = 
@@ -187,14 +188,14 @@ export interface Functions
 }
 
 export type FunctionProxy = {
-  [K in keyof Functions]: (...args: FunctionArgumentInputs<K>) => Expr<FunctionResult<K>>;
+  [K in keyof Functions]: (...args: FunctionArgumentInputs<K>) => ExprScalar<FunctionResult<K>>;
 };
 
 export function createFunctionProxy(): FunctionProxy {
   return new Proxy({}, {
     get: <K extends keyof Functions>(target: {}, func: K, reciever: any) => {
-      return (...args: FunctionArgumentInputs<K>): Expr<FunctionResult<K>> => {
-        return new ExprFunction(func, (args as any).map( Expr.parse ));
+      return (...args: FunctionArgumentInputs<K>): ExprScalar<FunctionResult<K>> => {
+        return new ExprFunction(func, (args as any).map( ExprScalar.parse ));
       };
     },
   }) as FunctionProxy;

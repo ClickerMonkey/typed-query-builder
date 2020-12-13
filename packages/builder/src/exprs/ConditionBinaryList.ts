@@ -1,8 +1,12 @@
+import { isArray } from '..';
+import { ExprKind } from '../Kind';
+import { Traverser } from '../Traverser';
 import { ConditionBinaryListPass, ConditionBinaryListType } from '../Types';
 import { Expr } from './Expr';
+import { ExprScalar } from './Scalar';
 
 
-export class ExprConditionBinaryList<T> extends Expr<boolean> 
+export class ExprConditionBinaryList<T> extends ExprScalar<boolean> 
 {
   
   public static readonly id = 'a?b[]';
@@ -10,10 +14,30 @@ export class ExprConditionBinaryList<T> extends Expr<boolean>
   public constructor(
     public type: ConditionBinaryListType,
     public pass: ConditionBinaryListPass,
-    public value: Expr<T>,
-    public test: Expr<T[]> | Expr<T>[]
+    public value: ExprScalar<T>,
+    public test: ExprScalar<T[]> | ExprScalar<T>[]
   ) {
     super();
+  }
+
+  public getKind(): ExprKind {
+    return ExprKind.CONDITION_BINARY_LIST;
+  }
+
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
+    return traverse.enter(this, () => {
+      traverse.step('value', this.value, (replace) => this.value = replace as any);
+      traverse.step('test', () => {
+        const test = this.test;
+        if (isArray(test)) {
+          for (let i = 0; i < test.length; i++) {
+            traverse.step(i, test[i], (replace) => test[i] = replace as any);
+          }
+        } else {
+          traverse.step(0, test, (replace) => this.test = replace as any);
+        }
+      });
+    });
   }
 
 }

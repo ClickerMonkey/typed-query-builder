@@ -1,6 +1,8 @@
 import { ExprField } from './exprs';
 import { Expr } from './exprs/Expr';
 import { Select } from './select/Select';
+import { Source } from './sources';
+import { NamedSource } from './sources/Named';
 
 /**
  * Returns the result of { ...A, ...B }
@@ -214,16 +216,8 @@ export type SelectsMap<S extends Selects, K extends SelectsKey<S>, M extends Rec
   }[keyof M]>
 ;
 
-export interface Source<A extends Name, S extends Selects>
-{
-  alias: A;
-  inferredType?: ObjectFromSelects<S>[];
-  
-  getFields(): SourceFieldsFromSelects<S>;
-}
-
 export type SourcesSelects<S extends Sources> = {
-  [K in keyof S]: S[K] extends Source<any, infer X> ? X : never;
+  [K in keyof S]: S[K] extends Source<infer X> ? X : never;
 };
 
 export type SourceFields<T> = {
@@ -264,6 +258,7 @@ export interface SourceFieldsFunctions<S extends Selects>
   _mapped<K extends SelectsKey<S>, M extends Record<string, K>>(map: M): SelectsMap<S, K, M>;
 }
 
+/*
 type AB = SourceFieldsFunctions<[Select<'name', string>, Select<'id', number>, Select<'done', boolean>]>;
 const ab: AB = null as any;
 const ac = ab.all();
@@ -279,15 +274,16 @@ const aj = ab.mapped({ 'New Name': 'name', 'New Done': 'done' });
 const ak = ab.mapped({});
 
 type AC = ['name', 'age'] extends ['name', 'id', 'age'] ? true : false;
+*/
 
 export type SourceFieldsFactory<T extends Selects> = AppendObjects<SourceFieldsFunctions<T>, SourceFields<T>>;
 
 export type SourceForType<T extends Sources> = { 
-  [K in keyof T]: T[K] extends Selects ? Source<K, T[K]> : never;
+  [K in keyof T]: T[K] extends Selects ? NamedSource<K, T[K]> : never;
 };
 
-export type SourceInstanceFromTuple<S extends Source<any, any>[]> = UnionToIntersection<{
-  [P in keyof S]: S[P] extends Source<infer N, infer T> 
+export type SourceInstanceFromTuple<S extends NamedSource<any, any>[]> = UnionToIntersection<{
+  [P in keyof S]: S[P] extends NamedSource<infer N, infer T> 
     ? Record<N, T> 
     : never;
 }[number]>;

@@ -1,7 +1,8 @@
-import { Expr } from './Expr';
+import { ExprScalar } from '..';
+import { ExprKind } from '../Kind';
 
 
-export class ExprRaw extends Expr<any> 
+export class ExprRaw extends ExprScalar<any> 
 {
 
   public static readonly id = 'raw';
@@ -10,6 +11,10 @@ export class ExprRaw extends Expr<any>
     public expr: any,
   ) {
     super();
+  }
+
+  public getKind(): ExprKind {
+    return ExprKind.RAW;
   }
 
 }

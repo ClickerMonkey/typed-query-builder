@@ -1,7 +1,8 @@
-import { Expr } from './Expr';
+import { ExprKind } from '../Kind';
+import { ExprScalar } from './Scalar';
 
 
-export class ExprConstant<T> extends Expr<T> 
+export class ExprConstant<T> extends ExprScalar<T> 
 {
   
   public static readonly id = 'const';
@@ -10,6 +11,10 @@ export class ExprConstant<T> extends Expr<T>
     public value: T
   ) {
     super();
+  }
+
+  public getKind(): ExprKind {
+    return ExprKind.CONSTANTS;
   }
 
   public isSimple(): boolean {

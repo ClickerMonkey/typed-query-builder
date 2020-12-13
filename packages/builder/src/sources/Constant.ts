@@ -1,26 +1,22 @@
 import { keys } from '../fns';
-import { Name, Selects, SelectsFromObject, SelectsKeys, ObjectFromSelects, Cast } from '../Types';
-import { ExprField } from '../exprs/Field';
-import { SourceBase } from './Base';
-import { Source, SourceFieldsFromSelects } from './Source';
+import { Selects, SelectsFromObject, SelectsKeys, ObjectFromSelects, Cast } from '../Types';
+import { Source } from './Source';
+import { ExprKind } from '../Kind';
 
 
-export function defineConstant<A extends Name, T extends Record<string, any>>(alias: A, constants: T[], columns?: Array<keyof T>): Source<A, Cast<SelectsFromObject<T>, Selects>>
+export function defineValues<T extends Record<string, any>>(constants: T[], columns?: Array<keyof T>): Source<Cast<SelectsFromObject<T>, Selects>>
 {
-  return new SourceConstant<A, Cast<SelectsFromObject<T>, Selects>>(alias, constants as any, columns || SourceConstant.calculateColumns(constants) as any);
+  return new SourceValues<Cast<SelectsFromObject<T>, Selects>>(constants as any, columns || SourceValues.calculateColumns(constants) as any);
 }
 
-export class SourceConstant<A extends Name, T extends Selects> extends SourceBase<A, T> 
+export class SourceValues<S extends Selects> extends Source<S> 
 {
 
-  public static calculateColumns<T>(constants: T[]): Array<keyof T>
-  {
+  public static calculateColumns<T>(constants: T[]): Array<keyof T> {
     const columnMap: Record<keyof T, true> = Object.create(null);
 
-    for (const c of constants) 
-    {
-      for (const prop in c) 
-      {
+    for (const c of constants) {
+      for (const prop in c) {
         columnMap[prop] = true;
       }
     }
@@ -28,24 +24,27 @@ export class SourceConstant<A extends Name, T extends Selects> extends SourceBas
     return keys(columnMap);
   }
 
-  public select: SourceFieldsFromSelects<T>;
+  public selects: S;
 
   public constructor(
-    public alias: A,
-    public constants: ObjectFromSelects<T>[],
-    public columns: SelectsKeys<T>,
+    public constants: ObjectFromSelects<S>[],
+    public columns: SelectsKeys<S>,
   ) {
-    super( alias );
+    super();
 
-    this.select = Object.create(null);
-    for (const column of columns) 
-    {
-      this.select[column ] = new ExprField(alias, column);
-    }
+    this.selects = columns.map((alias) => ({
+      alias,
+      getInferredType(): any {},
+      getExpr: () => this,
+    })) as any as S;
   }
 
-  public getFields(): SourceFieldsFromSelects<T> {
-    return this.select;
+  public getKind(): ExprKind {
+    return ExprKind.VALUES;
+  }
+
+  public getSelects(): S {
+    return this.selects;
   }
 
 }

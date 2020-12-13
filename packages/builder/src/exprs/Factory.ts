@@ -18,14 +18,15 @@ import { ExprNot } from './Not';
 import { ExprOperationBinary } from './OperationBinary';
 import { ExprOperationUnary } from './OperationUnary';
 import { ExprParam } from './Param';
-import { Expr, ExprInput, ExprTypeMap } from './Expr';
+import { Expr, ExprTypeMap } from './Expr';
 import { ExprField } from './Field';
 import { ExprRaw } from './Raw';
-import { SourcesFieldsFactory } from '../sources/Source';
 import { ExprRow } from './Row';
 import { ExprDefault } from './Default';
 import { ExprConditionBinaryList } from './ConditionBinaryList';
 import { Select } from '../select';
+import { ExprScalar, SourcesFieldsFactory } from '..';
+import { ExprInput } from './Scalar';
 
 
 
@@ -48,11 +49,11 @@ export class ExprFactory<T extends Sources, S extends Selects>
       : provider;
   }
 
-  public field<A extends keyof T & string, V extends T[A], F extends keyof V & string>(source: A, field: F): Expr<V[F]> {
+  public field<A extends keyof T & string, V extends T[A], F extends keyof V & string>(source: A, field: F): ExprScalar<V[F]> {
     return new ExprField<F, V[F]>(source, field);
   }
 
-  public raw<V>(raw: any): Expr<V> {
+  public raw<V>(raw: any): ExprScalar<V> {
     return new ExprRaw(raw);
   }
 
@@ -60,29 +61,29 @@ export class ExprFactory<T extends Sources, S extends Selects>
     return new ExprDefault();
   }
 
-  public param<V>(param: string): Expr<V> {
+  public param<V>(param: string): ExprScalar<V> {
     return new ExprParam<V>(param);
   }
 
   public row<E extends ExprInput<any | any[]>[]>(...elements: E): Expr<ExprTypeMap<JoinTuples<E>>> {
-    return new ExprRow(elements.map( Expr.parse )) as any;
+    return new ExprRow(elements.map( ExprScalar.parse )) as any;
   }
 
   public inspect<R>(): ExprCase<boolean, R>
   public inspect<R, V>(value: ExprInput<V>): ExprCase<V, R>
   public inspect<R>(value?: ExprInput<any>): ExprCase<any, R> {
-    return new ExprCase(value === undefined ? new ExprConstant(true) : Expr.parse(value));
+    return new ExprCase(value === undefined ? new ExprConstant(true) : ExprScalar.parse(value));
   }
 
-  public constant<V>(value: V): Expr<V> {
+  public constant<V>(value: V): ExprScalar<V> {
     return new ExprConstant(value);
   }
 
-  public func<F extends keyof Functions>(func: F, ...args: FunctionArgumentInputs<F>): Expr<FunctionResult<F>> {
-    return new ExprFunction(func, (args as any).map( Expr.parse ));
+  public func<F extends keyof Functions>(func: F, ...args: FunctionArgumentInputs<F>): ExprScalar<FunctionResult<F>> {
+    return new ExprFunction(func, (args as any).map( ExprScalar.parse ));
   }
 
-  public cast<I extends DataTypeInputs>(type: I, value: ExprInput<any>): Expr<DataTypeInputType<I>> {
+  public cast<I extends DataTypeInputs>(type: I, value: ExprInput<any>): ExprScalar<DataTypeInputType<I>> {
     return new ExprCast(type, value);
   }
 
@@ -90,21 +91,21 @@ export class ExprFactory<T extends Sources, S extends Selects>
     return new QuerySelect();
   }
 
-  public not(value: ExprInput<boolean>): Expr<boolean> {
-    return new ExprNot(Expr.parse(value));
+  public not(value: ExprInput<boolean>): ExprScalar<boolean> {
+    return new ExprNot(ExprScalar.parse(value));
   }
-  public exists(query: Expr<[Select<any, 1 | null>]>): Expr<boolean> {
+  public exists(query: Expr<[Select<any, 1 | null>]>): ExprScalar<boolean> {
     return new ExprExists(query, false);
   }
-  public notExists(query: Expr<[Select<any, 1 | null>]>): Expr<boolean> {
+  public notExists(query: Expr<[Select<any, 1 | null>]>): ExprScalar<boolean> {
     return new ExprExists(query, true);
   }
-  public between<V>(value: ExprInput<V>, low: ExprInput<V>, high: ExprInput<V>): Expr<boolean> {
-    return new ExprBetween(Expr.parse(value), Expr.parse(low), Expr.parse(high));
+  public between<V>(value: ExprInput<V>, low: ExprInput<V>, high: ExprInput<V>): ExprScalar<boolean> {
+    return new ExprBetween(ExprScalar.parse(value), ExprScalar.parse(low), ExprScalar.parse(high));
   }
 
-  public and(...conditions: Expr<boolean>[]): Expr<boolean>
-  public and(getConditions: ExprProvider<T, S ,Expr<boolean>[]>): Expr<boolean> 
+  public and(...conditions: ExprScalar<boolean>[]): ExprScalar<boolean>
+  public and(getConditions: ExprProvider<T, S, ExprScalar<boolean>[]>): ExprScalar<boolean> 
   public and(...conditions: any[]): Expr<boolean> {
     return new ExprConditions('AND', 
       isArray(conditions[0])
@@ -115,9 +116,9 @@ export class ExprFactory<T extends Sources, S extends Selects>
     );
   }
 
-  public or(...conditions: Expr<boolean>[]): Expr<boolean>
-  public or(getConditions: ExprProvider<T, S, Expr<boolean>[]>): Expr<boolean>
-  public or(...conditions: any[]): Expr<boolean> {
+  public or(...conditions: Expr<boolean>[]): ExprScalar<boolean>
+  public or(getConditions: ExprProvider<T, S, ExprScalar<boolean>[]>): ExprScalar<boolean>
+  public or(...conditions: any[]): ExprScalar<boolean> {
     return new ExprConditions('OR', 
       isArray(conditions[0])
         ? conditions[0]
@@ -127,101 +128,102 @@ export class ExprFactory<T extends Sources, S extends Selects>
     );
   }
 
-  public aggregate(type: AggregateType, value?: Expr<any>, distinct: boolean = false): Expr<number> {
+  public aggregate(type: AggregateType, value?: ExprScalar<any>, distinct: boolean = false): ExprScalar<number> {
     return new ExprAggregate(type, distinct, value);
   }
 
-  public count(distinct?: boolean, value?: Expr<any>): Expr<number> {
+  public count(distinct?: boolean, value?: ExprScalar<any>): ExprScalar<number> {
     return this.aggregate('COUNT', value, distinct);
   }
-  public countIf(condition: Expr<boolean>): Expr<number> {
+  public countIf(condition: ExprScalar<boolean>): ExprScalar<number> {
     return this.aggregate('COUNT', this.inspect().when<1 | null>(condition, 1).else(null), false);
   }
 
-  public sum(value: Expr<number>): Expr<number> {
+  public sum(value: ExprScalar<number>): ExprScalar<number> {
     return this.aggregate('SUM', value);
   }
-  public avg(value: Expr<number>): Expr<number> {
+  public avg(value: ExprScalar<number>): ExprScalar<number> {
     return this.aggregate('AVG', value);
   }
-  public min(value: Expr<number>): Expr<number> {
+  public min(value: ExprScalar<number>): ExprScalar<number> {
     return this.aggregate('MIN', value);
   }
-  public max(value: Expr<number>): Expr<number> {
+  public max(value: ExprScalar<number>): ExprScalar<number> {
     return this.aggregate('MAX', value);
   }
 
-  public op(first: ExprInput<number>, op: OperationUnaryType): Expr<number>
-  public op(first: ExprInput<number>, op: OperationBinaryType, second: ExprInput<number>): Expr<number> 
-  public op(first: ExprInput<number>, op: OperationBinaryType | OperationUnaryType, second?: ExprInput<number>): Expr<number> {
+  public op(first: ExprInput<number>, op: OperationUnaryType): ExprScalar<number>
+  public op(first: ExprInput<number>, op: OperationBinaryType, second: ExprInput<number>): ExprScalar<number> 
+  public op(first: ExprInput<number>, op: OperationBinaryType | OperationUnaryType, second?: ExprInput<number>): ExprScalar<number> {
     return second === undefined
-      ? new ExprOperationUnary(op as OperationUnaryType, Expr.parse(first))
-      : new ExprOperationBinary(op, Expr.parse(first), Expr.parse(second));
+      ? new ExprOperationUnary(op as OperationUnaryType, ExprScalar.parse(first))
+      : new ExprOperationBinary(op, ExprScalar.parse(first), ExprScalar.parse(second));
   }
 
-  public is<V>(value: ExprInput<V>, op: ConditionBinaryType, test: ExprInput<V>): Expr<boolean>
-  public is<V>(op: ConditionUnaryType, value: ExprInput<V>): Expr<boolean>
-  public is(a1: any, a2: any, a3?: any): Expr<boolean> {
+  public is<V>(value: ExprInput<V>, op: ConditionBinaryType, test: ExprInput<V>): ExprScalar<boolean>
+  public is<V>(op: ConditionUnaryType, value: ExprInput<V>): ExprScalar<boolean>
+  public is(a1: any, a2: any, a3?: any): ExprScalar<boolean> {
     if (a3 === undefined) {
-      return new ExprConditionUnary(a1, Expr.parse(a2));
+      return new ExprConditionUnary(a1, ExprScalar.parse(a2));
     } else {
-      return new ExprConditionBinary(a2, Expr.parse(a1), Expr.parse(a3));
+      return new ExprConditionBinary(a2, ExprScalar.parse(a1), ExprScalar.parse(a3));
     }
   }
 
-  public any<V>(value: ExprInput<V>, op: ConditionBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): Expr<boolean> {
+  public any<V>(value: ExprInput<V>, op: ConditionBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): ExprScalar<boolean> {
     return new ExprConditionBinaryList(op, 'ANY', 
-      Expr.parse( value ),
+      ExprScalar.parse( value ),
       isArray(values) 
-        ? (values as any[]).map( Expr.parse ) 
-        : Expr.parse( values )
+        ? (values as any[]).map( ExprScalar.parse ) 
+        : ExprScalar.parse( values )
     );
   }
 
-  public all<V>(value: ExprInput<V>, op: ConditionBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): Expr<boolean> {
+  public all<V>(value: ExprInput<V>, op: ConditionBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): ExprScalar<boolean> {
     return new ExprConditionBinaryList(op, 'ALL', 
-      Expr.parse( value ),
+      ExprScalar.parse( value ),
       isArray(values) 
-        ? (values as any[]).map( Expr.parse ) 
-        : Expr.parse( values )
+        ? (values as any[]).map( ExprScalar.parse ) 
+        : ExprScalar.parse( values )
     );
   }
 
-  public isNull<V>(value: ExprInput<V>): Expr<boolean> {
-    return new ExprConditionUnary('NULL', Expr.parse(value));
+  public isNull<V>(value: ExprInput<V>): ExprScalar<boolean> {
+    return new ExprConditionUnary('NULL', ExprScalar.parse(value));
   }
-  public isNotNull<V>(value: ExprInput<V>): Expr<boolean> {
-    return new ExprConditionUnary('NOT NULL', Expr.parse(value));
+  public isNotNull<V>(value: ExprInput<V>): ExprScalar<boolean> {
+    return new ExprConditionUnary('NOT NULL', ExprScalar.parse(value));
   }
-  public isTrue(value: ExprInput<boolean>): Expr<boolean> {
-    return new ExprConditionUnary('TRUE', Expr.parse(value));
+  public isTrue(value: ExprInput<boolean>): ExprScalar<boolean> {
+    return new ExprConditionUnary('TRUE', ExprScalar.parse(value));
   }
-  public isFalse(value: ExprInput<boolean>): Expr<boolean> {
-    return new ExprConditionUnary('FALSE', Expr.parse(value));
+  public isFalse(value: ExprInput<boolean>): ExprScalar<boolean> {
+    return new ExprConditionUnary('FALSE', ExprScalar.parse(value));
   }
 
-  public in<V>(value: ExprInput<V>, values: ExprInput<V[]> | ExprInput<V>[]): Expr<boolean>
-  public in<V>(value: ExprInput<V>, ...values: ExprInput<V>[]): Expr<boolean> 
-  public in<V>(value: ExprInput<V>, ...values: any[]): Expr<boolean> {
-    return new ExprIn(Expr.parse(value), 
+  public in<V>(value: ExprInput<V>, values: ExprInput<V[]> | ExprInput<V>[]): ExprScalar<boolean>
+  public in<V>(value: ExprInput<V>, ...values: ExprInput<V>[]): ExprScalar<boolean> 
+  public in<V>(value: ExprInput<V>, ...values: any[]): ExprScalar<boolean> {
+    return new ExprIn(ExprScalar.parse(value), 
       values.length !== 1 
-      ? values.map( Expr.parse )
+      ? values.map( ExprScalar.parse )
       : isArray(values[0])
-        ? values[0].map( Expr.parse )
-        : Expr.parse( values[0] )
+        ? values[0].map( ExprScalar.parse )
+        : ExprScalar.parse( values[0] )
     );
   }
 
-  public notIn<V>(value: ExprInput<V>, values: ExprInput<V[]> | ExprInput<V>[]): Expr<boolean>
-  public notIn<V>(value: ExprInput<V>, ...values: ExprInput<V>[]): Expr<boolean> 
-  public notIn<V>(value: ExprInput<V>, ...values: any[]): Expr<boolean> {
-    return new ExprIn(Expr.parse(value), 
+  public notIn<V>(value: ExprInput<V>, values: ExprInput<V[]> | ExprInput<V>[]): ExprScalar<boolean>
+  public notIn<V>(value: ExprInput<V>, ...values: ExprInput<V>[]): ExprScalar<boolean> 
+  public notIn<V>(value: ExprInput<V>, ...values: any[]): ExprScalar<boolean> {
+    return new ExprIn(ExprScalar.parse(value), 
       values.length !== 1 
-      ? values.map( Expr.parse )
+      ? values.map( ExprScalar.parse )
       : isArray(values[0])
-        ? values[0].map( Expr.parse )
-        : Expr.parse( values[0] ), 
+        ? values[0].map( ExprScalar.parse )
+        : ExprScalar.parse( values[0] ), 
       true
     );
   }
+  
 }

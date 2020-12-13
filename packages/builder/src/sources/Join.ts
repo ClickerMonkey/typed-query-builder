@@ -1,22 +1,19 @@
 import { Name, JoinType, Selects } from '../Types';
 import { Expr } from '../exprs/Expr';
-import { SourceBase } from './Base';
-import { Source, SourceFieldsFromSelects } from './Source';
+import { Source } from './Source';
+import { NamedSourceBase } from './NamedBase';
 
 
-export class SourceJoin<A extends Name, T extends Selects> extends SourceBase<A, T> 
+export class SourceJoin<N extends Name, S extends Selects> extends NamedSourceBase<N, S>
 {
 
   public constructor(
-    public source: Source<A, T>,
+    name: N,
+    source: Source<S>,
     public type: JoinType,
     public condition: Expr<boolean>
   ) {
-    super( source.alias );
-  }
-
-  public getFields(): SourceFieldsFromSelects<T> {
-    return this.source.getFields();
+    super( name, source );
   }
 
 }

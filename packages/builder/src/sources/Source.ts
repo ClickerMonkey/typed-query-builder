@@ -1,5 +1,11 @@
-import { isArray } from '../fns';
-import { Name, Selects, ObjectFromSelects, Sources, UnionToIntersection, UnionToTuple } from '../Types';
-import { ExprField } from '../exprs/Field';
+import { Selects } from "..";
+import { Expr } from "../exprs";
 
 
+
+export abstract class Source<S extends Selects> extends Expr<S[]>
+{
+
+  public abstract getSelects(): S;
+
+}

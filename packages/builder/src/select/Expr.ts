@@ -1,20 +1,24 @@
-import { Expr } from '../exprs/Expr';
+import { ExprScalar } from '../exprs';
 import { Select } from './Select';
 
 
 export class SelectExpr<A extends string, V> implements Select<A, V> 
 {
 
-  public inferredType?: V;
-
   public constructor(
     public alias: A,
-    public value: Expr<V>,
+    public value: ExprScalar<V>,
   ) {
 
   }
+
+  public getInferredType(): V
+  {
+    throw new Error('getInferredType should not be called.');
+  }
   
-  public getExpr(): Expr<V> {
+  public getExpr(): ExprScalar<V> 
+  {
     return this.value;
   }
 

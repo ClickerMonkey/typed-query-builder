@@ -1,7 +1,8 @@
-import { Expr } from './Expr';
+import { ExprScalar } from '..';
+import { ExprKind } from '../Kind';
 
 
-export class ExprParam<T> extends Expr<T> 
+export class ExprParam<T> extends ExprScalar<T> 
 {
   
   public static readonly id = '?';
@@ -10,6 +11,10 @@ export class ExprParam<T> extends Expr<T>
     public param: string
   ) {
     super();
+  }
+
+  public getKind(): ExprKind {
+    return ExprKind.PARAM;
   }
 
   public isSimple(): boolean {

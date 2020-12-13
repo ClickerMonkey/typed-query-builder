@@ -1,6 +1,5 @@
-import { Name } from '../Types';
-import { Expr } from '../exprs/Expr';
 import { Select } from './Select';
+import { ExprScalar } from '../exprs';
 
 
 export class SelectAliased<A extends string, V> implements Select<A, V> 
@@ -14,8 +13,14 @@ export class SelectAliased<A extends string, V> implements Select<A, V>
   ) {
 
   }
+
+  public getInferredType(): V
+  {
+    throw new Error('getInferredType should not be called.');
+  }
   
-  public getExpr(): Expr<V> {
+  public getExpr(): ExprScalar<V> 
+  {
     return this.select.getExpr();
   }
 

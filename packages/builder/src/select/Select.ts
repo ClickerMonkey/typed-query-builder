@@ -1,11 +1,11 @@
 import { Name } from '../Types';
-import { Expr } from '../exprs/Expr';
+import { ExprScalar } from '..';
 
 
 export interface Select<A extends Name, V>
 {
   alias: A;
-  inferredType?: V;
 
-  getExpr(): Expr<V>;
+  getInferredType(): V
+  getExpr(): ExprScalar<V>;
 }

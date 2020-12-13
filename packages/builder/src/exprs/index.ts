@@ -19,3 +19,4 @@ export * from './OperationUnary';
 export * from './Param';
 export * from './Raw';
 export * from './Row';
+export * from './Scalar';
