@@ -1,12 +1,12 @@
-import { defineSource, Select, query, UnionToTuple } from '../src/';
-import { expectExprType, expectSelect } from './helper';
+import { schema, Select, query, UnionToTuple } from '../src/';
+import { expectExprType, expectSelect, expectType, expectTypeMatch } from './helper';
 
 
 // tslint:disable: no-magic-numbers
 
 describe('Select', () => {
 
-  const Task = defineSource({
+  const Task = schema({
     name: 'task',
     fields: {
       id: 'INT',
@@ -16,6 +16,7 @@ describe('Select', () => {
       parentId: 'INT',
     },
   });
+
 
   it('counts', () => {
     const q = query()
@@ -137,8 +138,3 @@ describe('Select', () => {
   });
 
 });
-
-type AB<T> = T extends Array<infer E> ? UnionToTuple<E> : T;
-
-type AC = AB<(Select<'a', number> | Select<'b', string>)[]>;
-type AD = AB<[Select<'a', number>, Select<'b', string>]>;

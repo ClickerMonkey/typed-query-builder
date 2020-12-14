@@ -1,5 +1,5 @@
 import { isArray, isFunction, isString } from '../fns';
-import { SourcesFieldsFactory, Cast, AggregateType, JoinType, Selects, Sources, Name, OrderDirection, AppendTuples, MergeObjects, SelectsKeys, ArrayToTuple, LockType, SelectWithKey, SourcesSelectsOptional, SelectsOptional, NamedSourcesRecord } from '../Types';
+import { SourcesFieldsFactory, Cast, AggregateType, JoinType, Selects, Sources, Name, OrderDirection, AppendTuples, MergeObjects, SelectsKeys, ArrayToTuple, LockType, SelectWithKey, SourcesSelectsOptional, SelectsOptional, NamedSourcesRecord, Simplify } from '../Types';
 import { ExprAggregate } from '../exprs/Aggregate';
 import { ExprProvider, ExprFactory } from '../exprs/Factory';
 import { Expr, ExprType } from '../exprs/Expr';
@@ -64,8 +64,8 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
     return new QuerySelect( this );
   }
 
-  public with<WN extends Name, WS extends Selects>(query: ExprProvider<T, S, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, Source<WS>>, all?: boolean): QuerySelect<JoinedInner<T, WN, WS>, S> {
-    const source = this._criteria.exprs.provide(query);
+  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, Source<WS>>, all?: boolean): QuerySelect<JoinedInner<T, WN, WS>, S> {
+    const source = this._criteria.exprs.provide(sourceProvider);
 
     this._criteria.addSource(source as any);
 
@@ -78,9 +78,9 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
     return this as any;
   }
 
-  public from<FS extends NamedSource<any, any>[]>(sources: ExprProvider<T, S, FS>): QuerySelect<MergeObjects<T, NamedSourcesRecord<FS>>, S>
-  public from<FS extends NamedSource<any, any>[]>(...sources: FS): QuerySelect<MergeObjects<T, NamedSourcesRecord<FS>>, S>
-  public from<FS extends NamedSource<any, any>[]>(...sourceInput: any[]): QuerySelect<MergeObjects<T, NamedSourcesRecord<FS>>, S> {
+  public from<FS extends NamedSource<any, any>[]>(sources: ExprProvider<T, S, FS>): QuerySelect<Simplify<MergeObjects<T, NamedSourcesRecord<FS>>>, S>
+  public from<FS extends NamedSource<any, any>[]>(...sources: FS): QuerySelect<Simplify<MergeObjects<T, NamedSourcesRecord<FS>>>, S>
+  public from<FS extends NamedSource<any, any>[]>(...sourceInput: any[]): QuerySelect<Simplify<MergeObjects<T, NamedSourcesRecord<FS>>>, S> {
     const sources: NamedSource<any, any>[] = isFunction(sourceInput[0])
       ? this._criteria.exprs.provide(sourceInput[0])
       : isArray(sourceInput[0])

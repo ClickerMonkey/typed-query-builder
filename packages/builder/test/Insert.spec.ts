@@ -1,4 +1,4 @@
-import { defineSource, insert, ExprField, QueryInsert, Select, query } from '../src/';
+import { schema, insert, ExprField, QueryInsert, Select, query } from '../src/';
 import { expectExprType, expectType } from './helper';
 
 
@@ -6,7 +6,7 @@ import { expectExprType, expectType } from './helper';
 
 describe('Select', () => {
 
-  const Task = defineSource({
+  const Task = schema({
     name: 'task',
     fields: {
       id: 'INT',
@@ -18,7 +18,7 @@ describe('Select', () => {
     },
   });
 
-  const People = defineSource({
+  const People = schema({
     name: 'people',
     fields: {
       id: 'INT',

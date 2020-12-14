@@ -90,8 +90,8 @@ export class QueryInsert<
     return this._returning;
   }
 
-  public with<WN extends Name, WS extends Selects>(query: ExprProvider<W, S, NamedSource<WN, WS>>, recursive?: ExprProvider<MergeObjects<W, Record<WN, WS>>, S, Source<WS>>, all?: boolean): QueryInsert<MergeObjects<W, Record<WN, WS>>, I, S, C, R> {
-    const source = this._exprs.provide(query as any);
+  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<W, S, NamedSource<WN, WS>>, recursive?: ExprProvider<MergeObjects<W, Record<WN, WS>>, S, Source<WS>>, all?: boolean): QueryInsert<MergeObjects<W, Record<WN, WS>>, I, S, C, R> {
+    const source = this._exprs.provide(sourceProvider as any);
 
     this.addWith(source as any);
 
