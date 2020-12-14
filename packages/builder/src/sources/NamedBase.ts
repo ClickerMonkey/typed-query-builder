@@ -2,6 +2,7 @@ import { Name, Selects, SourceFieldsFromSelects } from "../Types";
 import { NamedSource } from "./Named";
 import { Source } from "./Source";
 import { createFields } from '../fns';
+import { createFieldsFactory, SourceFieldsFactory } from "..";
 
 
 export class NamedSourceBase<N extends Name, S extends Selects> implements NamedSource<N, S>
@@ -24,6 +25,10 @@ export class NamedSourceBase<N extends Name, S extends Selects> implements Named
 
   public getFields(): SourceFieldsFromSelects<S> {
     return createFields(this.name, this.source.getSelects());
+  }
+
+  public getFieldsFactory(): SourceFieldsFactory<S> {
+    return createFieldsFactory(this.source.getSelects(), this.getFields());
   }
 
 }

@@ -1,4 +1,3 @@
-import { Expr } from './exprs/Expr';
 import { ExprFunction } from './exprs/Function';
 import { DataTypeBox, DataTypeCircle, DataTypeLine, DataTypePath, DataTypePoint, DataTypePolygon, DataTypeSegment } from './DataTypes';
 import { ExprScalar, ExprInput } from './exprs/Scalar';

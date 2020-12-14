@@ -1,18 +1,24 @@
 import { Selects, Sources } from '../Types';
-import { QuerySelectBase } from './Base';
 import { Select } from '../select';
+import { Expr } from '../exprs';
+import { QueryCriteria } from './Criteria';
+import { ExprKind } from '../Kind';
 
 
-export class QuerySelectFirstValue<T extends Sources, S extends Selects, R> extends QuerySelectBase<T, S, R>
+export class QuerySelectFirstValue<T extends Sources, S extends Selects, R> extends Expr<R>
 {
   
   public static readonly id = 'svalue';
 
   public constructor(
-    base: QuerySelectBase<T, S, any>,
+    public criteria: QueryCriteria<T, S>,
     public value: Select<any, R>
   ) {
-    super( base as any );
+    super();
+  }
+
+  public getKind(): ExprKind {
+    return ExprKind.QUERY_FIRST_VALUE;
   }
   
 }

@@ -1,10 +1,22 @@
+import { Expr } from '../exprs';
+import { ExprKind } from '../Kind';
 import { Selects, Sources } from '../Types';
-import { QuerySelectBase } from './Base';
+import { QueryCriteria } from './Criteria';
 
 
-export class QuerySelectExistential<T extends Sources, S extends Selects> extends QuerySelectBase<T, S, 1 | null>
+export class QuerySelectExistential<T extends Sources, S extends Selects> extends Expr<1 | null>
 { 
   
   public static readonly id = 's1';
+
+  public constructor(
+    public _criteria: QueryCriteria<T, S>
+  ) {
+    super();
+  }
+
+  public getKind(): ExprKind {
+    return ExprKind.QUERY_EXISTENTIAL;
+  }
 
 }

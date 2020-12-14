@@ -1,18 +1,19 @@
 import { keys } from '../fns';
-import { Selects, SelectsFromObject, SelectsKeys, ObjectFromSelects, Cast } from '../Types';
+import { Selects, SelectsKeys, ObjectFromSelects } from '../Types';
 import { Source } from './Source';
 import { ExprKind } from '../Kind';
-
-
-export function defineValues<T extends Record<string, any>>(constants: T[], columns?: Array<keyof T>): Source<Cast<SelectsFromObject<T>, Selects>>
-{
-  return new SourceValues<Cast<SelectsFromObject<T>, Selects>>(constants as any, columns || SourceValues.calculateColumns(constants) as any);
-}
+import { SelectsFromTypeAndColumns } from '..';
 
 export class SourceValues<S extends Selects> extends Source<S> 
 {
 
-  public static calculateColumns<T>(constants: T[]): Array<keyof T> {
+  public static create<T extends Record<string, any>, C extends Array<keyof T>>(constants: T[], columns?: C): Source<SelectsFromTypeAndColumns<T, C>>
+  {
+    return new SourceValues<SelectsFromTypeAndColumns<T, C>>(constants as any, columns || SourceValues.calculateColumns(constants) as any);
+  }
+
+  public static calculateColumns<T>(constants: T[]): Array<keyof T> 
+  {
     const columnMap: Record<keyof T, true> = Object.create(null);
 
     for (const c of constants) {

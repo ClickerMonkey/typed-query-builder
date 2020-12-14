@@ -1,124 +1,120 @@
-import { isArray, isString, mapRecord } from '../fns';
-import { ObjectFromSelects, OrderDirection, Selects, SelectsKeys, SelectsNameless, SetOperation, Simplify } from '../Types';
+import { isArray, isString } from '../fns';
+import { OrderDirection, Selects, SelectsKeys, SetOperation } from '../Types';
 import { Expr, ExprField, ExprProvider } from '../exprs';
 import { OrderBy } from '../Order';
-import { createFieldsFactory, SourcesCast } from '../sources';
-import { QuerySelectBase } from './Base';
+import { NamedSourceBase, Source } from '../sources';
+import { ExprKind } from '../Kind';
+import { QueryCriteria } from './Criteria';
 
 
-export type QuerySetType<S extends Selects> = SourcesCast<Simplify<Record<'set', ObjectFromSelects<S>>>>;
 
-export type QuerySetQuery<S extends Selects> = QuerySelectBase<any, SelectsNameless<S>, any>;
-
-export class QuerySet<S extends Selects> extends QuerySelectBase<QuerySetType<S>, S, ObjectFromSelects<S>[]>
+export class QuerySet<S extends Selects> extends Source<S>
 {
   
-  public static readonly id = 'sset';
-
-  public _queries: QuerySetQuery<S>[];
-  public _all: boolean[];
-
+  public static readonly id = ExprKind.QUERY_SET_OPERATION;
+  
   public static create<S extends Selects>(
     op: SetOperation,
-    first: QuerySelectBase<any, S, any>,
-    second: QuerySetQuery<S>,
+    first: Source<S>,
+    second: Source<S>,
     all: boolean = false
   ) {
     return new QuerySet<S>(op, first, second, all);
   } 
 
+
+  public _criteria: QueryCriteria<{ set: S }, S>;
+  public _sources: Source<S>[];
+  public _all: boolean[];
+
   public constructor(
     public _op: SetOperation,
-    first: QuerySelectBase<any, S, any>,
-    second: QuerySetQuery<S>,
+    first: Source<S>,
+    second: Source<S>,
     all: boolean = false
   ) {
     super();
 
-    const root: QuerySelectBase<{ set: any }, any, any> = this as any;
-    const sourceFields = mapRecord( first._selectsExpr, (_, k) => new ExprField('set', k) ); 
-
-    root._selects = Object.values(sourceFields);
-    root._selectsExpr = sourceFields;
-    root._sourcesFields = {
-      set: createFieldsFactory(sourceFields as any),
-    };
-    root._sources = {
-      set: {
-        alias: 'set',
-        getFields: () => sourceFields as any,
-      },
-    };
-    
-    this._queries = [first as any, second];
+    this._sources = [first, second];
     this._all = [all];
+    this._criteria = new QueryCriteria();
+    this._criteria.addSelects(first.getSelects().map( s => new ExprField('set', s.alias )));
+    this._criteria.addSource(new NamedSourceBase('set', first) as any);
   }
 
-  public addSet(op: SetOperation, query: QuerySetQuery<S>, all: boolean = false): QuerySet<S>
+  public getKind(): ExprKind {
+    return ExprKind.QUERY_SET_OPERATION;
+  }
+
+  public getSelects(): S {
+    return this._sources[0].getSelects();
+  }
+
+  public addSet(op: SetOperation, source: Source<S>, all: boolean = false): QuerySet<S>
   {
     if (op === this._op) {
-      this._queries.push(query);
+      this._sources.push(source);
       this._all.push(all);
 
       return this;
     } else {
-      return QuerySet.create<S>(op, this, query, all);
+      return QuerySet.create<S>(op, this, source, all);
     }
   }
 
-  public union(query: QuerySetQuery<S>, all: boolean = false) {
+  public union(query: Source<S>, all: boolean = false) {
     return this.addSet('UNION', query, all);
   }
 
-  public unionAll(query: QuerySetQuery<S>) {
+  public unionAll(query: Source<S>) {
     return this.addSet('UNION', query, true);
   }
 
-  public intersect(query: QuerySetQuery<S>, all: boolean = false) {
+  public intersect(query: Source<S>, all: boolean = false) {
     return this.addSet('INTERSECT', query, all);
   }
 
-  public intersectAll(query: QuerySetQuery<S>) {
+  public intersectAll(query: Source<S>) {
     return this.addSet('INTERSECT', query, true);
   }
 
-  public except(query: QuerySetQuery<S>, all: boolean = false) {
+  public except(query: Source<S>, all: boolean = false) {
     return this.addSet('EXCEPT', query, all);
   }
 
-  public exceptAll(query: QuerySetQuery<S>) {
+  public exceptAll(query: Source<S>) {
     return this.addSet('EXCEPT', query, true);
   }
 
   public orderBy<K extends SelectsKeys<S>>(select: K, order?: OrderDirection, nullsLast?: boolean): this
-  public orderBy(values: ExprProvider<QuerySetType<S>, S, Expr<any> | Expr<any>[]>, order?: OrderDirection, nullsLast?: boolean): this
-  public orderBy<K extends SelectsKeys<S>>(values: K | ExprProvider<QuerySetType<S>, S, Expr<any> | Expr<any>[]>, order?: OrderDirection, nullsLast?: boolean): this {
+  public orderBy(values: ExprProvider<{ set: S }, S, Expr<any> | Expr<any>[]>, order?: OrderDirection, nullsLast?: boolean): this
+  public orderBy<K extends SelectsKeys<S>>(values: K | ExprProvider<{ set: S }, S, Expr<any> | Expr<any>[]>, order?: OrderDirection, nullsLast?: boolean): this {
     const resolved = isString(values)
-      ? this._selectsExpr[values as any]
-      : this._exprs.provide(values);
+      ? this._criteria.selectsExpr[values as any]
+      : this._criteria.exprs.provide(values);
     const resolvedArray = isArray(resolved)
       ? resolved
       : [ resolved ];
 
-    this._orderBy.push(...resolvedArray.map((value) => new OrderBy(value, order, nullsLast)));
+    this._criteria.orderBy.push(...resolvedArray.map((value) => new OrderBy(value, order, nullsLast)));
 
     return this;
   }
 
   public clearOrderBy(): this {
-    this._orderBy = [];
+    this._criteria.orderBy = [];
 
     return this;
   }
 
   public limit(limit?: number): this {
-    this._limit = limit;
+    this._criteria.limit = limit;
 
     return this;
   }
 
   public offset(offset?: number): this {
-    this._offset = offset;
+    this._criteria.offset = offset;
 
     return this;    
   }

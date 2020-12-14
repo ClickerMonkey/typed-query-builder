@@ -1,8 +1,7 @@
 import { Name, SourceFieldsFromSelects } from '.';
 import { ExprField } from './exprs';
-import { Select } from './select';
 import { SelectAliased } from './select/Aliased';
-import { ObjectKeys, Selects, SelectsRecord, SourceFields, SourceFieldsFactory, SourceFieldsFunctions } from './Types';
+import { ObjectKeys, Selects, SourceFieldsFactory, SourceFieldsFunctions } from './Types';
 
 export function isString(x: any): x is string 
 {

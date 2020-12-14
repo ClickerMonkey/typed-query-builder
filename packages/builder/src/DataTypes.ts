@@ -1,4 +1,5 @@
-import { Json, Simplify } from './Types';
+import { SelectsFromObject } from '.';
+import { Cast, Json, Selects, Simplify } from './Types';
 
 
 export type defineType<F extends DataTypeInputMap> = Simplify<DataTypeInputMapTypes<F>>;
@@ -8,6 +9,9 @@ export type DataTypeInputMap = Record<string, DataTypeInputs>;
 export type DataTypeInputMapTypes<F extends DataTypeInputMap> = {
   [P in keyof F]: DataTypeInputType<F[P]>
 };
+
+export type DataTypeInputMapSelects<F extends DataTypeInputMap> = 
+  Cast<SelectsFromObject<DataTypeInputMapTypes<F>>, Selects>;
 
 export type DataTypeInputs = 
   'BOOLEAN' | 

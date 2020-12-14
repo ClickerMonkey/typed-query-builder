@@ -1,16 +1,18 @@
-import { Expr, Select, ExprValueObjects, ExprValueTuples, MergeObjects, UndefinedKeys, SelectWithKey, UnionToIntersection, UnionToTuple, ArrayToTuple, ColumnsToTuple, AppendTuples, ObjectKeys, SelectsKeys, SelectsValues, SelectsNameless, ObjectFromSelects, SelectsExprs, JoinTuples, SourceFieldsFunctions, createFieldsFactory, ExprField, SelectsFromObject } from '../src/';
+import { Expr, Select, ExprValueObjects, ExprValueTuples, MergeObjects, UndefinedKeys, SelectWithKey, UnionToIntersection, UnionToTuple, ArrayToTuple, ColumnsToTuple, AppendTuples, ObjectKeys, SelectsKeys, SelectsValues, SelectsNameless, ObjectFromSelects, SelectsExprs, JoinTuples, ExprField, SelectsFromObject, values, SelectsWithKey, Source, NamedSource } from '../src/';
 import { expectType, expectTypeMatch } from './helper';
 
 
 describe('Types', () => {
 
     it('MergeObjects', () => {
-        expectTypeMatch<{ x: number, y: number }, MergeObjects<{x: number }, { y: number }>>(true);
-        expectTypeMatch<{ x: number, y: string }, MergeObjects<{x: number, y: number }, { y: string }>>(true);
-        expectTypeMatch<{ x: number, y: string | undefined }, MergeObjects<{x: number, y: number }, { y?: string }>>(true);
         expectTypeMatch<{}, MergeObjects<{}, {}>>(true);
         expectTypeMatch<{ x: number }, MergeObjects<{}, { x: number }>>(true);
         expectTypeMatch<{ x: number }, MergeObjects<{ x: number }, {}>>(true);
+        expectTypeMatch<{ x: number, y: number }, MergeObjects<{x: number }, { y: number }>>(true);
+        expectTypeMatch<{ x: number, y?: number }, MergeObjects<{x: number }, { y?: number }>>(true);
+        expectTypeMatch<{ x: number, y: string }, MergeObjects<{x: number, y: number }, { y: string }>>(true);
+        expectTypeMatch<{ x: number, y: string, z: Date }, MergeObjects<{x: number, y: number }, { y: string, z: Date }>>(true);
+        expectTypeMatch<{ x: number, y: string | number }, MergeObjects<{x: number, y: number }, { y?: string }>>(true);
     });
 
     it('UndefinedKeys', () => {
@@ -119,39 +121,83 @@ describe('Types', () => {
         expectTypeMatch<[string, string, boolean, Date], JoinTuples<[[string], [string, boolean], Date, []]>>(true);
     });
 
-    it('SourceFieldsFunctions', () => {
-        interface Person {
-            id: number;
-            name: string;
-            age: number;
-        }
+    it('SourceFieldsFunctions simple', () => {
+        const vals = values([{ id: 0, name: 'Task', age: 31 }]);
 
-        const fn: SourceFieldsFunctions<Person> = createFieldsFactory({
-            id: new ExprField('person', 'id'),
-            name: new ExprField('person', 'name'),
-            age: new ExprField('person', 'age'),
-        });
+        expectType<Source<[Select<"id", number>, Select<"name", string>, Select<"age", number>]>>(vals);
 
-        expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number>]>(fn.all());
-        expectType<[ExprField<"id", number>, ExprField<"age", number>]>(fn.only(['age', 'id']));
-        expectType<[ExprField<"id", number>, ExprField<"name", string>]>(fn.except(['age']));
+        const source = vals.as('Person');
+
+        expectType<NamedSource<"Person", [Select<"id", number>, Select<"name", string>, Select<"age", number>]>>(source);
+
+        const fields = source.getFieldsFactory();
+
+        expectType<ExprField<'id', number>>(fields.id);
+        expectType<ExprField<'name', string>>(fields.name);
+        expectType<ExprField<'age', number>>(fields.age);
+        expectType<Select<'newId', number>>(fields.id.as('newId'));
+
+        expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number>]>(fields.all());
+
+        expectType<[]>(fields.only());
+        expectType<[]>(fields.only([]));
+        expectType<[Select<"id", number>, Select<"age", number>]>(fields.only('age', 'id'));
+        expectType<[Select<"id", number>, Select<"age", number>]>(fields.only(['age', 'id']));
+
+        expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number>]>(fields.except());
+        expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number>]>(fields.except([]));
+        expectType<[Select<"id", number>]>(fields.except('age', 'name'));
+        expectType<[Select<"id", number>]>(fields.except(['age', 'name']));
+        expectType<[Select<"id", number>, Select<"name", string>]>(fields.except('age'));
+        expectType<[Select<"id", number>, Select<"name", string>]>(fields.except(['age']));
+
+        expectType<[]>(fields.mapped({}));
+        expectType<[Select<"newId", number>, Select<"newAge", number>]>(fields.mapped({ newId: 'id', newAge: 'age' }));
+    });
+
+    it('SourceFieldsFunctions optionals', () => {
+        const vals = values([
+            { id: 0, name: 'Task', age: 31 },
+            { id: 0, name: 'Task' },
+        ]);
+
+        expectType<Source<[Select<"id", number>, Select<"name", string>, Select<"age", number | undefined>]>>(vals);
+
+        const source = vals.as('Person');
+
+        expectType<NamedSource<"Person", [Select<"id", number>, Select<"name", string>, Select<"age", number | undefined>]>>(source);
+
+        const fields = source.getFieldsFactory();
+
+        expectType<ExprField<'id', number>>(fields.id);
+        expectType<ExprField<'name', string>>(fields.name);
+        expectType<ExprField<'age', number | undefined>>(fields.age);
+        expectType<Select<'newId', number>>(fields.id.as('newId'));
+
+        expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number | undefined>]>(fields.all());
+
+        expectType<[]>(fields.only());
+        expectType<[]>(fields.only([]));
+        expectType<[Select<"id", number>, Select<"age", number | undefined>]>(fields.only('age', 'id'));
+        expectType<[Select<"id", number>, Select<"age", number | undefined>]>(fields.only(['age', 'id']));
+
+        expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number | undefined>]>(fields.except());
+        expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number | undefined>]>(fields.except([]));
+        expectType<[Select<"id", number>]>(fields.except('age', 'name'));
+        expectType<[Select<"id", number>]>(fields.except(['age', 'name']));
+        expectType<[Select<"id", number>, Select<"name", string>]>(fields.except('age'));
+        expectType<[Select<"id", number>, Select<"name", string>]>(fields.except(['age']));
+
+        expectType<[]>(fields.mapped({}));
+        expectType<[Select<"newId", number>, Select<"newAge", number | undefined>]>(fields.mapped({ newId: 'id', newAge: 'age' }));
+    });
+
+    it('SelectsWithKey', () => {
+        type TestSelects = [Select<'name', string>, Select<'id', number>, Select<'done', boolean>];
+
+        // expectTypeMatch<[Select<"name", string>, Select<"id", number>], SelectsWithKey<TestSelects, 'name' | 'id'>>(true);
     });
     
-    type AB = SourceFieldsFunctions<[Select<'name', string>, Select<'id', number>, Select<'done', boolean>]>;
-const ab: AB = null as any;
-const ac = ab.all();
-const ah = ab.only();
-const ad = ab.only('name', 'id');
-const ae = ab.only(['name', 'done']);
-const al = ab.except('id');
-const am = ab.except(['name']);
-const af = ab.except();
-const ag = ab.except([]);
-const ai = ab.mapped({ 'New Name': 'name' });
-const aj = ab.mapped({ 'New Name': 'name', 'New Done': 'done' });
-const ak = ab.mapped({});
-
-
     it('SelectsFromObject', () => {
       type A = {};
       type B = { x: number };
@@ -162,8 +208,8 @@ const ak = ab.mapped({});
       expectTypeMatch<[], SelectsFromObject<A>>(true);
       expectTypeMatch<[Select<"x", number>], SelectsFromObject<B>>(true);
       expectTypeMatch<[Select<"x", number>, Select<"y", string>], SelectsFromObject<C>>(true);
-      expectTypeMatch<[Select<"x", number>, Select<"y", string>], SelectsFromObject<D>>(true);
-      expectTypeMatch<[Select<"y", string>, Select<"w", number>], SelectsFromObject<E>>(true);
+      expectTypeMatch<[Select<"x", number>, Select<"y", string | undefined>], SelectsFromObject<D>>(true);
+      expectTypeMatch<[Select<"y", string>, Select<"w", number | undefined>], SelectsFromObject<E>>(true);
     });
 
 });
