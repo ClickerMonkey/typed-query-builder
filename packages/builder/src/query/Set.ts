@@ -1,5 +1,5 @@
 import { isArray, isString } from '../fns';
-import { OrderDirection, Selects, SelectsKeys, SetOperation } from '../Types';
+import { OrderDirection, Selects, SelectsKeys, SetOperation, SourceCompatible } from '../Types';
 import { Expr, ExprField, ExprProvider } from '../exprs';
 import { OrderBy } from '../Order';
 import { NamedSourceBase, Source } from '../sources';
@@ -16,7 +16,7 @@ export class QuerySet<S extends Selects> extends Source<S>
   public static create<S extends Selects>(
     op: SetOperation,
     first: Source<S>,
-    second: Source<S>,
+    second: SourceCompatible<S>,
     all: boolean = false
   ) {
     return new QuerySet<S>(op, first, second, all);
@@ -24,22 +24,23 @@ export class QuerySet<S extends Selects> extends Source<S>
 
 
   public _criteria: QueryCriteria<{ set: S }, S>;
-  public _sources: Source<S>[];
+  public _sources: SourceCompatible<S>[];
   public _all: boolean[];
 
   public constructor(
     public _op: SetOperation,
-    first: Source<S>,
-    second: Source<S>,
+    public _first: Source<S>,
+    second: SourceCompatible<S>,
     all: boolean = false
   ) {
     super();
 
-    this._sources = [first, second];
+
+    this._sources = [_first as any, second];
     this._all = [all];
     this._criteria = new QueryCriteria();
-    this._criteria.addSelects(first.getSelects().map( s => new ExprField('set', s.alias )));
-    this._criteria.addSource(new NamedSourceBase('set', first) as any);
+    this._criteria.addSelects(_first.getSelects().map( s => new ExprField('set', s.alias )));
+    this._criteria.addSource(new NamedSourceBase('set', _first) as any);
   }
 
   public getKind(): ExprKind {
@@ -47,10 +48,10 @@ export class QuerySet<S extends Selects> extends Source<S>
   }
 
   public getSelects(): S {
-    return this._sources[0].getSelects();
+    return this._first.getSelects();
   }
 
-  public addSet(op: SetOperation, source: Source<S>, all: boolean = false): QuerySet<S>
+  public addSet(op: SetOperation, source: SourceCompatible<S>, all: boolean = false): QuerySet<S>
   {
     if (op === this._op) {
       this._sources.push(source);
@@ -62,27 +63,27 @@ export class QuerySet<S extends Selects> extends Source<S>
     }
   }
 
-  public union(query: Source<S>, all: boolean = false) {
+  public union(query: SourceCompatible<S>, all: boolean = false) {
     return this.addSet('UNION', query, all);
   }
 
-  public unionAll(query: Source<S>) {
+  public unionAll(query: SourceCompatible<S>) {
     return this.addSet('UNION', query, true);
   }
 
-  public intersect(query: Source<S>, all: boolean = false) {
+  public intersect(query: SourceCompatible<S>, all: boolean = false) {
     return this.addSet('INTERSECT', query, all);
   }
 
-  public intersectAll(query: Source<S>) {
+  public intersectAll(query: SourceCompatible<S>) {
     return this.addSet('INTERSECT', query, true);
   }
 
-  public except(query: Source<S>, all: boolean = false) {
+  public except(query: SourceCompatible<S>, all: boolean = false) {
     return this.addSet('EXCEPT', query, all);
   }
 
-  public exceptAll(query: Source<S>) {
+  public exceptAll(query: SourceCompatible<S>) {
     return this.addSet('EXCEPT', query, true);
   }
 

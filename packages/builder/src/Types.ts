@@ -268,21 +268,17 @@ export type SourcesFieldsFactory<S extends Sources> = {
 export interface SourceFieldsFunctions<S extends Selects>
 {
   all(): S;
-  _all(): S;
   
   only<C extends SelectsKey<S>>(only: C[]): SelectsWithKey<S, C>;
   only<C extends SelectsKey<S> = never>(...only: C[]): SelectsWithKey<S, C>;
-  _only<C extends SelectsKey<S>>(only: C[]): SelectsWithKey<S, C>;  
-  _only<C extends SelectsKey<S>>(...only: C[]): SelectsWithKey<S, C>;
 
-  except<C extends SelectsKey<S>>(exclude: C[]): SelectsWithKey<S, Exclude<SelectsKey<S>, C>>;
-  except<C extends SelectsKey<S> = never>(...exclude: C[]): SelectsWithKey<S, Exclude<SelectsKey<S>, C>>;
-  _except<C extends SelectsKey<S>>(exclude: C[]): SelectsWithKey<S, Exclude<SelectsKey<S>, C>>;
-  _except<C extends SelectsKey<S>>(...exclude: C[]): SelectsWithKey<S, Exclude<SelectsKey<S>, C>>;
+  exclude<C extends SelectsKey<S>>(exclude: C[]): SelectsWithKey<S, Exclude<SelectsKey<S>, C>>;
+  exclude<C extends SelectsKey<S> = never>(...exclude: C[]): SelectsWithKey<S, Exclude<SelectsKey<S>, C>>;
 
   mapped<K extends SelectsKey<S>, M extends Record<string, K>>(map: M): SelectsMap<S, K, M>;
-  _mapped<K extends SelectsKey<S>, M extends Record<string, K>>(map: M): SelectsMap<S, K, M>;
 }
+
+export type SourceCompatible<S extends Selects> = Source<SelectsNameless<S>>;
 
 export type SourceFieldsFactory<S extends Selects> = MergeObjects<SourceFieldsFunctions<S>, SourceFieldsFromSelects<S>>;
 

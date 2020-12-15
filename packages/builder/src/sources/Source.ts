@@ -1,4 +1,4 @@
-import { Selects, Name } from "../Types";
+import { Selects, Name, SourceCompatible } from "../Types";
 import { Expr } from "../exprs";
 import { QuerySet } from "../query";
 import { NamedSource } from "./Named";
@@ -8,7 +8,7 @@ import { NamedSourceBase } from "./NamedBase";
 
 export abstract class Source<S extends Selects> extends Expr<S[]>
 {
- 
+   
   public abstract getSelects(): S;
 
   public as<N extends Name>(name: N): NamedSource<N, S>
@@ -16,32 +16,32 @@ export abstract class Source<S extends Selects> extends Expr<S[]>
     return new NamedSourceBase(name, this);
   }
 
-  public union(query: Source<S>, all: boolean = false): QuerySet<S>
+  public union(query: SourceCompatible<S>, all: boolean = false): QuerySet<S>
   {
     return QuerySet.create('UNION', this, query, all);
   }
 
-  public unionAll(query: Source<S>): QuerySet<S>
+  public unionAll(query: SourceCompatible<S>): QuerySet<S>
   {
     return QuerySet.create('UNION', this, query, true);
   }
 
-  public intersect(query: Source<S>, all: boolean = false): QuerySet<S>
+  public intersect(query: SourceCompatible<S>, all: boolean = false): QuerySet<S>
   {
     return QuerySet.create('INTERSECT', this, query, all);
   }
 
-  public intersectAll(query: Source<S>): QuerySet<S>
+  public intersectAll(query: SourceCompatible<S>): QuerySet<S>
   {
     return QuerySet.create('INTERSECT', this, query, true);
   }
 
-  public except(query: Source<S>, all: boolean = false): QuerySet<S>
+  public except(query: SourceCompatible<S>, all: boolean = false): QuerySet<S>
   {
     return QuerySet.create('EXCEPT', this, query, all);
   }
 
-  public exceptAll(query: Source<S>): QuerySet<S>
+  public exceptAll(query: SourceCompatible<S>): QuerySet<S>
   {
     return QuerySet.create('EXCEPT', this, query, true);
   }

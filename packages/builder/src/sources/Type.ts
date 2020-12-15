@@ -1,14 +1,16 @@
 import { DataTypeInputMap, DataTypeInputMapSelects } from '../DataTypes';
-import { createFields, createFieldsFactory } from '../fns';
-import { AppendTuples, Name, Selects, MergeObjects, SourceFieldsFactory, SourceFieldsFromSelects } from '../Types';
+import { createFields, createFieldsFactory, isArray } from '../fns';
+import { AppendTuples, Name, Selects, MergeObjects, SourceFieldsFromSelects, SourceFieldsFunctions, SourceFieldsFactory, SelectsKey, SelectsWithKey, SelectsMap } from '../Types';
 import { Source } from './Source';
 import { NamedSource } from './Named';
 import { ExprKind } from '../Kind';
-import { Schema, SchemaInput } from './Schema';
+import { SchemaInput } from './Schema';
+import { ExprField } from '../exprs';
+import { SelectAliased } from '../select';
 
 
 
-export class SourceType<A extends Name, S extends Selects, F extends DataTypeInputMap> extends Source<S> implements NamedSource<A, S>
+export class SourceType<N extends Name, S extends Selects, F extends DataTypeInputMap> extends Source<S> implements NamedSource<N, S>, SourceFieldsFunctions<S>
 {
   
   public static create<N extends Name, F extends DataTypeInputMap>(input: SchemaInput<N, F>): SourceType<N, DataTypeInputMapSelects<F>, F> 
@@ -16,17 +18,26 @@ export class SourceType<A extends Name, S extends Selects, F extends DataTypeInp
     return new SourceType(input);
   }
 
+  public name: N;
+  public table: Name;
+  public primary: Name[];
+  public fieldType: F;
+  public fieldColumn: { [P in keyof F]?: string };
+  public fields: SourceFieldsFactory<S>;
+  protected fieldMap: SourceFieldsFromSelects<S>;
+  protected selects: S;
 
-  public _schema: Schema<A, S, F>;
-
-  public constructor(input: SchemaInput<A, F>) {
+  public constructor(input: SchemaInput<N, F>) {
     super();
 
-    this._schema = new Schema(input);
-  }
-
-  public getName(): A {
-    return this._schema.name;
+    this.name = input.name;
+    this.table = input.table || input.name;
+    this.fieldType = input.fields;
+    this.fieldColumn = input.fieldColumn || {};
+    this.primary = input.primary || [Object.keys(input.fields)[0]];
+    this.selects = Object.keys(input.fields).map( field => new ExprField( input.name, field ) ) as any;
+    this.fieldMap = createFields(this.name, this.selects);
+    this.fields = createFieldsFactory(this.selects, this.fieldMap);
   }
 
   public getKind(): ExprKind {
@@ -34,7 +45,11 @@ export class SourceType<A extends Name, S extends Selects, F extends DataTypeInp
   }
 
   public getSelects(): S {
-    return this._schema.selects;
+    return this.selects;
+  }
+
+  public getName(): N {
+    return this.name;
   }
 
   public getSource(): Source<S> {
@@ -42,27 +57,57 @@ export class SourceType<A extends Name, S extends Selects, F extends DataTypeInp
   }
 
   public getFields(): SourceFieldsFromSelects<S> {
-    return createFields(this._schema.name, this.getSelects());
+    return this.fieldMap;
   }
 
   public getFieldsFactory(): SourceFieldsFactory<S> {
-    return createFieldsFactory(this.getSelects(), this.getFields());
+    return this.fields;
   }
 
   public extend<E extends Name, EF extends DataTypeInputMap>(input: SchemaInput<E, EF>): SourceType<E, AppendTuples<S, DataTypeInputMapSelects<EF>>, MergeObjects<F, EF>> {
     return new SourceType({
       name: input.name,
-      table: input.table || this._schema.table,
+      table: input.table || this.table,
       primary: input.primary,
       fields: {
-        ...this._schema.fields,
+        ...this.fieldType,
         ...input.fields,
       },
       fieldColumn: {
-        ...this._schema.fieldColumn,
+        ...this.fieldColumn,
         ...(input.fieldColumn || {}),
       },
     } as any) as any;
+  }
+
+  public all(): S {
+    return this.selects;
+  }
+  
+  public only<C extends SelectsKey<S>>(only: C[]): SelectsWithKey<S, C>
+  public only<C extends SelectsKey<S> = never>(...onlyInput: C[]): SelectsWithKey<S, C>
+  public only<C extends SelectsKey<S> = never>(...onlyInput: C[]): SelectsWithKey<S, C> {
+    const only = (isArray(onlyInput[0]) ? onlyInput[0] : onlyInput) as C[];
+
+    return only.map( (field) => this.fieldMap[field as any] ) as any;
+  }
+
+  public exclude<C extends SelectsKey<S>>(exclude: C[]): SelectsWithKey<S, Exclude<SelectsKey<S>, C>>
+  public exclude<C extends SelectsKey<S> = never>(...excludeInput: C[]): SelectsWithKey<S, Exclude<SelectsKey<S>, C>> {
+    const exclude = (isArray(excludeInput[0]) ? excludeInput[0] : excludeInput) as C[];
+
+    return this.selects.filter( s => exclude.indexOf(s.alias as any) === -1 ) as any;
+  }
+
+  public mapped<K extends SelectsKey<S>, M extends Record<string, K>>(map: M): SelectsMap<S, K, M> {
+    const out = [];
+
+    for (const prop in map)
+    {
+      out.push(new SelectAliased(prop, this.fieldMap[map[prop] as any]));
+    }
+
+    return out as any;
   }
   
 }

@@ -144,12 +144,12 @@ describe('Types', () => {
         expectType<[Select<"id", number>, Select<"age", number>]>(fields.only('age', 'id'));
         expectType<[Select<"id", number>, Select<"age", number>]>(fields.only(['age', 'id']));
 
-        expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number>]>(fields.except());
-        expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number>]>(fields.except([]));
-        expectType<[Select<"id", number>]>(fields.except('age', 'name'));
-        expectType<[Select<"id", number>]>(fields.except(['age', 'name']));
-        expectType<[Select<"id", number>, Select<"name", string>]>(fields.except('age'));
-        expectType<[Select<"id", number>, Select<"name", string>]>(fields.except(['age']));
+        expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number>]>(fields.exclude());
+        expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number>]>(fields.exclude([]));
+        expectType<[Select<"id", number>]>(fields.exclude('age', 'name'));
+        expectType<[Select<"id", number>]>(fields.exclude(['age', 'name']));
+        expectType<[Select<"id", number>, Select<"name", string>]>(fields.exclude('age'));
+        expectType<[Select<"id", number>, Select<"name", string>]>(fields.exclude(['age']));
 
         expectType<[]>(fields.mapped({}));
         expectType<[Select<"newId", number>, Select<"newAge", number>]>(fields.mapped({ newId: 'id', newAge: 'age' }));
@@ -181,12 +181,12 @@ describe('Types', () => {
         expectType<[Select<"id", number>, Select<"age", number | undefined>]>(fields.only('age', 'id'));
         expectType<[Select<"id", number>, Select<"age", number | undefined>]>(fields.only(['age', 'id']));
 
-        expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number | undefined>]>(fields.except());
-        expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number | undefined>]>(fields.except([]));
-        expectType<[Select<"id", number>]>(fields.except('age', 'name'));
-        expectType<[Select<"id", number>]>(fields.except(['age', 'name']));
-        expectType<[Select<"id", number>, Select<"name", string>]>(fields.except('age'));
-        expectType<[Select<"id", number>, Select<"name", string>]>(fields.except(['age']));
+        expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number | undefined>]>(fields.exclude());
+        expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number | undefined>]>(fields.exclude([]));
+        expectType<[Select<"id", number>]>(fields.exclude('age', 'name'));
+        expectType<[Select<"id", number>]>(fields.exclude(['age', 'name']));
+        expectType<[Select<"id", number>, Select<"name", string>]>(fields.exclude('age'));
+        expectType<[Select<"id", number>, Select<"name", string>]>(fields.exclude(['age']));
 
         expectType<[]>(fields.mapped({}));
         expectType<[Select<"newId", number>, Select<"newAge", number | undefined>]>(fields.mapped({ newId: 'id', newAge: 'age' }));
@@ -195,7 +195,7 @@ describe('Types', () => {
     it('SelectsWithKey', () => {
         type TestSelects = [Select<'name', string>, Select<'id', number>, Select<'done', boolean>];
 
-        // expectTypeMatch<[Select<"name", string>, Select<"id", number>], SelectsWithKey<TestSelects, 'name' | 'id'>>(true);
+        expectTypeMatch<[Select<"name", string>, Select<"id", number>], SelectsWithKey<TestSelects, 'name' | 'id'>>(true);
     });
     
     it('SelectsFromObject', () => {

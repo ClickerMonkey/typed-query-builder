@@ -1,8 +1,9 @@
 import { QuerySelect } from './query/Select';
 import { QueryInsert } from './query/Insert';
-import { MergeObjects, Name, Selects, SelectsKeys, SourceFieldsFactory, SelectsFromTypeAndColumns, Sources, Simplify } from './Types';
+import { Name, Selects, SelectsKeys, SelectsFromTypeAndColumns, Sources, NamedSourcesRecord, NamedSourceRecord } from './Types';
 import { DataTypeInputMap, DataTypeInputMapSelects } from './DataTypes';
-import { SchemaInput, Source, SourceType, SourceValues } from './sources';
+import { NamedSource, SchemaInput, Source, SourceType, SourceValues } from './sources';
+import { ExprProvider } from './exprs';
 
 
 
@@ -12,6 +13,10 @@ export function query<
 >(): QuerySelect<T, S> 
 {
   return QuerySelect.create();
+}
+
+export function from<FN extends Name, FS extends Selects>(source: ExprProvider<{}, [], NamedSource<FN, FS>>): QuerySelect<Record<FN, FS>, []> { 
+  return QuerySelect.create().from(source) as any;
 }
 
 export function insert<
@@ -31,12 +36,11 @@ export function values<
   return SourceValues.create(constants, columns);
 }
 
-export function schema<
+export function define<
   N extends Name, 
   F extends DataTypeInputMap
->(input: SchemaInput<N, F>): Simplify<MergeObjects<SourceType<N, DataTypeInputMapSelects<F>, F>, SourceFieldsFactory<DataTypeInputMapSelects<F>>>>
+>(input: SchemaInput<N, F>): SourceType<N, DataTypeInputMapSelects<F>, F>
 {
-  const source = new SourceType(input);
-
-  return Object.assign(source, source.getFieldsFactory()) as any;
+  return new SourceType(input);
 }
+

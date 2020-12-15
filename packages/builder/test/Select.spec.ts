@@ -1,12 +1,12 @@
-import { schema, Select, query, UnionToTuple } from '../src/';
-import { expectExprType, expectSelect, expectType, expectTypeMatch } from './helper';
+import { define, query, from } from '../src/';
+import { expectExprType, expectSelect } from './helper';
 
 
 // tslint:disable: no-magic-numbers
 
 describe('Select', () => {
 
-  const Task = schema({
+  const Task = define({
     name: 'task',
     fields: {
       id: 'INT',
@@ -15,6 +15,17 @@ describe('Select', () => {
       doneAt: 'TIMESTAMP',
       parentId: 'INT',
     },
+  });
+  
+  const TaskField = Task.fields;
+
+  it('simple', () => {
+    const q = from(Task)
+      .select(Task.all())
+      .where([
+        TaskField.done.isTrue()
+      ])
+    ;
   });
 
 

@@ -1,4 +1,4 @@
-export * from './Base';
+export * from './Criteria';
 export * from './Existential';
 export * from './First';
 export * from './FirstValue';

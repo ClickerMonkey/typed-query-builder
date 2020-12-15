@@ -62,43 +62,28 @@ export function createFields<S extends Selects>(source: Name, selects: S): Sourc
 
 export function createFieldsFactory<S extends Selects>(selects: S, fields: SourceFieldsFromSelects<S>): SourceFieldsFactory<S> 
 {
-  const all: SourceFieldsFunctions<S>['all'] = () => selects;
-
-  const only: SourceFieldsFunctions<S>['only'] = (...onlyInput: any[]) => 
-  {
-    const _only = isArray(onlyInput[0]) ? onlyInput[0] : onlyInput;
-
-    return _only.map( (field) => fields[field] ) as any;
-  };
-
-  const except: SourceFieldsFunctions<S>['except'] = (...exceptInput: any[]) => 
-  {
-    const _except = isArray(exceptInput[0]) ? exceptInput[0] : exceptInput;
-
-    return selects.filter( s => _except.indexOf(s.alias) === -1 ) as any;
-  };
-
-  const mapped: SourceFieldsFunctions<S>['mapped'] = (map) =>
-  {
-    const out = [];
-
-    for (const prop in map)
-    {
-      out.push(new SelectAliased(prop, fields[map[prop] as any]));
-    }
-
-    return out as any;
-  };
-
   const fns: SourceFieldsFunctions<S> = {
-    all,
-    _all: all,
-    only,
-    _only: only,
-    except,
-    _except: except,
-    mapped,
-    _mapped: mapped,
+    all: () => selects,
+    only: (...onlyInput: any[]) => {
+      const only = isArray(onlyInput[0]) ? onlyInput[0] : onlyInput;
+
+      return only.map( (field) => fields[field] ) as any;
+    },
+    exclude: (...excludeInput: any[]) => {
+      const exclude = isArray(excludeInput[0]) ? excludeInput[0] : excludeInput;
+
+      return selects.filter( s => exclude.indexOf(s.alias) === -1 ) as any;
+    },
+    mapped: (map) => {
+      const out = [];
+
+      for (const prop in map)
+      {
+        out.push(new SelectAliased(prop, fields[map[prop] as any]));
+      }
+  
+      return out as any;
+    },
   };
 
   return Object.assign(fns, fields) as any;

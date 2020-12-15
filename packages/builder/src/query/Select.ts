@@ -1,5 +1,5 @@
 import { isArray, isFunction, isString } from '../fns';
-import { SourcesFieldsFactory, Cast, AggregateType, JoinType, Selects, Sources, Name, OrderDirection, AppendTuples, MergeObjects, SelectsKeys, ArrayToTuple, LockType, SelectWithKey, SourcesSelectsOptional, SelectsOptional, NamedSourcesRecord, Simplify } from '../Types';
+import { SourcesFieldsFactory, Cast, AggregateType, JoinType, Selects, Sources, Name, OrderDirection, AppendTuples, MergeObjects, SelectsKeys, ArrayToTuple, LockType, SelectWithKey, SourcesSelectsOptional, SelectsOptional, NamedSourcesRecord, Simplify, NamedSourceRecord } from '../Types';
 import { ExprAggregate } from '../exprs/Aggregate';
 import { ExprProvider, ExprFactory } from '../exprs/Factory';
 import { Expr, ExprType } from '../exprs/Expr';
@@ -78,16 +78,9 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
     return this as any;
   }
 
-  public from<FS extends NamedSource<any, any>[]>(sources: ExprProvider<T, S, FS>): QuerySelect<Simplify<MergeObjects<T, NamedSourcesRecord<FS>>>, S>
-  public from<FS extends NamedSource<any, any>[]>(...sources: FS): QuerySelect<Simplify<MergeObjects<T, NamedSourcesRecord<FS>>>, S>
-  public from<FS extends NamedSource<any, any>[]>(...sourceInput: any[]): QuerySelect<Simplify<MergeObjects<T, NamedSourcesRecord<FS>>>, S> {
-    const sources: NamedSource<any, any>[] = isFunction(sourceInput[0])
-      ? this._criteria.exprs.provide(sourceInput[0])
-      : isArray(sourceInput[0])
-        ? sourceInput[0]
-        : sourceInput;
-
-    this._criteria.addSources(sources);
+  public from<FN extends Name, FS extends Selects>(source: ExprProvider<T, S, NamedSource<FN, FS>>): QuerySelect<Simplify<MergeObjects<T, Record<FN, FS>>>, S> {
+    
+    this._criteria.addSource(this._criteria.exprs.provide(source) as any);
 
     return this as any;
   }

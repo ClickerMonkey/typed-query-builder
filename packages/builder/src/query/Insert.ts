@@ -114,7 +114,7 @@ export class QueryInsert<
   public into<IN extends Name, IT extends Selects, IC extends SelectsKeys<IT>>(into: SourceType<IN, IT, any>, columns?: IC): QueryInsert<W, IN, IT, IC, []>
   {
     (this as any)._into = into;
-    (this as any)._columns = columns || into._schema.selects.map( s => s.alias );
+    (this as any)._columns = columns || into.getSelects().map( s => s.alias );
     (this as any)._withFields[into.getName()] = into.getFieldsFactory();
     
     return this as any;
@@ -143,12 +143,12 @@ export class QueryInsert<
     {
       if (this._into) 
       {
-        this._returning = this._into._schema.selects as any as R;
+        this._returning = this._into.getSelects() as any as R;
       }
     }
     else if (isArray<keyof S>(output) && isString(output[0]))
     {
-      this._returning.push(...output.map( alias => this._into._schema.selectMap[alias as any] ));
+      this._returning.push(...output.map( alias => this._into.getFields()[alias as any] ));
     }
     else
     {
