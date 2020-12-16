@@ -1,8 +1,8 @@
 import { QuerySelect } from './query/Select';
 import { QueryInsert } from './query/Insert';
-import { Name, Selects, SelectsKeys, SelectsFromTypeAndColumns, Sources, NamedSourcesRecord, NamedSourceRecord } from './Types';
+import { Name, Selects, SelectsKeys, SelectsFromTypeAndColumns, Sources, Simplify, SelectsKey } from './Types';
 import { DataTypeInputMap, DataTypeInputMapSelects } from './DataTypes';
-import { NamedSource, SchemaInput, Source, SourceType, SourceValues } from './sources';
+import { NamedSource, SourceTypeInput, Source, SourceType, SourceValues } from './sources';
 import { ExprProvider } from './exprs';
 
 
@@ -15,7 +15,7 @@ export function query<
   return QuerySelect.create();
 }
 
-export function from<FN extends Name, FS extends Selects>(source: ExprProvider<{}, [], NamedSource<FN, FS>>): QuerySelect<Record<FN, FS>, []> { 
+export function from<FN extends Name, FS extends Selects>(source: ExprProvider<{}, [], NamedSource<FN, FS>>): QuerySelect<Simplify<Record<FN, FS>>, []> { 
   return QuerySelect.create().from(source) as any;
 }
 
@@ -23,7 +23,7 @@ export function insert<
   W extends Sources = {}, 
   I extends Name = never,
   T extends Selects = [], 
-  C extends SelectsKeys<T> = never,
+  C extends SelectsKey<T> = never,
   R extends Selects = []
 >(): QueryInsert<W, I, T, C, R> {
   return new QueryInsert();
@@ -39,7 +39,7 @@ export function values<
 export function define<
   N extends Name, 
   F extends DataTypeInputMap
->(input: SchemaInput<N, F>): SourceType<N, DataTypeInputMapSelects<F>, F>
+>(input: SourceTypeInput<N, F>): SourceType<N, DataTypeInputMapSelects<F>, F>
 {
   return new SourceType(input);
 }

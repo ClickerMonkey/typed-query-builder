@@ -24,7 +24,7 @@ export class NamedSourceBase<N extends Name, S extends Selects> implements Named
   }
 
   public getFields(): SourceFieldsFromSelects<S> {
-    return createFields(this.name, this.source.getSelects());
+    return createFields(this, this.source.getSelects());
   }
 
   public getFieldsFactory(): SourceFieldsFactory<S> {

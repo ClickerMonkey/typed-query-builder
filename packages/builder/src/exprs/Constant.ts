@@ -14,7 +14,7 @@ export class ExprConstant<T> extends ExprScalar<T>
   }
 
   public getKind(): ExprKind {
-    return ExprKind.CONSTANTS;
+    return ExprKind.CONSTANT;
   }
 
   public isSimple(): boolean {

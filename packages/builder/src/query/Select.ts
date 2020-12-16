@@ -1,5 +1,5 @@
 import { isArray, isFunction, isString } from '../fns';
-import { SourcesFieldsFactory, Cast, AggregateType, JoinType, Selects, Sources, Name, OrderDirection, AppendTuples, MergeObjects, SelectsKeys, ArrayToTuple, LockType, SelectWithKey, SourcesSelectsOptional, SelectsOptional, NamedSourcesRecord, Simplify, NamedSourceRecord } from '../Types';
+import { SourcesFieldsFactory, Cast, AggregateType, JoinType, Selects, Sources, Name, OrderDirection, AppendTuples, MergeObjects, SelectsKeys, ArrayToTuple, LockType, SelectWithKey, SourcesSelectsOptional, SelectsOptional, Simplify, SelectValueWithKey, SelectsKey, FlattenTuple, TupleOf, SelectsWithKey, SelectsKeyWithType } from '../Types';
 import { ExprAggregate } from '../exprs/Aggregate';
 import { ExprProvider, ExprFactory } from '../exprs/Factory';
 import { Expr, ExprType } from '../exprs/Expr';
@@ -21,17 +21,28 @@ import { ExprInput, ExprScalar } from '../exprs/Scalar';
 
 
 type JoinedInner<T extends Sources, JN extends Name, JT extends Selects> = 
-  MergeObjects<T, Record<JN, JT>>;
+  Simplify<MergeObjects<T, Record<JN, JT>>>;
 
 type JoinedLeft<T extends Sources, JN extends Name, JT extends Selects> = 
-  MergeObjects<T, Record<JN, SelectsOptional<JT>>>;
+  Simplify<MergeObjects<T, Record<JN, SelectsOptional<JT>>>>;
 
 type JoinedRight<T extends Sources, JN extends Name, JT extends Selects> = 
-  Cast<MergeObjects<SourcesSelectsOptional<T>, Record<JN, JT>>, Sources>;
+  Simplify<Cast<MergeObjects<SourcesSelectsOptional<T>, Record<JN, JT>>, Sources>>;
 
 type JoinedFull<T extends Sources, JN extends Name, JT extends Selects> = 
-  Cast<MergeObjects<SourcesSelectsOptional<T>, Record<JN, SelectsOptional<JT>>>, Sources>;
+  Simplify<Cast<MergeObjects<SourcesSelectsOptional<T>, Record<JN, SelectsOptional<JT>>>, Sources>>;
 
+type SelectAllSelects<T extends Sources, S extends Selects> = 
+  AppendTuples<S, FlattenTuple<T[keyof T]>>
+
+type SelectGivenSelects<S extends Selects, FS extends Select<any, any>[]> = 
+  AppendTuples<S, ArrayToTuple<FS>>;
+
+type MaybeSources<A extends Sources, B extends Sources> = 
+  Simplify<MergeObjects<A, SourcesSelectsOptional<B>>>;
+
+type MaybeSelects<A extends Selects, B extends Selects> = 
+  AppendTuples<A, Cast<SelectsOptional<Cast<SelectsWithKey<B, Exclude<SelectsKey<B>, SelectsKey<A>>>, Selects>>, Selects>>;
 
 export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
 {
@@ -78,11 +89,15 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
     return this as any;
   }
 
-  public from<FN extends Name, FS extends Selects>(source: ExprProvider<T, S, NamedSource<FN, FS>>): QuerySelect<Simplify<MergeObjects<T, Record<FN, FS>>>, S> {
+  public from<FN extends keyof T>(source: FN): QuerySelect<T, S>
+  public from<FN extends Name, FS extends Selects>(source: ExprProvider<T, S, NamedSource<FN, FS>>): QuerySelect<Simplify<MergeObjects<T, Record<FN, FS>>>, S> 
+  public from<FN extends Name, FS extends Selects>(source: keyof T | ExprProvider<T, S, NamedSource<FN, FS>>): never {
     
-    this._criteria.addSource(this._criteria.exprs.provide(source) as any);
+    if (!isString(source)) {
+      this._criteria.addSource(this._criteria.exprs.provide(source) as any);
+    }
 
-    return this as any;
+    return this as never;
   }
 
   public join<JN extends Name, JT extends Selects>(type: 'INNER', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, ExprInput<boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S>
@@ -110,9 +125,11 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
     return this.join('FULL', source, on);
   }
 
-  public select<FS extends Select<any, any>[]>(selects: ExprProvider<T, S, FS>): QuerySelect<T, AppendTuples<S, ArrayToTuple<FS>>>
-  public select<FS extends Select<any, any>[]>(...selects: FS): QuerySelect<T, AppendTuples<S, FS>>
-  public select<FS extends Select<any, any>[]>(...selectInput: any[]): QuerySelect<T, AppendTuples<S, FS>> {
+
+  public select(selects: '*'): QuerySelect<T, SelectAllSelects<T, S>>
+  public select<FS extends Select<any, any>[]>(selects: ExprProvider<T, S, FS>): QuerySelect<T, SelectGivenSelects<S, FS>>
+  public select<FS extends TupleOf<Select<any, any>>>(...selects: FS): QuerySelect<T, SelectGivenSelects<S, FS>>
+  public select(...selectInput: any[]): never {
     const selects: Select<any, any>[] = isFunction(selectInput[0])
       ? this._criteria.exprs.provide(selectInput[0])
       : isArray(selectInput[0])
@@ -121,7 +138,7 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
 
     this._criteria.addSelects(selects);
 
-    return this as any;
+    return this as never;
   }
 
   public clearSelect(): QuerySelect<Sources, []> {
@@ -132,6 +149,10 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
 
   public using<R extends QuerySelect<T, any>>(context: (query: this, selects: SourcesFieldsFactory<T>, exprs: ExprFactory<T, S>, fns: FunctionProxy) => R): R {
     return context(this, this._criteria.sourcesFields, this._criteria.exprs, fns);
+  }
+
+  public maybe<MT extends Sources = {}, MS extends Selects = []>(condition: any, maybeQuery: (query: this) => QuerySelect<MT, MS>): QuerySelect<MaybeSources<T, MT>, MaybeSelects<S, MS>> {
+    return (condition ? maybeQuery(this) : this) as any;
   }
 
   public where(conditions: ExprProvider<T, S, ExprScalar<boolean> | ExprScalar<boolean>[]>): this {
@@ -213,58 +234,86 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
     return this;
   }
 
-  public aggregate<AT extends AggregateType>(type: AT, value?: ExprScalar<any>, distinct: boolean = false): QuerySelectFirstValue<{}, [Select<AT, number>], Select<AT, number>> {
-    return new QuerySelectFirstValue(this._criteria.extend(), new ExprAggregate(type, distinct, value).as(type)) as any;
+  public aggregate<AT extends AggregateType, V extends SelectsKey<S>>(type: AT, value?: V | ExprProvider<T, S, ExprScalar<any>>, distinct: boolean = false): ExprScalar<number> {
+    return new QuerySelectFirstValue(this._criteria.extend(), 
+      new ExprAggregate(type, distinct, 
+        isString(value)
+          ? this._criteria.selectsExpr[value as any]
+          : this._criteria.exprs.provide(value)
+      ).as(type)
+    );
   }
 
-  public count(distinct: boolean = false, value?: ExprScalar<any>) {
+  public count(): ExprScalar<number>
+  public count<V extends SelectsKey<S>>(distinct: boolean, select: V): ExprScalar<number>
+  public count(distinct: boolean, value: ExprProvider<T, S, ExprScalar<any>>): ExprScalar<number>
+  public count(distinct: boolean, value?: ExprProvider<T, S, ExprScalar<any>>): ExprScalar<number>
+  public count(distinct: boolean = false, value?: ExprProvider<T, S, ExprScalar<any>>): ExprScalar<number> {
     return this.aggregate('COUNT', value, distinct);
   }
 
-  public countIf(condition: ExprScalar<boolean>) {
+  public countIf<V extends SelectsKeyWithType<S, boolean>>(select: V): ExprScalar<number>
+  public countIf(value: ExprProvider<T, S, ExprScalar<boolean>>): ExprScalar<number>
+  public countIf(condition: ExprScalar<boolean>): ExprScalar<number> {
     return this.aggregate('COUNT', this._criteria.exprs.inspect().when<1 | null>(condition, 1).else(null), false);
   }
 
-  public sum(value: ExprScalar<number>) {
+  public sum<V extends SelectsKeyWithType<S, number>>(select: V): ExprScalar<number>
+  public sum(value: ExprProvider<T, S, ExprScalar<number>>): ExprScalar<number>
+  public sum(value: ExprScalar<number>): ExprScalar<number> {
     return this.aggregate('SUM', value);
   }
 
-  public avg(value: ExprScalar<number>) {
+  public avg<V extends SelectsKeyWithType<S, number>>(select: V): ExprScalar<number>
+  public avg(value: ExprProvider<T, S, ExprScalar<number>>): ExprScalar<number>
+  public avg(value: ExprScalar<number>): ExprScalar<number> {
     return this.aggregate('AVG', value);
   }
 
-  public min(value: ExprScalar<number>) {
+  public min<V extends SelectsKeyWithType<S, number>>(select: V): ExprScalar<number>
+  public min(value: ExprProvider<T, S, ExprScalar<number>>): ExprScalar<number>
+  public min(value: ExprScalar<number>): ExprScalar<number> {
     return this.aggregate('MIN', value);
   }
 
-  public max(value: ExprScalar<number>) {
+  public max<V extends SelectsKeyWithType<S, number>>(select: V): ExprScalar<number>
+  public max(value: ExprProvider<T, S, ExprScalar<number>>): ExprScalar<number>
+  public max(value: ExprScalar<number>): ExprScalar<number> {
     return this.aggregate('MAX', value);
   }
 
-  public first(): QuerySelectFirst<T, S> {
+  public first(): Expr<S> {
     return new QuerySelectFirst<T, S>(this._criteria.extend());
   }
 
-  public exists(): QuerySelectExistential<T, S> {
+  public exists(): ExprScalar<1 | null> {
     return new QuerySelectExistential<T, S>(this._criteria.extend());
   }
 
-  public list<V extends SelectsKeys<S>>(select: V): QuerySelectList<T, S, SelectWithKey<S, V>>
+  public list<V extends SelectsKey<S>>(select: V): QuerySelectList<T, S, SelectWithKey<S, V>>
   public list<E>(value: ExprProvider<T, S, Expr<E>>): QuerySelectList<T, S, ExprType<E>>
-  public list(value: any): Expr<any> {
+  public list<V extends SelectsKey<S>, E>(value: V | ExprProvider<T, S, Expr<E>>): Expr<any> {
     return new QuerySelectList(this._criteria.extend(), isString(value) 
-      ? this._criteria.selectsExpr[value]
+      ? this._criteria.selectsExpr[value as any]
       : this._criteria.exprs.provide(value)
     );
   }
 
-  public value<V extends SelectsKeys<S>>(select: V): QuerySelectFirstValue<T, S, SelectWithKey<S, V>>
-  public value<E>(value: ExprProvider<T, S, Expr<E>>): QuerySelectFirstValue<T, S, E>
-  public value(value: any): Expr<any> {
+  public value<V extends SelectsKey<S>>(select: V): ExprScalar<SelectValueWithKey<S, V>>
+  public value<E>(value: ExprProvider<T, S, ExprScalar<E>>): ExprScalar<E>
+  public value<V extends SelectsKey<S>, E>(value: V | ExprProvider<T, S, ExprScalar<E>>): ExprScalar<any> {
     return new QuerySelectFirstValue(this._criteria.extend(), isString(value)
-      ? this._criteria.selectsExpr[value]
+      ? this._criteria.selectsExpr[value as any]
       : this._criteria.exprs.provide(value)
     );
+  }
+
+  public hasSelect(name: any): name is SelectsKeys<S> {
+    return Boolean(this._criteria.selectsExpr[name as any]);
+  }
+
+  public hasSource(name: any): name is keyof T {
+    return Boolean(this._criteria.sources[name]);
   }
 
 }

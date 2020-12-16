@@ -8,7 +8,7 @@ export const enum ExprKind {
     CONDITION_BINARY_LIST   = 'a?l',
     CONDITIONS              = 'andor',
     CONDITION_UNARY         = 'a?',
-    CONSTANTS               = 'const',
+    CONSTANT               = 'const',
     DEFAULT                 = 'def',
     EXISTS                  = 'exist',
     FIELD                   = 'field',
@@ -23,6 +23,7 @@ export const enum ExprKind {
     JOIN                    = 'join',
     VALUES                  = 'values',
     TABLE                   = 'table',
+    TABLE_UNSPECIFIED       = 'table?',
     QUERY_SELECT            = 'sel',
     QUERY_EXISTENTIAL       = '1',
     QUERY_FIRST             = 'first',
@@ -32,5 +33,5 @@ export const enum ExprKind {
     QUERY_INSERT            = 'ins',
     QUERY_UPDATE            = 'upd',
     QUERY_DELETE            = 'del',
-    QUERY_SET_OPERATION               = 'set',
+    QUERY_SET_OPERATION     = 'set',
 }

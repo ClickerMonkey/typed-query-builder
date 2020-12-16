@@ -1,5 +1,5 @@
 import { isArray, isString } from '../fns';
-import { Cast, SelectsRecord, SelectsValues, SelectsWithKeys, Name, Selects, Sources, ArrayToTuple, SelectsKeys, SelectWithKey, MergeObjects, SourcesFieldsFactory } from '../Types';
+import { Cast, SelectsRecord, SelectsValues, Name, Selects, Sources, ArrayToTuple, SelectsKeys, MergeObjects, SourcesFieldsFactory, SelectsKey, SelectsWithKey } from '../Types';
 import { Expr, ExprFactory, ExprInput, ExprProvider, ExprScalar } from '../exprs';
 import { NamedSource, Source, SourceRecursive, SourceType } from '../sources';
 import { ExprKind } from '../Kind';
@@ -7,31 +7,27 @@ import { ExprKind } from '../Kind';
 
 export type QueryInsertReturning<
   T extends Selects = [],
-  C extends SelectsKeys<T> = never
-> = {
-  [I in keyof C]: SelectWithKey<T, C[I]>
-};
+  C extends SelectsKey<T> = never
+> = SelectsWithKey<T, C>;
 
 export type QueryInsertReturningColumns<
   T extends Selects = [],
-  C extends SelectsKeys<T> = never
-> = QueryInsertReturning<T, C> extends Selects
-  ? QueryInsertReturning<T, C>
-  : never;
+  C extends SelectsKey<T> = never
+> = Cast<QueryInsertReturning<T, C>, Selects>;
 
 export type QueryInsertValuesArray<
   T extends Selects = never, 
-  C extends SelectsKeys<T> = never,
-> = SelectsValues<Cast<SelectsWithKeys<T, C>, Selects>>
+  C extends SelectsKey<T> = never,
+> = SelectsValues<Cast<SelectsWithKey<T, C>, Selects>>
 
 export type QueryInsertValuesObject<
   T extends Selects = never, 
-  C extends SelectsKeys<T> = never,
-> = SelectsRecord<Cast<SelectsWithKeys<T, C>, Selects>>;
+  C extends SelectsKey<T> = never,
+> = SelectsRecord<Cast<SelectsWithKey<T, C>, Selects>>;
 
 export type QueryInsertValuesInput<
   T extends Selects = never, 
-  C extends SelectsKeys<T> = never,
+  C extends SelectsKey<T> = never,
 > = ExprInput<
   QueryInsertValuesObject<T, C> |
   QueryInsertValuesObject<T, C>[] |
@@ -41,7 +37,7 @@ export type QueryInsertValuesInput<
 
 export type QueryInsertValuesResolved<
   T extends Selects = never, 
-  C extends SelectsKeys<T> = never,
+  C extends SelectsKey<T> = never,
 > = Expr<
   QueryInsertValuesObject<T, C> |
   QueryInsertValuesObject<T, C>[] |
@@ -54,7 +50,7 @@ export class QueryInsert<
   W extends Sources = {}, 
   I extends Name = never,
   S extends Selects = [], 
-  C extends SelectsKeys<S> = never,
+  C extends SelectsKey<S> = never,
   R extends Selects = []
 > extends Source<R>
 {
@@ -63,7 +59,7 @@ export class QueryInsert<
 
   public _exprs: ExprFactory<MergeObjects<W, Record<I, S>>, []>;
   public _into: SourceType<I, S, any>;
-  public _columns: C;
+  public _columns: C[];
   public _with: NamedSource<keyof W, any>[];
   public _withFields: SourcesFieldsFactory<MergeObjects<W, Record<I, S>>>;
   public _values: QueryInsertValuesResolved<S, C>[];
@@ -109,15 +105,15 @@ export class QueryInsert<
     (this as any)._withFields[source.getName()] = source.getFieldsFactory();
   }
 
-  public into<IN extends Name, IT extends Selects>(into: SourceType<IN, IT, any>): QueryInsert<W, IN, IT, SelectsKeys<IT>, []>
-  public into<IN extends Name, IT extends Selects, IC extends SelectsKeys<IT>>(into: SourceType<IN, IT, any>, columns: IC): QueryInsert<W, IN, IT, IC, []>
-  public into<IN extends Name, IT extends Selects, IC extends SelectsKeys<IT>>(into: SourceType<IN, IT, any>, columns?: IC): QueryInsert<W, IN, IT, IC, []>
+  public into<IN extends Name, IT extends Selects>(into: SourceType<IN, IT, any>): QueryInsert<W, IN, IT, SelectsKey<IT>, []>
+  public into<IN extends Name, IT extends Selects, IC extends SelectsKey<IT>>(into: SourceType<IN, IT, any>, columns: IC[]): QueryInsert<W, IN, Cast<SelectsWithKey<IT, IC>, Selects>, Cast<IC, SelectsKeys<Cast<SelectsWithKey<IT, IC>, Selects>>>, []>
+  public into<IN extends Name, IT extends Selects, IC extends SelectsKey<IT>>(into: SourceType<IN, IT, any>, columns?: IC[]): never
   {
     (this as any)._into = into;
     (this as any)._columns = columns || into.getSelects().map( s => s.alias );
     (this as any)._withFields[into.getName()] = into.getFieldsFactory();
     
-    return this as any;
+    return this as never;
   }
 
   public values(values: ExprProvider<W, [], QueryInsertValuesInput<S, C>>): this 
@@ -135,7 +131,7 @@ export class QueryInsert<
   }
 
   public returning(output: '*'): QueryInsert<W, I, S, C, S>
-  public returning<RC extends SelectsKeys<S>>(output: RC): QueryInsert<W, I, S, C, QueryInsertReturningColumns<S, RC>>
+  public returning<RC extends SelectsKey<S>>(output: RC[]): QueryInsert<W, I, S, C, QueryInsertReturningColumns<S, RC>>
   public returning<RS extends Selects>(output: ExprProvider<MergeObjects<W, Record<I, S>>, [], RS>): QueryInsert<W, I, S, C, ArrayToTuple<RS>>
   public returning<RS extends Selects>(output: RS | '*' | Array<keyof S>): never
   {

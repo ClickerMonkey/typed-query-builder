@@ -1,6 +1,7 @@
 import { Name, SourceFieldsFromSelects } from '.';
 import { ExprField } from './exprs';
 import { SelectAliased } from './select/Aliased';
+import { NamedSource } from './sources';
 import { ObjectKeys, Selects, SourceFieldsFactory, SourceFieldsFunctions } from './Types';
 
 export function isString(x: any): x is string 
@@ -50,11 +51,11 @@ export function keys<T>(object: T): ObjectKeys<T>
   return Object.keys(object) as ObjectKeys<T>;
 }
 
-export function createFields<S extends Selects>(source: Name, selects: S): SourceFieldsFromSelects<S>
+export function createFields<N extends Name, S extends Selects>(source: NamedSource<N, S>, selects: S): SourceFieldsFromSelects<S>
 {
   return selects.reduce((fields, select) => 
   {
-    fields[select.alias] = new ExprField(source, select.alias);
+    fields[select.alias] = new ExprField(source as any, select.alias);
 
     return fields;
   }, {} as SourceFieldsFromSelects<S>);

@@ -1,4 +1,4 @@
-import { Expr, Select, ExprValueObjects, ExprValueTuples, MergeObjects, UndefinedKeys, SelectWithKey, UnionToIntersection, UnionToTuple, ArrayToTuple, ColumnsToTuple, AppendTuples, ObjectKeys, SelectsKeys, SelectsValues, SelectsNameless, ObjectFromSelects, SelectsExprs, JoinTuples, ExprField, SelectsFromObject, values, SelectsWithKey, Source, NamedSource } from '../src/';
+import { Expr, Select, ExprValueObjects, ExprValueTuples, FlattenTuple, ExprValueToExpr, MergeObjects, UndefinedKeys, SelectWithKey, UnionToIntersection, UnionToTuple, ArrayToTuple, ColumnsToTuple, AppendTuples, ObjectKeys, SelectsKeys, SelectsValues, SelectsNameless, ObjectFromSelects, SelectsExprs, JoinTuples, ExprField, SelectsFromObject, values, SelectsWithKey, Source, NamedSource } from '../src/';
 import { expectType, expectTypeMatch } from './helper';
 
 
@@ -52,11 +52,6 @@ describe('Types', () => {
         expectTypeMatch<[string], ArrayToTuple<string[]>>(true);
     });
 
-    it('ColumnsToTuple', () => {
-        expectTypeMatch<["name", "id"], ColumnsToTuple<{ id: number, name: string, done: boolean}, ['name', 'id']>>(true);
-        expectTypeMatch<["name", "id"], ColumnsToTuple<{ id: number, name: string, done: boolean}, ('name' | 'id')[]>>(true);
-    });
-
     it('AppendTuples', () => {
         expectTypeMatch<[], AppendTuples<[], []>>(true);
         expectTypeMatch<[number], AppendTuples<[], [number]>>(true);
@@ -64,6 +59,19 @@ describe('Types', () => {
         expectTypeMatch<[number, number], AppendTuples<[number], [number]>>(true);
         expectTypeMatch<[number, number, string], AppendTuples<[number], [number, string]>>(true);
         expectTypeMatch<[number, number, string, boolean], AppendTuples<[number], [number, string]>>(false);
+    });
+
+    it('FlattenTuples', () => {
+        expectTypeMatch<[], FlattenTuple<[]>>(true);
+        expectTypeMatch<[1], FlattenTuple<[1]>>(true);
+        expectTypeMatch<[Date, 2], FlattenTuple<[Date, [2]]>>(true);
+        expectTypeMatch<[1], FlattenTuple<[[1]]>>(true);
+        expectTypeMatch<[1], FlattenTuple<[[[1]]]>>(true);
+        expectTypeMatch<[1, 'x'], FlattenTuple<[[1], ['x']]>>(true);
+        expectTypeMatch<[1, 'x', Date], FlattenTuple<[[1], ['x', Date]]>>(true);
+        expectTypeMatch<[1, 'x', Date, string, 2], FlattenTuple<[[1], ['x', Date, string], [2]]>>(true);
+        expectTypeMatch<[1, boolean], FlattenTuple<[[1], [boolean]]>>(true);
+        expectTypeMatch<[Select<'y', string>, Select<'x', boolean>], FlattenTuple<[[Select<'y', string>], [Select<'x', boolean>]]>>(true);
     });
 
     it('ObjectKeys', () => {
@@ -120,6 +128,21 @@ describe('Types', () => {
         expectTypeMatch<[string, string, boolean], JoinTuples<[[string], [string, boolean]]>>(true);
         expectTypeMatch<[string, string, boolean, Date], JoinTuples<[[string], [string, boolean], Date, []]>>(true);
     });
+
+    it('SelectAll', () => {
+        type Test1a = [];
+        type Test1b = Record<"tasks", [Select<"id", number>]>;
+    
+        expectTypeMatch<[Select<"id", number>], AppendTuples<Test1a, Test1b[keyof Test1b]>>(true);
+
+        type Test2a = [Select<"count", number>];
+        type Test2b = { a: [Select<"name", string>], b: [Select<"id", number>, Select<"done", boolean>] };
+    
+        expectTypeMatch<
+            [Select<"count", number>, Select<"name", string>, Select<"id", number>, Select<"done", boolean>], 
+            AppendTuples<Test2a, FlattenTuple<Test2b[keyof Test2b]>>
+        >(true);
+    })
 
     it('SourceFieldsFunctions simple', () => {
         const vals = values([{ id: 0, name: 'Task', age: 31 }]);
@@ -199,17 +222,28 @@ describe('Types', () => {
     });
     
     it('SelectsFromObject', () => {
-      type A = {};
-      type B = { x: number };
-      type C = { y: string, x: number };
-      type D = { x: number } | { x: number, y: string };
-      type E = { y: string, w?: number };
+        type A = {};
+        type B = { x: number };
+        type C = { y: string, x: number };
+        type D = { x: number } | { x: number, y: string };
+        type E = { y: string, w?: number };
 
-      expectTypeMatch<[], SelectsFromObject<A>>(true);
-      expectTypeMatch<[Select<"x", number>], SelectsFromObject<B>>(true);
-      expectTypeMatch<[Select<"x", number>, Select<"y", string>], SelectsFromObject<C>>(true);
-      expectTypeMatch<[Select<"x", number>, Select<"y", string | undefined>], SelectsFromObject<D>>(true);
-      expectTypeMatch<[Select<"y", string>, Select<"w", number | undefined>], SelectsFromObject<E>>(true);
+        expectTypeMatch<[], SelectsFromObject<A>>(true);
+        expectTypeMatch<[Select<"x", number>], SelectsFromObject<B>>(true);
+        expectTypeMatch<[Select<"x", number>, Select<"y", string>], SelectsFromObject<C>>(true);
+        expectTypeMatch<[Select<"x", number>, Select<"y", string | undefined>], SelectsFromObject<D>>(true);
+        expectTypeMatch<[Select<"y", string>, Select<"w", number | undefined>], SelectsFromObject<E>>(true);
+    });
+
+    it('ExprValueToExpr', () => {
+        expectTypeMatch<Expr<number>, ExprValueToExpr<number>>(true);
+        expectTypeMatch<Expr<number[]> | Expr<Select<any, number>[]>, ExprValueToExpr<number[]>>(true);
+        expectTypeMatch<Expr<number[]> | Expr<Select<any, string | number>[]>, ExprValueToExpr<(string | number)[]>>(true);
+        expectTypeMatch<Expr<[Select<'x', number>]>, ExprValueToExpr<{ x: number }>>(true);
+        expectTypeMatch<Expr<[Select<'x', number>, Select<'y', string>]>, ExprValueToExpr<{ x: number, y: string }>>(true);
+        expectTypeMatch<Expr<[Select<'x', number>, Select<'y', string>][]>, ExprValueToExpr<{ x: number, y: string }[]>>(true);
+        expectTypeMatch<Expr<[Select<any, number>, Select<any, string>]> | Expr<[number, string]>, ExprValueToExpr<[number, string]>>(true);
+        expectTypeMatch<Expr<[Select<any, number>, Select<any, string>][]> | Expr<[number, string][]>, ExprValueToExpr<[number, string][]>>(true);
     });
 
 });

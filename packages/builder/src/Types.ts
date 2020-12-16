@@ -5,8 +5,6 @@ import { Source } from './sources';
 import { NamedSource } from './sources/Named';
 
 
-export type Diff<T, U> = T extends U ? never : T;
-
 /**
  * Returns the result of { ...A, ...B }
  */
@@ -31,7 +29,6 @@ export type UndefinedKeys<T> = {
   [P in keyof T]-?: undefined extends T[P] ? P : never 
 }[keyof T];
 
-// TODO when you call this with `ObjectFromSelects<[Select<'name', string>]>` it returns { name?: string } which is WRONG
 /**
  * Converts { x: number | undefined } to { x?: number | undefined }
  * 
@@ -48,8 +45,15 @@ export type IsNever<T, Y = true, N = false> = [T] extends [never] ? Y : N;
 
 export type StripNever<T> = Pick<T, { [K in keyof T]: IsNever<T[K], never, K> }[keyof T]>;
 
+export type Extends<A, B, Y = true, N = false> = 
+  [A] extends [B]
+    ? [B] extends [A]
+      ? Y
+      : N
+    : N;
+
 export type Simplify<T> = 
-  T extends (object | any[])
+  T extends object
     ? { [K in keyof T]: T[K] }
     : T;
 
@@ -82,16 +86,19 @@ export type ArrayToTuple<T> =
     : T
 ;
 
-export type ColumnsToTuple<T, C extends Array<keyof T>> = 
-  ArrayToTuple<C> extends Array<keyof T>
-    ? ArrayToTuple<C>
-    : C
-;
 
 
 export type AppendTuples<A extends any[], B extends any[]> = 
   Simplify<[...A, ...B]>
 ;
+
+export type FlattenTuple<T> = 
+      T extends [infer A, ...infer B]
+        ? A extends any[] 
+          ? FlattenTuple<AppendTuples<A, B>>
+          : [A, ...FlattenTuple<B>]
+        : T;
+
 
 export type JsonScalar = number | string | boolean | null;
 export type JsonObject = { [key: string]: JsonScalar | JsonObject | JsonArray; };
@@ -123,12 +130,43 @@ export type ObjectKeys<T> =
 
 export type Cast<T, AS> = T extends AS ? T : never;
 
+
+export type ExprValueToExpr<T> = 
+  T extends Array<infer E> 
+    // T = E[] | [...]
+    ? E extends unknown[] 
+      // T = [...][], E = [...]
+      ? Expr<E[]> | Expr<{ [K in keyof E]: Select<any, E[K]> }[]> // T = E=[...][]
+      // T = any[], not [...][]
+      : E extends object
+        // T = object[], E = object
+        ? Expr<SelectsFromObject<E>[]> // T = object[]
+        // T = not object[], E = not object
+        : T extends [unknown, ...unknown[]]
+          // T = tuple
+          ? Expr<T> | Expr<{ [K in keyof T]: Select<any, T[K]> }> 
+          // T = primitive[]
+          : Expr<E[]> | Expr<Select<any, E>[]> 
+    // T = not array
+    : T extends object
+      // T = object, not array
+      ? Expr<SelectsFromObject<T>>
+      // T = primitive
+      : T extends boolean
+        ? Expr<boolean>
+        : Expr<T>;
+
+// string[] NOT a tuple, [string] or [number, string, ...]
+export type IsTuple<T, Y = true, N = false> = T extends [unknown, ...unknown[]] ? Y : N;
+
 export type ExprValueObjects<V> =
-  V extends Array<Selects>
+  V extends Array<Selects> // [S1, S2, S3][]
     ? ObjectFromSelects<V[number]>[]
-    : V extends Selects
-      ? ObjectFromSelects<V>
-      : V
+    : V extends Select<any, infer E>[] // S1[]
+      ? E[]
+        : V extends Selects // [S1, S2, S3]
+          ? ObjectFromSelects<V>
+          : V
 ;
 
 export type ExprValueTuples<V> =
@@ -145,6 +183,8 @@ export type PartialChildren<T> = {
 
 export type ToTuple<T extends any> = T extends any[] ? T : [T];
 
+export type TupleOf<T> = [T, ...T[]];
+
 export type JoinTuples<T extends any[]> =
   T extends [infer A]
     ? ToTuple<A>
@@ -156,11 +196,21 @@ export type Selects = Select<Name, any>[];
 
 export type Sources = { [source: string]: Selects };
 
+/**
+ * Converts Selects into an array of it's names.
+ */
 export type SelectsKeys<T extends Selects> = {
   [K in keyof T]: T[K] extends Select<infer P, any> ? P : never;
 };
 
+/**
+ * Converts Selects into a type which has all the names.
+ */
 export type SelectsKey<T extends Selects> = SelectsKeys<T>[number];
+
+export type SelectsKeyWithType<T extends Selects, D> = {
+  [K in keyof T]: T[K] extends Select<infer P, infer V> ? V extends D ?  P : never : never;
+}[number];
 
 export type SelectsValues<T extends Selects> = {
   [K in keyof T]: T[K] extends Select<any, infer V> ? V : never;
@@ -193,9 +243,9 @@ export type SelectsFromObjectSimple<T> = Simplify<UnionToTuple<Required<{
 }>[keyof T]>>;
 
 export type SelectWithKey<S extends Selects, K> = {
-  [P in keyof S]: S[P] extends Select<infer E, any> 
-    ? E extends K
-      ? S[P]
+  [P in keyof S]: S[P] extends Select<infer N, infer V> 
+    ? N extends K
+      ? Select<N, V>
       : never
     : never
 }[number];
@@ -215,7 +265,7 @@ export type SelectsWithKey<S extends Selects, K> = UnionToTuple<{
       : never
     : never
 }[number]>;
-
+ 
 export type SelectsWithKeys<S extends Selects, K extends SelectsKeys<S>> = {
   [I in keyof K]: SelectWithKey<S, K[I]> 
 };
@@ -269,10 +319,10 @@ export interface SourceFieldsFunctions<S extends Selects>
 {
   all(): S;
   
-  only<C extends SelectsKey<S>>(only: C[]): SelectsWithKey<S, C>;
+  only<C extends SelectsKey<S>>(only: C[]): SelectsWithKey<S, unknown extends C ? never : C>;
   only<C extends SelectsKey<S> = never>(...only: C[]): SelectsWithKey<S, C>;
 
-  exclude<C extends SelectsKey<S>>(exclude: C[]): SelectsWithKey<S, Exclude<SelectsKey<S>, C>>;
+  exclude<C extends SelectsKey<S>>(exclude: C[]): SelectsWithKey<S, unknown extends C ? SelectsKey<S> : Exclude<SelectsKey<S>, C>>;
   exclude<C extends SelectsKey<S> = never>(...exclude: C[]): SelectsWithKey<S, Exclude<SelectsKey<S>, C>>;
 
   mapped<K extends SelectsKey<S>, M extends Record<string, K>>(map: M): SelectsMap<S, K, M>;
@@ -280,7 +330,7 @@ export interface SourceFieldsFunctions<S extends Selects>
 
 export type SourceCompatible<S extends Selects> = Source<SelectsNameless<S>>;
 
-export type SourceFieldsFactory<S extends Selects> = MergeObjects<SourceFieldsFunctions<S>, SourceFieldsFromSelects<S>>;
+export type SourceFieldsFactory<S extends Selects> = Simplify<MergeObjects<SourceFieldsFunctions<S>, SourceFieldsFromSelects<S>>>;
 
 export type SourceForType<T extends Sources> = { 
   [K in keyof T]: T[K] extends Selects ? NamedSource<K, T[K]> : never;

@@ -2,7 +2,7 @@ import { isArray, isString } from '../fns';
 import { OrderDirection, Selects, SelectsKeys, SetOperation, SourceCompatible } from '../Types';
 import { Expr, ExprField, ExprProvider } from '../exprs';
 import { OrderBy } from '../Order';
-import { NamedSourceBase, Source } from '../sources';
+import { Source } from '../sources';
 import { ExprKind } from '../Kind';
 import { QueryCriteria } from './Criteria';
 
@@ -35,12 +35,13 @@ export class QuerySet<S extends Selects> extends Source<S>
   ) {
     super();
 
+    const set = _first.as('set');
 
     this._sources = [_first as any, second];
     this._all = [all];
     this._criteria = new QueryCriteria();
-    this._criteria.addSelects(_first.getSelects().map( s => new ExprField('set', s.alias )));
-    this._criteria.addSource(new NamedSourceBase('set', _first) as any);
+    this._criteria.addSelects(_first.getSelects().map( s => new ExprField(set as any, s.alias )));
+    this._criteria.addSource(set as any);
   }
 
   public getKind(): ExprKind {

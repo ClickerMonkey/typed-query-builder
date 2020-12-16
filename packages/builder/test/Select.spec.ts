@@ -1,5 +1,5 @@
-import { define, query, from } from '../src/';
-import { expectExprType, expectSelect } from './helper';
+import { define, query, from, Select, values, Expr, ExprValueObjects, ExprType } from '../src/';
+import { expectExpr, expectExprType, expectSelect, expectExtends, expectTypeMatch } from './helper';
 
 
 // tslint:disable: no-magic-numbers
@@ -17,25 +17,94 @@ describe('Select', () => {
     },
   });
   
-  const TaskField = Task.fields;
+  const Task$ = Task.fields;
 
   it('simple', () => {
     const q = from(Task)
       .select(Task.all())
       .where([
-        TaskField.done.isTrue()
+        Task$.done.isTrue()
       ])
     ;
+
+    expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number }]>(q);
   });
 
+  it('select *', () => {
+    const q = from(Task)
+      .select('*')
+      .where([
+        Task$.done.isTrue()
+      ])
+    ;
+
+    expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number }]>(q);
+  });
+
+  it('field shorthand', () => {
+    expectExpr<number>(Task$.id.min());
+    expectExpr<number>(Task$.id.max());
+    expectExpr<number>(Task$.id.avg());
+    expectExpr<number>(Task$.id.count());
+    expectExpr<number>(Task$.id.sum());
+    expectExpr<number>(Task$.id.first());
+    expectExpr<number[]>(Task$.id.list());
+
+    expectExpr<number>(Task$.id.min(Task$.done)); // min id of done tasks
+    expectExpr<number>(Task$.id.max(Task$.done)); // max id of done tasks
+    expectExpr<number>(Task$.id.avg(Task$.done)); // average id of done tasks
+    expectExpr<number>(Task$.id.count(Task$.done)); // number of done tasks
+    expectExpr<number>(Task$.id.sum(Task$.done)); // sum of done ids
+    expectExpr<number>(Task$.id.first(Task$.done)); // first done id
+    expectExpr<number[]>(Task$.id.list(Task$.done)); // ids of done tasks
+  });
+
+  it('maybe', () => {
+    type Request = {
+      query?: string;
+      limit?: number;
+      offset?: number;
+      includeParent?: boolean;
+    };
+
+    const request: Request = {
+      query: 'task%',
+      limit: 23,
+      offset: 1,
+    };
+
+    const q = from(Task)
+      .select('*')
+      .maybe(request.query, (q) => q
+        .where(Task.fields.name.like(request.query))
+      )
+      .maybe(request.limit, (q) => q
+        .limit(request.limit)
+      )
+      .maybe(request.offset, (q) => q
+        .offset(request.offset)
+      )
+      .maybe(request.includeParent, (q) => q
+        .joinLeft(Task.as('parentTask'), ({ parentTask }) => parentTask.id.eq(Task.fields.id))
+        .select(({ parentTask }) => [parentTask.name.as('parentName')])
+      )
+    ;
+
+    expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number, parentName?: string }]>(q);
+    expectTypeMatch<{}[], ExprValueObjects<ExprType<typeof q>>>(true);
+
+    expectExpr<string>(q.value('parentName'));
+  });
 
   it('counts', () => {
+
     const q = query()
       .from(Task)
       .select(({ task }) => task.all())
       .where(({ task }) => task.done.eq(true))
     ;
 
+    expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number }]>(q);
     expectExprType<number>(q.count());
     expectSelect<'count', number>(q.count().as('count'));
 
@@ -45,8 +114,24 @@ describe('Select', () => {
       ])
     ;
 
-    expectExprType<{ count: number }>(w.first());
-    expectExprType<[number]>(w.row());
+    expectExprType<[Select<'count', number>]>(w.first());
+  });
+
+  it('recursive', () => {
+    const q = query()
+      .with(
+        values([{ id: 43 }]).as('tasks'),
+        ({ tasks }) =>
+          query()
+            .from(Task)
+            .select([Task.fields.id])
+            .where([tasks.id.eq(Task.fields.parentId)])
+      )
+      .from('tasks')
+      .select('*')
+    ;
+
+    expectExprType<[Select<'id', number>][]>(q);
   });
 
   it('lists from single select', () => {
@@ -56,7 +141,8 @@ describe('Select', () => {
       .list('name')
     ;
     
-    expectExprType<string[]>(q);
+    expectExprType<Select<'name', string>[]>(q);
+    expectExpr<string[]>(q);
   });
 
   it('lists from all select', () => {
@@ -66,7 +152,9 @@ describe('Select', () => {
       .list('name')
     ;
     
-    expectExprType<string[]>(q);
+    expectExprType<Select<'name', string>[]>(q);
+    expectExtends<Expr<Select<'name', string>[]>, typeof q>();
+    expectExpr<string[]>(q);
   });
 
   it('lists from expr', () => {
@@ -76,18 +164,6 @@ describe('Select', () => {
     ;
     
     expectExprType<string[]>(q);
-  });
-
-  it('row', () => {
-    const q = query()
-      .from(Task)
-      .select(Task.all())
-      .where(({ task }) => task.doneAt.isNotNull())
-      .orderBy(({ task }) => task.doneAt, 'DESC')
-      .row()
-    ;
-    
-    expectExprType<[number, string, boolean, Date]>(q);
   });
 
   it('exists', () => {
@@ -103,13 +179,13 @@ describe('Select', () => {
             .where(({ parent }) => [
               parent.id.eq(task.parentId)
             ])
+            .exists()
         )
       )
     ;
 
-    expectExprType<{ lower_name: string }[]>(q);
-    expectExprType<{ lower_name: string }>(q.first());
-    expectExprType<[string]>(q.row());
+    expectExpr<{ lower_name: string }[]>(q);
+    expectExpr<{ lower_name: string }>(q.first());
   });
 
   it('union', () => {
@@ -123,7 +199,7 @@ describe('Select', () => {
         query()
           .from(Task)
           .select(({ task }, {}, { length }) => [
-            length(task.name).as('other'),
+            length(task.name).as('name_length'),
             task.name
           ])
       )

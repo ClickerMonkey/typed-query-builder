@@ -1,12 +1,12 @@
-import { schema, insert, ExprField, QueryInsert, Select, query } from '../src/';
-import { expectExprType, expectType } from './helper';
+import { define, insert, ExprField, QueryInsert, Select, query } from '../src/';
+import { expectExpr, expectExprType, expectType } from './helper';
 
 
 // tslint:disable: no-magic-numbers
 
 describe('Select', () => {
 
-  const Task = schema({
+  const Task = define({
     name: 'task',
     fields: {
       id: 'INT',
@@ -18,7 +18,7 @@ describe('Select', () => {
     },
   });
 
-  const People = schema({
+  const People = define({
     name: 'people',
     fields: {
       id: 'INT',
@@ -29,64 +29,23 @@ describe('Select', () => {
   it('insert normal', () => {
     const q = insert()
       .into(Task, ['name'])
+      .values({ name: 'Hello' })
+      .values([{ name: '2nd instance' }])
+      .values(['tuple'])
+      .values([['tuple']])
     ;
 
-    expectType<
-      QueryInsert<
-        {}, // With
-        "task", // Into
-        { // Type
-          id: number;
-          name: string;
-          done: boolean;
-          doneAt: Date;
-          parentId: number;
-          assignee: number;
-        }, // Columns
-        ["name"],
-        [] // Returning
-      >
-    >(q);
+    expectExpr<[][]>(q);
   });
 
   it('insert returning all', () => {
     const q = insert()
       .into(Task)
+      .values({ id: 3, name: 't3', done: false, doneAt: new Date(), parentId: -1, assignee: -1 })
       .returning('*')
     ;
 
-    expectType<
-      QueryInsert<
-        {}, // With
-        "task", // Into
-        { // Type
-          id: number;
-          name: string;
-          done: boolean;
-          doneAt: Date;
-          parentId: number;
-          assignee: number;
-        }, // Columns
-        ["id", "name", "done", "doneAt", "parentId", "assignee"], 
-        [ // Returning
-          Select<"id", number>,
-          Select<"name", string>,
-          Select<"done", boolean>,
-          Select<"doneAt", Date>,
-          Select<"parentId", number>,
-          Select<"assignee", number>,
-        ]
-      >
-    >(q);
-
-    expectExprType<{ 
-      id: number, 
-      name: string,
-      done: boolean,
-      doneAt: Date,
-      parentId: number,
-      assignee: number,
-    }>(q);
+    expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number, assignee: number }]>(q);
   });
 
   it('insert returning', () => {
@@ -97,24 +56,7 @@ describe('Select', () => {
       ])
     ;
 
-    expectType<
-      QueryInsert<
-        {}, // With
-        "task", // Into
-        { // Type
-          id: number;
-          name: string;
-          done: boolean;
-          doneAt: Date;
-          parentId: number;
-          assignee: number;
-        }, 
-        ["id", "name", "done", "doneAt", "parentId", "assignee"], // Columns
-        [ExprField<"id", number>] // Returning
-      >
-    >(q);
-
-    expectExprType<{ id: number }>(q);
+    expectExpr<[{ id: number }]>(q);
   });
 
   it('insert with one', () => {
@@ -136,7 +78,7 @@ describe('Select', () => {
       ])
     ;
 
-    expectExprType<number>(q);
+    expectExprType<[][]>(q);
   });
 
   it('insert with multiple', () => {
@@ -165,7 +107,7 @@ describe('Select', () => {
       }])
     ;
 
-    expectExprType<number>(q);
+    expectExprType<[][]>(q);
   });
 
   it('insert with one returning', () => {
@@ -188,8 +130,7 @@ describe('Select', () => {
       .returning(['id'])
     ;
 
-    expectExprType<[number][]>(q.tuples());
-    expectExprType<{ id: number }[]>(q.objects());
+    expectExpr<[number][]>(q);
   });
 
   it('insert with no returning', () => {
@@ -211,8 +152,7 @@ describe('Select', () => {
       ])
     ;
 
-    expectExprType<never>(q.tuples());
-    expectExprType<never>(q.objects());
+    expectExprType<[][]>(q);
   });
 
   it('insert with multiple returning columns', () => {
@@ -235,8 +175,8 @@ describe('Select', () => {
       .returning(['id', 'done'])
     ;
 
-    expectExprType<[number, boolean][]>(q.tuples());
-    expectExprType<{ id: number, done: boolean }[]>(q.objects());
+    expectExpr<[number, boolean][]>(q);
+    expectExpr<{ id: number, done: boolean }[]>(q);
   });
 
   it('insert with multiple returning expression', () => {
@@ -261,8 +201,8 @@ describe('Select', () => {
       ])
     ;
 
-    expectExprType<[string][]>(q.tuples());
-    expectExprType<{ lower: string }[]>(q.objects());
+    expectExpr<[string][]>(q);
+    expectExpr<{ lower: string }[]>(q);
   });
 
   it('insert with multiple returning expression with rest', () => {
@@ -288,7 +228,7 @@ describe('Select', () => {
       ])
     ;
 
-    expectExprType<[
+    expectExpr<[
       string, 
       number, 
       string, 
@@ -296,7 +236,7 @@ describe('Select', () => {
       Date, 
       number, 
       number
-    ][]>(q.tuples()); // TODO
+    ][]>(q); // TODO
 
     expectExprType<{ 
       lower: string,

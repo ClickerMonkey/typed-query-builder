@@ -27,6 +27,7 @@ import { ExprConditionBinaryList } from './ConditionBinaryList';
 import { Select } from '../select';
 import { ExprScalar, SourcesFieldsFactory } from '..';
 import { ExprInput } from './Scalar';
+import { SourceUnspecified } from '../sources/Unspecified';
 
 
 
@@ -50,7 +51,7 @@ export class ExprFactory<T extends Sources, S extends Selects>
   }
 
   public field<A extends keyof T & string, V extends T[A], F extends keyof V & string>(source: A, field: F): ExprScalar<V[F]> {
-    return new ExprField<F, V[F]>(source, field);
+    return new ExprField<F, V[F]>(new SourceUnspecified().as(source) as any, field);
   }
 
   public raw<V>(raw: any): ExprScalar<V> {
@@ -94,7 +95,7 @@ export class ExprFactory<T extends Sources, S extends Selects>
   public not(value: ExprInput<boolean>): ExprScalar<boolean> {
     return new ExprNot(ExprScalar.parse(value));
   }
-  public exists(query: Expr<[Select<any, 1 | null>]>): ExprScalar<boolean> {
+  public exists(query: Expr<[Select<any, 1 | null>]> | Expr<1 | null>): ExprScalar<boolean> {
     return new ExprExists(query, false);
   }
   public notExists(query: Expr<[Select<any, 1 | null>]>): ExprScalar<boolean> {

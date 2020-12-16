@@ -11,7 +11,7 @@ export class ExprExists extends ExprScalar<boolean>
   public static readonly id = 'exists';
 
   public constructor(
-    public value: Expr<[Select<any, 1 | null>]>,
+    public value: Expr<[Select<any, 1 | null>]> | Expr<1 | null>,
     public not: boolean = false
   ) {
     super();
