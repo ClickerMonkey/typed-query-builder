@@ -184,7 +184,6 @@ RETURNING (* | scalar, ...)
 </details>
 
 ### SQL Features TODO
-- recursive with  (pgsql, mysql)
 - priority to sources for evaluation (withs, froms, joins)
 - partitions? (pgsql, mysql)
 - windows? (pgsql, mysql)
@@ -210,6 +209,7 @@ RETURNING (* | scalar, ...)
    WHERE condition 
    RETURNING [* | value, ...]
 - DELETE FROM source WHERE condition
+- stored procedures support?
 
 ### Refined TODO
 - for SQL transformers...
