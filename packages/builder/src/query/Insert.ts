@@ -1,19 +1,10 @@
-import { isArray, isString } from '../fns';
-import { Cast, Name, Selects, Sources, ArrayToTuple, SelectsKeys, MergeObjects, SourcesFieldsFactory, SelectsKey, SelectsWithKey, SelectsValuesExprs, SelectsRecordExprs, SelectsNormalize } from '../types';
-import { Expr, ExprFactory, ExprInput, ExprProvider, ExprScalar } from '../exprs';
-import { NamedSource, Source, SourceRecursive, SourceType } from '../sources';
+import { Cast, Name, Selects, Sources, SelectsKeys, SelectsKey, SelectsWithKey, SelectsValuesExprs, SelectsRecordExprs, Tuple, JoinedInner } from '../types';
+import { Expr, ExprInput, ExprProvider, ExprScalar } from '../exprs';
+import { NamedSource, Source, SourceType } from '../sources';
 import { ExprKind } from '../Kind';
+import { QueryModify, QueryModifyReturningColumns, QueryModifyReturningExpressions } from './Modify';
+import { Select } from '../select';
 
-
-export type QueryInsertReturning<
-  T extends Selects = [],
-  C extends SelectsKey<T> = never
-> = SelectsWithKey<T, C>;
-
-export type QueryInsertReturningColumns<
-  T extends Selects = [],
-  C extends SelectsKey<T> = never
-> = Cast<QueryInsertReturning<T, C>, Selects>;
 
 export type QueryInsertValuesTuple<
   T extends Selects = never, 
@@ -47,76 +38,54 @@ export type QueryInsertValuesResolved<
 
 
 export class QueryInsert<
-  W extends Sources = {}, 
-  I extends Name = never,
+  T extends Sources = {}, 
+  N extends Name = never,
   S extends Selects = [], 
   C extends SelectsKey<S> = never,
   R extends Selects = []
-> extends Source<R>
+> extends QueryModify<T, N, S, R>
 {
 
   public static readonly id = ExprKind.QUERY_INSERT;
 
-  public _exprs: ExprFactory<MergeObjects<W, Record<I, S>>, []>;
-  public _into: SourceType<I, S, any>;
+  public _into: SourceType<N, S, any>;
   public _columns: C[];
-  public _with: NamedSource<keyof W, any>[];
-  public _withFields: SourcesFieldsFactory<MergeObjects<W, Record<I, S>>>;
   public _values: QueryInsertValuesResolved<S, C>[];
-  public _returning: R;
-
+  
   public constructor() 
   {
     super();
 
     this._into = null as any;
     this._columns = [] as any;
-    this._with = [];
-    this._withFields = Object.create(null);
     this._values = [];
-    this._returning = [] as any;
-    this._exprs = new ExprFactory(this._withFields as any, [] as any);
   }
 
   public getKind(): ExprKind {
     return ExprKind.QUERY_INSERT;
   }
 
-  public getSelects(): R {
-    return this._returning;
+  protected getMainSource(): SourceType<N, S, any> {
+    return this._into;
   }
 
-  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<W, S, NamedSource<WN, WS>>, recursive?: ExprProvider<MergeObjects<W, Record<WN, WS>>, S, Source<WS>>, all?: boolean): QueryInsert<MergeObjects<W, Record<WN, WS>>, I, S, C, R> {
-    const source = this._exprs.provide(sourceProvider as any);
-
-    this.addWith(source as any);
-
-    if (recursive) {
-      const recursiveSource = this._exprs.provide(recursive as any);
-
-      this.addWith(new SourceRecursive(source.getName(), source.getSource(), recursiveSource, all) as any);
-    }
-
-    return this as any;
+  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, Source<WS>>, all?: boolean): QueryInsert<JoinedInner<T, WN, WS>, N, S, C, R> {
+    return super.with(sourceProvider, recursive, all) as any;
   }
 
-  protected addWith(source: NamedSource<any, any>): void {
-    (this as any)._with.push(source);
-    (this as any)._withFields[source.getName()] = source.getFieldsFactory();
-  }
-
-  public into<IN extends Name, IT extends Selects>(into: SourceType<IN, IT, any>): QueryInsert<W, IN, IT, SelectsKey<IT>, []>
-  public into<IN extends Name, IT extends Selects, IC extends SelectsKey<IT>>(into: SourceType<IN, IT, any>, columns: IC[]): QueryInsert<W, IN, Cast<SelectsWithKey<IT, IC>, Selects>, Cast<IC, SelectsKeys<Cast<SelectsWithKey<IT, IC>, Selects>>>, []>
+  public into<IN extends Name, IT extends Selects>(into: SourceType<IN, IT, any>): QueryInsert<JoinedInner<T, IN, IT>, IN, IT, SelectsKey<IT>, []>
+  public into<IN extends Name, IT extends Selects, IC extends SelectsKey<IT>>(into: SourceType<IN, IT, any>, columns: IC[]): QueryInsert<JoinedInner<T, IN, IT>, IN, Cast<SelectsWithKey<IT, IC>, Selects>, Cast<IC, SelectsKeys<Cast<SelectsWithKey<IT, IC>, Selects>>>, []>
   public into<IN extends Name, IT extends Selects, IC extends SelectsKey<IT>>(into: SourceType<IN, IT, any>, columns?: IC[]): never
   {
     (this as any)._into = into;
     (this as any)._columns = columns || into.getSelects().map( s => s.alias );
-    (this as any)._withFields[into.getName()] = into.getFieldsFactory();
+
+    this.addSource(into as any);
     
     return this as never;
   }
 
-  public values(values: ExprProvider<W, [], QueryInsertValuesInput<S, C>>): this 
+  public values(values: ExprProvider<T, [], QueryInsertValuesInput<S, C>>): this 
   {
     this._values.push(ExprScalar.parse(this._exprs.provide(values as any)));
 
@@ -130,37 +99,17 @@ export class QueryInsert<
     return this;
   }
 
-  public returning(output: '*'): QueryInsert<W, I, S, C, S>
-  public returning<RC extends SelectsKey<S>>(output: RC[]): QueryInsert<W, I, S, C, QueryInsertReturningColumns<S, RC>>
-  public returning<RS extends Selects>(output: ExprProvider<MergeObjects<W, Record<I, S>>, [], RS>): QueryInsert<W, I, S, C, SelectsNormalize<ArrayToTuple<RS>>>
-  public returning<RS extends Selects>(output: RS | '*' | Array<keyof S>): never
+  public returning(output: '*'): QueryInsert<T, N, S, C, S>
+  public returning<RC extends SelectsKey<S>>(output: RC[]): QueryInsert<T, N, S, C, QueryModifyReturningColumns<R, S, RC>>
+  public returning<RS extends Tuple<Select<any, any>>>(output: ExprProvider<T, [], RS>): QueryInsert<T, N, S, C, QueryModifyReturningExpressions<R, RS>>
+  public returning<RS extends Tuple<Select<any, any>>>(output: RS | '*' | Array<keyof S>): never
   {
-    if (output === '*') 
-    {
-      if (this._into) 
-      {
-        this._returning = this._into.getSelects() as any as R;
-      }
-    }
-    else if (isArray<keyof S>(output) && isString(output[0]))
-    {
-      this._returning.push(...output.map( alias => this._into.getFields()[alias as any] ));
-    }
-    else
-    {
-      const exprs = this._exprs.provide(output);
-
-      this._returning.push(...exprs as any);
-    }
-
-    return this as never;
+    return super.returning(output as any) as never;
   }
 
-  public clearReturning(): QueryInsert<W, I, S, C, []> 
+  public clearReturning(): QueryInsert<T, N, S, C, []> 
   {
-    this._returning = [] as any;
-
-    return this as any;
+    return super.clearReturning() as any;
   }
 
 }

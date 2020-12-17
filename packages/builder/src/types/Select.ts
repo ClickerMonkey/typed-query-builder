@@ -1,6 +1,6 @@
-import { Expr } from '../exprs';
+import { Expr, ExprInput } from '../exprs';
 import { Select } from '../select';
-import { Cast, MergeObjects, Simplify, UndefinedToOptional, UnionToIntersection, UnionToTuple } from './Core';
+import { Cast, Simplify, UndefinedToOptional, UnionToIntersection, UnionToTuple } from './Core';
 import { Name } from './Query';
 import { Sources } from './Source';
 import { AppendTuples, ArrayToTuple, FlattenTuple, Tuple } from './Tuple';
@@ -56,11 +56,29 @@ export type SelectsNameless<T extends Selects> = {
   [K in keyof T]: T[K] extends Select<any, infer V> ? Select<any, V> : never;
 };
 
+export type SelectsTupleEquivalent<S extends Selects> = 
+  S extends [] 
+    ? never
+    : S extends [Select<any, infer V>]
+      ? Expr<V> | Expr<S>
+      : SelectsValuesExprs<S> | Expr<S>
+;
+
 export type ObjectFromSelects<T extends Selects> = 
   UndefinedToOptional<
     Simplify<UnionToIntersection<{
       [K in keyof T]: T[K] extends Select<infer P, infer V>
         ? { [_P in P]: V }
+        : {}
+    }[number]>>
+  >
+;
+
+export type ObjectExprFromSelects<T extends Selects> = 
+  Partial<
+    Simplify<UnionToIntersection<{
+      [K in keyof T]: T[K] extends Select<infer P, infer V>
+        ? { [_P in P]: ExprInput<V> }
         : {}
     }[number]>>
   >

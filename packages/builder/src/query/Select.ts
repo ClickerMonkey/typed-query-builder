@@ -123,14 +123,6 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
     return this as any;
   }
 
-  public using<R extends QuerySelect<T, any>>(context: (query: this, selects: SourcesFieldsFactory<T>, exprs: ExprFactory<T, S>, fns: FunctionProxy) => R): R {
-    return context(this, this._criteria.sourcesFields, this._criteria.exprs, fns);
-  }
-
-  public maybe<MT extends Sources = {}, MS extends Selects = []>(condition: any, maybeQuery: (query: this) => QuerySelect<MT, MS>): QuerySelect<MaybeSources<T, MT>, MaybeSelects<S, MS>> {
-    return (condition ? maybeQuery(this) : this) as any;
-  }
-
   public where(conditions: ExprProvider<T, S, ExprScalar<boolean> | ExprScalar<boolean>[]>): this {
     const resolved = this._criteria.exprs.provide(conditions);
     const values = isArray(resolved)
@@ -208,6 +200,14 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
     this._lock = type;
 
     return this;
+  }
+
+  public using<R>(context: (query: this, selects: SourcesFieldsFactory<T>, exprs: ExprFactory<T, S>, fns: FunctionProxy) => R): R {
+    return context(this, this._criteria.sourcesFields, this._criteria.exprs, fns);
+  }
+
+  public maybe<MT extends Sources = {}, MS extends Selects = []>(condition: any, maybeQuery: (query: this) => QuerySelect<MT, MS>): QuerySelect<MaybeSources<T, MT>, MaybeSelects<S, MS>> {
+    return (condition ? maybeQuery(this) : this) as any;
   }
 
   public aggregate<AT extends AggregateType, V extends SelectsKey<S>>(type: AT, value?: V | ExprProvider<T, S, ExprScalar<any>>, distinct: boolean = false): ExprScalar<number> {

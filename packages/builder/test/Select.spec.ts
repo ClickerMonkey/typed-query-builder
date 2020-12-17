@@ -104,6 +104,16 @@ describe('Select', () => {
     expectExprType<string | undefined>(q.value('parentName'));
   });
 
+  it('constant select', () => {
+    const q = from(Task)
+      .select((sources, { count }) => [
+        count().as('count')
+      ])
+    ;
+
+    expectExprType<[Select<'count', number>][]>(q);
+  });
+
   it('counts', () => {
 
     const q = query()

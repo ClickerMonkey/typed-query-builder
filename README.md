@@ -13,7 +13,7 @@ The most advanced TypeScript query builder available! It can generate SQL, be tr
 
 ```typescript
 // This translates data types to TypeScript types
-const Task = defineSource({
+const Task = define({
   name: 'task',
   fields: {
     id: 'INT',
@@ -79,7 +79,6 @@ const q = query()
  *  taskCount: number,
  * }>
  * 
- * q.row() = [number, string, boolean, Date, number, string, number]
  * q.first() = result
  * q.max('lowerName') = string
  * q.list('name') = string[]
@@ -213,8 +212,6 @@ RETURNING (* | scalar, ...)
 - DELETE FROM source WHERE condition
 
 ### Refined TODO
-- avoid SourceInstance/T(objects) and just use Selects for Sources. Rename Selects?
-- Change SourceType to return all fields at base, add _ avoid potential conflicts: _table, _primary, _fields, _fieldColumn, _as, _extend, _all, _only, _except
 - for SQL transformers...
   - which char wraps aliases + policy (always, reserved)
   - which char wraps table/columns + policy
@@ -237,6 +234,5 @@ RETURNING (* | scalar, ...)
    - CASE WHEN (a = b) or (a IS NULL AND b IS NULL) THEN 1 ELSE 0 END = 1
    - NOT A <=> B = IS DISTINCT FROM
 - != is always converted to <>
-- certain joins result in types that are partialed
 - when using if to join and search, outside the if maybe have those joins/froms partialed?
 - add optional default to QuerySelect.value()

@@ -1,11 +1,28 @@
 import { QuerySelect } from './query/Select';
 import { QueryInsert } from './query/Insert';
-import { Name, Selects, SelectsFromTypeAndColumns, Sources, Simplify, SelectsKey } from './types';
+import { Name, Selects, SelectsFromTypeAndColumns, Sources, Simplify, SelectsKey, MergeObjects } from './types';
 import { DataTypeInputMap, DataTypeInputMapSelects } from './DataTypes';
 import { NamedSource, SourceTypeInput, Source, SourceType, SourceValues } from './sources';
 import { ExprProvider } from './exprs';
+import { QueryUpdate } from './query/Update';
+import { QueryDelete } from './query/Delete';
 
 
+
+export function values<
+  T extends Record<string, any>,
+  C extends Array<keyof T>
+>(constants: T[], columns?: C): Source<SelectsFromTypeAndColumns<T, C>> {
+  return SourceValues.create(constants, columns);
+}
+
+export function define<
+  N extends Name, 
+  F extends DataTypeInputMap
+>(input: SourceTypeInput<N, F>): SourceType<N, DataTypeInputMapSelects<F>, F>
+{
+  return new SourceType(input);
+}
 
 export function query<
   T extends Sources = {}, 
@@ -29,18 +46,56 @@ export function insert<
   return new QueryInsert();
 }
 
-export function values<
-  T extends Record<string, any>,
-  C extends Array<keyof T>
->(constants: T[], columns?: C): Source<SelectsFromTypeAndColumns<T, C>> {
-  return SourceValues.create(constants, columns);
+export function update<
+  T extends Sources = {}, 
+  F extends Name = never,
+  S extends Selects = [], 
+  R extends Selects = []
+>(): QueryUpdate<T, F, S, R>
+export function update<
+  T extends Sources = {}, 
+  F extends Name = never,
+  S extends Selects = [], 
+  R extends Selects = []
+>(target: SourceType<F, S, any>): QueryUpdate<MergeObjects<T, Record<F, S>>, F, S, R>
+export function update<
+  T extends Sources = {}, 
+  F extends Name = never,
+  S extends Selects = [], 
+  R extends Selects = []
+>(target?: SourceType<F, S, any>): QueryUpdate<T, F, S, R> {
+  const query = new QueryUpdate<T, F, S, R>();
+
+  if (target) {
+    query.update(target);
+  }
+
+  return query;
 }
 
-export function define<
-  N extends Name, 
-  F extends DataTypeInputMap
->(input: SourceTypeInput<N, F>): SourceType<N, DataTypeInputMapSelects<F>, F>
-{
-  return new SourceType(input);
-}
+export function remove<
+  T extends Sources = {}, 
+  F extends Name = never,
+  S extends Selects = [], 
+  R extends Selects = []
+>(): QueryDelete<T, F, S, R>
+export function remove<
+  T extends Sources = {}, 
+  F extends Name = never,
+  S extends Selects = [], 
+  R extends Selects = []
+>(target: SourceType<F, S, any>): QueryDelete<MergeObjects<T, Record<F, S>>, F, S, R>
+export function remove<
+  T extends Sources = {}, 
+  F extends Name = never,
+  S extends Selects = [], 
+  R extends Selects = []
+>(target?: SourceType<F, S, any>): QueryDelete<T, F, S, R> {
+  const query = new QueryDelete<T, F, S, R>();
 
+  if (target) {
+    query.from(target);
+  }
+
+  return query;
+}
