@@ -1,5 +1,5 @@
 import { SelectsFromObject } from '.';
-import { Cast, Json, Selects, Simplify } from './Types';
+import { Cast, Json, Selects, Simplify } from './types';
 
 
 export type defineType<F extends DataTypeInputMap> = Simplify<DataTypeInputMapTypes<F>>;

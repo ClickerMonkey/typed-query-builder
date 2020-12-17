@@ -6,33 +6,28 @@
         "packages/*"
     ],
     "scripts": {
-        "clean": "rimraf ./packages/*/dist",
-        "build": "tsc --build",
-        "lint": "eslint . -f codeframe",
-        "pretest": "yarn build && yarn lint",
-        "test": "yarn test:unit",
-        "test:unit": "mocha \"packages/*/dist/test/**/*.spec.js\" --enable-source-maps",
-        "start": "yarn start:client",
-        "start:client": "yarn workspace @sample/app start",
-        "start:server": "yarn workspace @sample/server start",
-        "prettify": "npx prettier . --write"
+        "clean": "lerna run clean",
+        "build": "lerna run build",
+        "pub": "lerna publish",
+        "test": "lerna run test"
     },
     "devDependencies": {
-        "@types/jest": "24.0.11",
+        "@types/jest": "^26.0.19",
         "@types/node": "11.13.4",
         "commitizen": "3.0.7",
         "cross-var": "1.1.0",
         "cz-conventional-changelog": "2.1.0",
         "gzip-size-cli": "3.0.0",
         "irish-pub": "0.2.0",
-        "jest": "24.7.1",
+        "jest": "26.6.0",
         "jest-cli": "24.7.1",
+        "lerna": "^3.22.1",
         "lint-staged": "8.1.5",
         "prettier": "1.17.0",
         "shx": "0.3.2",
         "standard-version": "5.0.2",
         "strip-json-comments-cli": "1.0.1",
-        "ts-jest": "25.2.1",
+        "ts-jest": "^26.4.4",
         "ts-loader": "6.2.1",
         "tslint": "5.16.0",
         "tslint-config-prettier": "1.18.0",
@@ -47,7 +42,6 @@
         "validate-commit-msg": "2.14.0",
         "webpack": "5.1.0",
         "webpack-cli": "4.0.0",
-        "webpack-config-utils": "2.3.1",
-        "lerna": "^3.22.1"
+        "webpack-config-utils": "2.3.1"
     }
 }

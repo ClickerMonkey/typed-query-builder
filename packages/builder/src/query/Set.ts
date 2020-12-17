@@ -1,5 +1,5 @@
 import { isArray, isString } from '../fns';
-import { OrderDirection, Selects, SelectsKeys, SetOperation, SourceCompatible } from '../Types';
+import { OrderDirection, Selects, SelectsKeys, SetOperation, SourceCompatible } from '../types';
 import { Expr, ExprField, ExprProvider } from '../exprs';
 import { OrderBy } from '../Order';
 import { Source } from '../sources';

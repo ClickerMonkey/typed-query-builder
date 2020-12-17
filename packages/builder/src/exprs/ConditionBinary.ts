@@ -1,6 +1,6 @@
 import { ExprKind } from '../Kind';
 import { Traverser } from '../Traverser';
-import { ConditionBinaryType } from '../Types';
+import { ConditionBinaryType } from '../types';
 import { Expr } from './Expr';
 import { ExprScalar } from './Scalar';
 

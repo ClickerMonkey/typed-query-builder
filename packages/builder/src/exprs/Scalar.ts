@@ -1,10 +1,10 @@
-import { isArray } from "util";
 import { ExprCast, ExprCase, ExprOperationUnary, ExprOperationBinary, ExprConditionUnary, ExprConditionBinary, ExprBetween, ExprIn, ExprConditions } from ".";
 import { DataTypeInputs, DataTypeInputType, OperationUnaryType, OperationBinaryType, ConditionBinaryType, ConditionUnaryType, ConditionBinaryListType } from "..";
 import { Select, SelectExpr } from "../select";
 import { ExprConditionBinaryList } from "./ConditionBinaryList";
 import { ExprConstant } from "./Constant";
 import { Expr } from "./Expr";
+import { isArray } from '../fns';
 
 
 export type ExprInput<T> = ExprScalar<T> | T;
@@ -120,16 +120,16 @@ export abstract class ExprScalar<T> extends Expr<T>
   }
 
   public isNull(): ExprScalar<boolean> {
-    return new ExprConditionUnary('NULL', ExprScalar.parse(this));
+    return new ExprConditionUnary('NULL', this);
   }
   public isNotNull(): ExprScalar<boolean> {
-    return new ExprConditionUnary('NOT NULL', ExprScalar.parse(this));
+    return new ExprConditionUnary('NOT NULL', this);
   }
   public isTrue(): ExprScalar<boolean> {
-    return new ExprConditionUnary('TRUE', ExprScalar.parse(this));
+    return new ExprConditionUnary('TRUE', this);
   }
   public isFalse(): ExprScalar<boolean> {
-    return new ExprConditionUnary('FALSE', ExprScalar.parse(this));
+    return new ExprConditionUnary('FALSE', this);
   }
 
   public in(values: ExprInput<T[]> | ExprInput<T>[]): ExprScalar<boolean>

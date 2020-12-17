@@ -1,4 +1,4 @@
-import { OrderDirection } from './Types';
+import { OrderDirection } from './types';
 import { Expr } from './exprs/Expr';
 
 

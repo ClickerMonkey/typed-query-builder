@@ -1,7 +1,7 @@
 import { DataTypeInputs, DataTypeInputType } from '../DataTypes';
 import { isArray, isFunction } from '../fns';
 import { fns, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions } from '../Functions';
-import { AggregateType, ConditionBinaryListType, ConditionBinaryType, ConditionUnaryType, JoinTuples, OperationBinaryType, OperationUnaryType, Selects, SelectsExprs, Sources } from '../Types';
+import { AggregateType, ConditionBinaryListType, ConditionBinaryType, ConditionUnaryType, JoinTuples, OperationBinaryType, OperationUnaryType, Selects, SelectsExprs, Sources } from '../types';
 import { QuerySelect } from '../query/Select';
 import { ExprAggregate } from './Aggregate';
 import { ExprBetween } from './Between';
@@ -28,6 +28,7 @@ import { Select } from '../select';
 import { ExprScalar, SourcesFieldsFactory } from '..';
 import { ExprInput } from './Scalar';
 import { SourceUnspecified } from '../sources/Unspecified';
+import { ExprNull } from './Null';
 
 
 
@@ -60,6 +61,10 @@ export class ExprFactory<T extends Sources, S extends Selects>
 
   public defaults<V>(): Expr<V> {
     return new ExprDefault();
+  }
+
+  public nulls<V>(): Expr<V> {
+    return new ExprNull();
   }
 
   public param<V>(param: string): ExprScalar<V> {

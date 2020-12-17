@@ -1,5 +1,5 @@
-import { Select, Source, values } from "../src";
-import { NamedSource } from "../src/sources/Named";
+import { describe, it } from '@jest/globals';
+import { Select, Source, NamedSource, values } from '@typed-query-builder/builder';
 import { expectType } from "./helper";
 
 

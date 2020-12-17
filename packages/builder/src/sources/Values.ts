@@ -1,5 +1,5 @@
 import { keys } from '../fns';
-import { Selects, SelectsKeys, ObjectFromSelects } from '../Types';
+import { Selects, SelectsKeys, ObjectFromSelects } from '../types';
 import { Source } from './Source';
 import { ExprKind } from '../Kind';
 import { SelectsFromTypeAndColumns } from '..';

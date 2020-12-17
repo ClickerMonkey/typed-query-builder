@@ -1,6 +1,6 @@
 import { ExprKind } from '../Kind';
 import { Traversable, Traverser } from '../Traverser';
-import { Simplify } from '../Types';
+import { Simplify } from '../types';
 
 
 
@@ -10,12 +10,12 @@ export type ExprTypeMap<T> = Simplify<{
   [K in keyof T]: ExprType<T[K]>
 }>;
 
-export abstract class Expr<T> implements Traversable<Expr<T>>
+export abstract class Expr<T> implements Traversable<Expr<unknown>>
 {
 
   public abstract getKind(): ExprKind;
 
-  public traverse<R>(traverse: Traverser<Expr<T>, R>): R
+  public traverse<R>(traverse: Traverser<Expr<unknown>, R>): R
   {
     return traverse.enter(this);
   }

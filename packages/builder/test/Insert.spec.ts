@@ -1,5 +1,6 @@
-import { define, insert, ExprField, QueryInsert, Select, query } from '../src/';
-import { expectExpr, expectExprType, expectType } from './helper';
+import { describe, it } from '@jest/globals';
+import { define, insert, query } from '@typed-query-builder/builder';
+import { expectExpr, expectExprType } from './helper';
 
 
 // tslint:disable: no-magic-numbers
@@ -68,12 +69,12 @@ describe('Select', () => {
           .as('people')
       )
       .into(Task)
-      .values(({ people }, { defaults }) => [
+      .values(({ people }, { defaults, nulls }) => [
         defaults(),
         'Task #1',
         false,
-        null,
-        null,
+        nulls(),
+        nulls(),
         people.id
       ])
     ;
@@ -90,19 +91,19 @@ describe('Select', () => {
           .as('people')
       )
       .into(Task)
-      .values(({ people }, { defaults }) => [{
+      .values(({ people }, { defaults, nulls }) => [{
         id: defaults(),
         name: 'Task #1',
         done: false,
-        doneAt: null,
-        parentId: null,
+        doneAt: nulls(),
+        parentId: nulls(),
         assignee: people.id
       }, {
         id: defaults(),
         name: 'Task #1 Child',
         done: false,
-        doneAt: null,
-        parentId: null,
+        doneAt: nulls(),
+        parentId: nulls(),
         assignee: people.id
       }])
     ;
@@ -119,12 +120,12 @@ describe('Select', () => {
           .as('people')
       )
       .into(Task)
-      .values(({ people }, { defaults }) => [
+      .values(({ people }, { defaults, nulls }) => [
         defaults(),
         'Task #1',
         false,
-        null,
-        null,
+        nulls(),
+        nulls(),
         people.id
       ])
       .returning(['id'])
@@ -142,12 +143,12 @@ describe('Select', () => {
           .as('people')
       )
       .into(Task)
-      .values(({ people }, { defaults }) => [
+      .values(({ people }, { defaults, nulls }) => [
         defaults(),
         'Task #1',
         false,
-        null,
-        null,
+        nulls(),
+        nulls(),
         people.id
       ])
     ;
@@ -164,12 +165,12 @@ describe('Select', () => {
           .as('people')
       )
       .into(Task)
-      .values(({ people }, { defaults }) => [
+      .values(({ people }, { defaults, nulls }) => [
         defaults(),
         'Task #1',
         false,
-        null,
-        null,
+        nulls(),
+        nulls(),
         people.id
       ])
       .returning(['id', 'done'])
@@ -188,12 +189,12 @@ describe('Select', () => {
           .as('people')
       )
       .into(Task)
-      .values(({ people }, { defaults }) => [
+      .values(({ people }, { defaults, nulls }) => [
         defaults(),
         'Task #1',
         false,
-        null,
-        null,
+        nulls(),
+        nulls(),
         people.id
       ])
       .returning(({ task }, {}, { lower }) => [
@@ -214,12 +215,12 @@ describe('Select', () => {
           .as('people')
       )
       .into(Task)
-      .values(({ people }, { defaults }) => [
+      .values(({ people }, { defaults, nulls }) => [
         defaults(),
         'Task #1',
         false,
-        null,
-        null,
+        nulls(),
+        nulls(),
         people.id
       ])
       .returning(({ task }, {}, { lower }) => [
@@ -228,25 +229,7 @@ describe('Select', () => {
       ])
     ;
 
-    expectExpr<[
-      string, 
-      number, 
-      string, 
-      boolean, 
-      Date, 
-      number, 
-      number
-    ][]>(q); // TODO
-
-    expectExprType<{ 
-      lower: string,
-      id: number,
-      name: string,
-      done: boolean,
-      doneAt: Date,
-      parentId: number,
-      assignee: number,
-    }[]>(q.objects());
+    expectExpr<[{ lower: string, id: number, name: string, done: boolean, doneAt: Date, parentId: number, assignee: number }]>(q);
   });
 
 });

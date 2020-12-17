@@ -1,6 +1,6 @@
 import { ExprKind } from '../Kind';
 import { Traverser } from '../Traverser';
-import { ConditionUnaryType } from '../Types';
+import { ConditionUnaryType } from '../types';
 import { Expr } from './Expr';
 import { ExprScalar } from './Scalar';
 

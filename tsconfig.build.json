@@ -28,5 +28,9 @@
     "downlevelIteration": true
   },
   "compileOnSave": false,
-  "buildOnSave": false
+  "buildOnSave": false,
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

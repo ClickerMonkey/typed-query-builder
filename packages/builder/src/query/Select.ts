@@ -1,5 +1,5 @@
 import { isArray, isFunction, isString } from '../fns';
-import { SourcesFieldsFactory, Cast, AggregateType, JoinType, Selects, Sources, Name, OrderDirection, AppendTuples, MergeObjects, SelectsKeys, ArrayToTuple, LockType, SelectWithKey, SourcesSelectsOptional, SelectsOptional, Simplify, SelectValueWithKey, SelectsKey, FlattenTuple, TupleOf, SelectsWithKey, SelectsKeyWithType } from '../Types';
+import { SourcesFieldsFactory, AggregateType, JoinType, Selects, Sources, Name, OrderDirection, MergeObjects, SelectsKeys, LockType, SelectWithKey, Simplify, SelectValueWithKey, SelectsKey, Tuple, SelectsKeyWithType, JoinedInner, JoinedRight, JoinedLeft, JoinedFull, SelectAllSelects, SelectGivenSelects, MaybeSources, MaybeSelects } from '../types';
 import { ExprAggregate } from '../exprs/Aggregate';
 import { ExprProvider, ExprFactory } from '../exprs/Factory';
 import { Expr, ExprType } from '../exprs/Expr';
@@ -19,30 +19,6 @@ import { SourceRecursive } from '../sources/Recursive';
 import { ExprInput, ExprScalar } from '../exprs/Scalar';
 
 
-
-type JoinedInner<T extends Sources, JN extends Name, JT extends Selects> = 
-  Simplify<MergeObjects<T, Record<JN, JT>>>;
-
-type JoinedLeft<T extends Sources, JN extends Name, JT extends Selects> = 
-  Simplify<MergeObjects<T, Record<JN, SelectsOptional<JT>>>>;
-
-type JoinedRight<T extends Sources, JN extends Name, JT extends Selects> = 
-  Simplify<Cast<MergeObjects<SourcesSelectsOptional<T>, Record<JN, JT>>, Sources>>;
-
-type JoinedFull<T extends Sources, JN extends Name, JT extends Selects> = 
-  Simplify<Cast<MergeObjects<SourcesSelectsOptional<T>, Record<JN, SelectsOptional<JT>>>, Sources>>;
-
-type SelectAllSelects<T extends Sources, S extends Selects> = 
-  AppendTuples<S, FlattenTuple<T[keyof T]>>
-
-type SelectGivenSelects<S extends Selects, FS extends Select<any, any>[]> = 
-  AppendTuples<S, ArrayToTuple<FS>>;
-
-type MaybeSources<A extends Sources, B extends Sources> = 
-  Simplify<MergeObjects<A, SourcesSelectsOptional<B>>>;
-
-type MaybeSelects<A extends Selects, B extends Selects> = 
-  AppendTuples<A, Cast<SelectsOptional<Cast<SelectsWithKey<B, Exclude<SelectsKey<B>, SelectsKey<A>>>, Selects>>, Selects>>;
 
 export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
 {
@@ -101,9 +77,9 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
   }
 
   public join<JN extends Name, JT extends Selects>(type: 'INNER', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, ExprInput<boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S>
-  public join<JN extends Name, JT extends Selects>(type: 'LEFT', source: NamedSource<JN, JT>, on: ExprProvider<JoinedLeft<T, JN, JT>, S, ExprInput<boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S>
-  public join<JN extends Name, JT extends Selects>(type: 'RIGHT', source: NamedSource<JN, JT>, on: ExprProvider<JoinedRight<T, JN, JT>, S, ExprInput<boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S>
-  public join<JN extends Name, JT extends Selects>(type: 'FULL', source: NamedSource<JN, JT>, on: ExprProvider<JoinedFull<T, JN, JT>, S, ExprInput<boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S>
+  public join<JN extends Name, JT extends Selects>(type: 'LEFT', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, ExprInput<boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S>
+  public join<JN extends Name, JT extends Selects>(type: 'RIGHT', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, ExprInput<boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S>
+  public join<JN extends Name, JT extends Selects>(type: 'FULL', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, ExprInput<boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S>
   public join<JN extends Name, JT extends Selects>(type: JoinType, source: NamedSource<JN, JT>, on: any): never  {
     const onExpr = ExprScalar.parse(this._criteria.exprs.provide(on as any));
 
@@ -115,20 +91,20 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
   public joinInner<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, ExprInput<boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S> {
     return this.join('INNER', source, on);
   }
-  public joinLeft<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedLeft<T, JN, JT>, S, ExprInput<boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S> {
+  public joinLeft<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, ExprInput<boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S> {
     return this.join('LEFT', source, on);
   }
-  public joinRight<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedRight<T, JN, JT>, S, ExprInput<boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S> {
+  public joinRight<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, ExprInput<boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S> {
     return this.join('RIGHT', source, on);
   }
-  public joinOuter<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedFull<T, JN, JT>, S, ExprInput<boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S> {
+  public joinOuter<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, ExprInput<boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S> {
     return this.join('FULL', source, on);
   }
 
 
   public select(selects: '*'): QuerySelect<T, SelectAllSelects<T, S>>
-  public select<FS extends Select<any, any>[]>(selects: ExprProvider<T, S, FS>): QuerySelect<T, SelectGivenSelects<S, FS>>
-  public select<FS extends TupleOf<Select<any, any>>>(...selects: FS): QuerySelect<T, SelectGivenSelects<S, FS>>
+  public select<FS extends Tuple<Select<any, any>>>(selects: ExprProvider<T, S, FS>): QuerySelect<T, SelectGivenSelects<S, FS>>
+  public select<FS extends Tuple<Select<any, any>>>(...selects: FS): QuerySelect<T, SelectGivenSelects<S, FS>>
   public select(...selectInput: any[]): never {
     const selects: Select<any, any>[] = isFunction(selectInput[0])
       ? this._criteria.exprs.provide(selectInput[0])

@@ -1,4 +1,4 @@
-import { Name, JoinType, Selects } from '../Types';
+import { Name, JoinType, Selects } from '../types';
 import { NamedSourceBase } from './NamedBase';
 import { NamedSource } from './Named';
 import { ExprScalar } from '../exprs';

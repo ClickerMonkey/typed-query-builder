@@ -1,4 +1,4 @@
-import { Name } from '../Types';
+import { Name } from '../types';
 import { Select } from '../select/Select';
 import { ExprScalar } from './Scalar';
 import { ExprKind } from '../Kind';

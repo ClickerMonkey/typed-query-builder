@@ -1,4 +1,4 @@
-import { Name, Selects, SourceFieldsFromSelects } from "../Types";
+import { Name, Selects, SourceFieldsFromSelects } from "../types";
 import { NamedSource } from "./Named";
 import { Source } from "./Source";
 import { createFields } from '../fns';

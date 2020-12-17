@@ -1,6 +1,6 @@
 import { ExprKind } from '../Kind';
 import { Traverser } from '../Traverser';
-import { AggregateType } from '../Types';
+import { AggregateType } from '../types';
 import { Expr } from './Expr';
 import { ExprScalar } from './Scalar';
 

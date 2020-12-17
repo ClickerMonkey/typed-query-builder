@@ -1,4 +1,4 @@
-import { Name, Selects } from '../Types';
+import { Name, Selects } from '../types';
 import { NamedSourceBase } from './NamedBase';
 import { Source } from './Source';
 

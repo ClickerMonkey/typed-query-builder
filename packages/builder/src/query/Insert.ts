@@ -1,5 +1,5 @@
 import { isArray, isString } from '../fns';
-import { Cast, SelectsRecord, SelectsValues, Name, Selects, Sources, ArrayToTuple, SelectsKeys, MergeObjects, SourcesFieldsFactory, SelectsKey, SelectsWithKey } from '../Types';
+import { Cast, Name, Selects, Sources, ArrayToTuple, SelectsKeys, MergeObjects, SourcesFieldsFactory, SelectsKey, SelectsWithKey, SelectsValuesExprs, SelectsRecordExprs, SelectsNormalize } from '../types';
 import { Expr, ExprFactory, ExprInput, ExprProvider, ExprScalar } from '../exprs';
 import { NamedSource, Source, SourceRecursive, SourceType } from '../sources';
 import { ExprKind } from '../Kind';
@@ -15,15 +15,15 @@ export type QueryInsertReturningColumns<
   C extends SelectsKey<T> = never
 > = Cast<QueryInsertReturning<T, C>, Selects>;
 
-export type QueryInsertValuesArray<
+export type QueryInsertValuesTuple<
   T extends Selects = never, 
   C extends SelectsKey<T> = never,
-> = SelectsValues<Cast<SelectsWithKey<T, C>, Selects>>
+> = SelectsValuesExprs<Cast<SelectsWithKey<T, C>, Selects>>
 
 export type QueryInsertValuesObject<
   T extends Selects = never, 
   C extends SelectsKey<T> = never,
-> = SelectsRecord<Cast<SelectsWithKey<T, C>, Selects>>;
+> = SelectsRecordExprs<Cast<SelectsWithKey<T, C>, Selects>>;
 
 export type QueryInsertValuesInput<
   T extends Selects = never, 
@@ -31,8 +31,8 @@ export type QueryInsertValuesInput<
 > = ExprInput<
   QueryInsertValuesObject<T, C> |
   QueryInsertValuesObject<T, C>[] |
-  QueryInsertValuesArray<T, C> |
-  QueryInsertValuesArray<T, C>[]
+  QueryInsertValuesTuple<T, C> |
+  QueryInsertValuesTuple<T, C>[]
 >;
 
 export type QueryInsertValuesResolved<
@@ -41,8 +41,8 @@ export type QueryInsertValuesResolved<
 > = Expr<
   QueryInsertValuesObject<T, C> |
   QueryInsertValuesObject<T, C>[] |
-  QueryInsertValuesArray<T, C> |
-  QueryInsertValuesArray<T, C>[]
+  QueryInsertValuesTuple<T, C> |
+  QueryInsertValuesTuple<T, C>[]
 >;
 
 
@@ -132,7 +132,7 @@ export class QueryInsert<
 
   public returning(output: '*'): QueryInsert<W, I, S, C, S>
   public returning<RC extends SelectsKey<S>>(output: RC[]): QueryInsert<W, I, S, C, QueryInsertReturningColumns<S, RC>>
-  public returning<RS extends Selects>(output: ExprProvider<MergeObjects<W, Record<I, S>>, [], RS>): QueryInsert<W, I, S, C, ArrayToTuple<RS>>
+  public returning<RS extends Selects>(output: ExprProvider<MergeObjects<W, Record<I, S>>, [], RS>): QueryInsert<W, I, S, C, SelectsNormalize<ArrayToTuple<RS>>>
   public returning<RS extends Selects>(output: RS | '*' | Array<keyof S>): never
   {
     if (output === '*') 

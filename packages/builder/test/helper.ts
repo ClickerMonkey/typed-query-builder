@@ -1,11 +1,5 @@
-import { Expr, Select } from '../src/';
-import { Name, ExprValueObjects, SelectsFromObject, Selects, ExprValueToExpr } from '../src/Types';
-
-
-type AA = ExprValueToExpr<boolean>; // Expr<boolean>
-type AB = ExprValueToExpr<string[]>; // Expr<string[]> | Expr<Select<any, string>[]>
-type AC = ExprValueToExpr<[string, number]>; // Expr<[string, number]> | Expr<[Select<any, string>, Select<any, number>]>
-type AD = ExprValueToExpr<[string, boolean]>; // Expr<[string, number]> | Expr<[Select<any, string>, Select<any, boolean>]>
+import { expect } from '@jest/globals';
+import { Name, ExprValueToExpr, Expr, Select } from '@typed-query-builder/builder';
 
 
 export function expectType<T>(type: T) 

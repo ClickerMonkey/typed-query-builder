@@ -1,6 +1,6 @@
 import { DataTypeInputMap, DataTypeInputMapSelects } from '../DataTypes';
 import { createFields, createFieldsFactory, isArray } from '../fns';
-import { AppendTuples, Name, Selects, MergeObjects, SourceFieldsFromSelects, SourceFieldsFunctions, SourceFieldsFactory, SelectsKey, SelectsWithKey, SelectsMap } from '../Types';
+import { AppendTuples, Name, Selects, MergeObjects, SourceFieldsFromSelects, SourceFieldsFunctions, SourceFieldsFactory, SelectsKey, SelectsWithKey, SelectsMap } from '../types';
 import { Source } from './Source';
 import { NamedSource } from './Named';
 import { ExprKind } from '../Kind';

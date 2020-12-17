@@ -1,7 +1,7 @@
 import { isArray } from '..';
 import { ExprKind } from '../Kind';
 import { Traverser } from '../Traverser';
-import { ConditionBinaryListPass, ConditionBinaryListType } from '../Types';
+import { ConditionBinaryListPass, ConditionBinaryListType } from '../types';
 import { Expr } from './Expr';
 import { ExprScalar } from './Scalar';
 

@@ -1,6 +1,6 @@
 import { Expr } from '../exprs';
 import { ExprKind } from '../Kind';
-import { Selects, Sources } from '../Types';
+import { Selects, Sources } from '../types';
 import { QueryCriteria } from './Criteria';
 
 

@@ -3,7 +3,10 @@ module.exports = {
   roots: [
     '<rootDir>/test',
   ],
-  testRegex: '(.*)\\.ts$',
+  testRegex: '(.*)\\.spec\\.ts$',
+  moduleNameMapper: {
+    '^@typed-query-builder/builder$': '<rootDir>/src/'
+  },
   moduleFileExtensions: [
     'js',
     'ts',

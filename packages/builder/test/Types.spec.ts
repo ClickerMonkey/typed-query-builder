@@ -1,4 +1,5 @@
-import { Expr, Select, ExprValueObjects, ExprValueTuples, FlattenTuple, ExprValueToExpr, MergeObjects, UndefinedKeys, SelectWithKey, UnionToIntersection, UnionToTuple, ArrayToTuple, ColumnsToTuple, AppendTuples, ObjectKeys, SelectsKeys, SelectsValues, SelectsNameless, ObjectFromSelects, SelectsExprs, JoinTuples, ExprField, SelectsFromObject, values, SelectsWithKey, Source, NamedSource } from '../src/';
+import { describe, it } from '@jest/globals';
+import { Expr, Select, ExprValueObjects, ExprValueTuples, FlattenTuple, ExprValueToExpr, MergeObjects, UndefinedKeys, SelectWithKey, UnionToIntersection, UnionToTuple, ArrayToTuple, AppendTuples, ObjectKeys, SelectsKeys, SelectsValues, SelectsNameless, ObjectFromSelects, SelectsExprs, JoinTuples, ExprField, SelectsFromObject, values, SelectsWithKey, Source, NamedSource, SelectAllSelects } from '@typed-query-builder/builder';
 import { expectType, expectTypeMatch } from './helper';
 
 
@@ -23,7 +24,7 @@ describe('Types', () => {
 
     it('ExprValueObjects', () => {
         expectTypeMatch<number, ExprValueObjects<number>>(true);
-        expectTypeMatch<{ name: string }, ExprValueObjects<[Select<'name', string>]>>(true);
+        expectTypeMatch<string[], ExprValueObjects<[Select<'name', string>]>>(true);
         expectTypeMatch<{ name: string, id: number }, ExprValueObjects<[Select<'name', string>, Select<'id', number>]>>(true);
         expectTypeMatch<{ name: string, id: number }[], ExprValueObjects<[Select<'name', string>, Select<'id', number>][]>>(true);
         expectTypeMatch<string[], ExprValueObjects<string[]>>(true);
@@ -140,7 +141,7 @@ describe('Types', () => {
     
         expectTypeMatch<
             [Select<"count", number>, Select<"name", string>, Select<"id", number>, Select<"done", boolean>], 
-            AppendTuples<Test2a, FlattenTuple<Test2b[keyof Test2b]>>
+            SelectAllSelects<Test2b, Test2a>
         >(true);
     })
 
@@ -225,20 +226,18 @@ describe('Types', () => {
         type A = {};
         type B = { x: number };
         type C = { y: string, x: number };
-        type D = { x: number } | { x: number, y: string };
         type E = { y: string, w?: number };
 
         expectTypeMatch<[], SelectsFromObject<A>>(true);
         expectTypeMatch<[Select<"x", number>], SelectsFromObject<B>>(true);
         expectTypeMatch<[Select<"x", number>, Select<"y", string>], SelectsFromObject<C>>(true);
-        expectTypeMatch<[Select<"x", number>, Select<"y", string | undefined>], SelectsFromObject<D>>(true);
         expectTypeMatch<[Select<"y", string>, Select<"w", number | undefined>], SelectsFromObject<E>>(true);
     });
 
     it('ExprValueToExpr', () => {
         expectTypeMatch<Expr<number>, ExprValueToExpr<number>>(true);
         expectTypeMatch<Expr<number[]> | Expr<Select<any, number>[]>, ExprValueToExpr<number[]>>(true);
-        expectTypeMatch<Expr<number[]> | Expr<Select<any, string | number>[]>, ExprValueToExpr<(string | number)[]>>(true);
+        expectTypeMatch<Expr<(string | number)[]> | Expr<Select<any, string | number>[]>, ExprValueToExpr<(string | number)[]>>(true);
         expectTypeMatch<Expr<[Select<'x', number>]>, ExprValueToExpr<{ x: number }>>(true);
         expectTypeMatch<Expr<[Select<'x', number>, Select<'y', string>]>, ExprValueToExpr<{ x: number, y: string }>>(true);
         expectTypeMatch<Expr<[Select<'x', number>, Select<'y', string>][]>, ExprValueToExpr<{ x: number, y: string }[]>>(true);

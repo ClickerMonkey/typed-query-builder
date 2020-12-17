@@ -1,4 +1,4 @@
-import { Selects, SelectsExprs, Sources } from '../Types';
+import { Selects, SelectsExprs, Sources } from '../types';
 import { ExprFactory } from '../exprs/Factory';
 import { OrderBy } from '../Order';
 import { Select } from '../select/Select';

@@ -1,4 +1,5 @@
-import { define, query, from, Select, values, Expr, ExprValueObjects, ExprType } from '../src/';
+import { describe, it } from '@jest/globals';
+import { define, query, from, Select, values, Expr, ExprValueObjects, ExprType } from '@typed-query-builder/builder';
 import { expectExpr, expectExprType, expectSelect, expectExtends, expectTypeMatch } from './helper';
 
 
@@ -76,7 +77,7 @@ describe('Select', () => {
     const q = from(Task)
       .select('*')
       .maybe(request.query, (q) => q
-        .where(Task.fields.name.like(request.query))
+        .where(Task.fields.name.like(request.query as string))
       )
       .maybe(request.limit, (q) => q
         .limit(request.limit)
@@ -91,9 +92,16 @@ describe('Select', () => {
     ;
 
     expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number, parentName?: string }]>(q);
-    expectTypeMatch<{}[], ExprValueObjects<ExprType<typeof q>>>(true);
+    expectTypeMatch<{
+      id: number;
+      name: string;
+      done: boolean;
+      doneAt: Date;
+      parentId: number;
+      parentName?: string | undefined;
+    }[], ExprValueObjects<ExprType<typeof q>>>(true);
 
-    expectExpr<string>(q.value('parentName'));
+    expectExprType<string | undefined>(q.value('parentName'));
   });
 
   it('counts', () => {
@@ -122,10 +130,9 @@ describe('Select', () => {
       .with(
         values([{ id: 43 }]).as('tasks'),
         ({ tasks }) =>
-          query()
-            .from(Task)
-            .select([Task.fields.id])
-            .where([tasks.id.eq(Task.fields.parentId)])
+          from(Task)
+          .select([Task.fields.id])
+          .where([tasks.id.eq(Task.fields.parentId)])
       )
       .from('tasks')
       .select('*')
@@ -189,6 +196,7 @@ describe('Select', () => {
   });
 
   it('union', () => {
+
     const q = query()
       .select((sources, { constant }) => [
         constant(1).as('value'),
@@ -214,14 +222,16 @@ describe('Select', () => {
         query()
           .from(Task)
           .select(
-            Task.select.parentId,
-            Task.select.name
+            Task.fields.parentId,
+            Task.fields.name
           )
       )
       .orderBy(({ set }) => set.message, 'DESC')
       .offset(10)
       .limit(10)
     ;
+
+    expectExprType<[Select<'value', number>, Select<'message', string>][]>(q);
   });
 
 });

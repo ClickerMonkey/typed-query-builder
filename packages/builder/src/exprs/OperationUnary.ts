@@ -1,7 +1,7 @@
 import { ExprScalar } from '..';
 import { ExprKind } from '../Kind';
 import { Traverser } from '../Traverser';
-import { OperationUnaryType } from '../Types';
+import { OperationUnaryType } from '../types';
 import { Expr } from './Expr';
 
 

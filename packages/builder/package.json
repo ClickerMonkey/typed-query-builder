@@ -5,6 +5,9 @@
   "description": "A fully-featured fully-typed single-interface query builder for any database.",
   "main": "dist/typed-query-builder.js",
   "typings": "typings/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "repository": {
     "type": "git",
@@ -17,17 +20,16 @@
     "node": ">=6.9"
   },
   "scripts": {
-    "build": "yarn bundle:prod",
-    "bundle:prod": "webpack --mode production",
-    "bundle:dev": "webpack --mode development --devtool source-map",
-    "prepack": "yarn build",
+    "build": "yarn run clean && yarn run compile",
+    "clean": "rimraf -rf ./dist",
+    "compile": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "yarn run build",
     "test": "jest",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "test:watch": "npm test -- --watch",
     "test:coverage": "npm test -- --coverage",
     "test:only-changed": "npm test -- --bail --onlyChanged",
     "prebuild": "npm run verify",
-    "docs": "typedoc -p . --readme README.md --theme minimal --mode file --target 'es5' --excludeNotExported --excludePrivate --ignoreCompilerErrors --exclude \"**/test/**/*.*\" --out ../typed-query-builder-pages/docs src/ && cp -R examples ../typed-query-builder-pages/ && cp -R umd ../typed-query-builder-pages/",
     "verify": "npm test",
     "circular": "madge --circular --extensions ts,tsx ./src",
     "cz": "git-cz",
@@ -38,5 +40,9 @@
   },
   "tslint": {
     "extends": "../../tslint.json"
+  },
+  "devDependencies": {
+    "@types/jest": "25.2.1",
+    "jest": "26.6.0"
   }
 }

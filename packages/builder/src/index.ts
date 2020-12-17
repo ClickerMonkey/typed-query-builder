@@ -1,6 +1,6 @@
 
 export * from './fns';
-export * from './Types';
+export * from './types';
 export * from './DataTypes';
 export * from './Functions';
 export * from './Order';

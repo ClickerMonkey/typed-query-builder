@@ -1,6 +1,6 @@
 import { QuerySelect } from './query/Select';
 import { QueryInsert } from './query/Insert';
-import { Name, Selects, SelectsKeys, SelectsFromTypeAndColumns, Sources, Simplify, SelectsKey } from './Types';
+import { Name, Selects, SelectsFromTypeAndColumns, Sources, Simplify, SelectsKey } from './types';
 import { DataTypeInputMap, DataTypeInputMapSelects } from './DataTypes';
 import { NamedSource, SourceTypeInput, Source, SourceType, SourceValues } from './sources';
 import { ExprProvider } from './exprs';

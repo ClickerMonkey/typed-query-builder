@@ -1,4 +1,4 @@
-import { Name } from '../Types';
+import { Name } from '../types';
 import { ExprScalar } from '..';
 
 

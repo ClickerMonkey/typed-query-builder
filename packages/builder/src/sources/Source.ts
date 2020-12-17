@@ -1,4 +1,4 @@
-import { Selects, Name, SourceCompatible } from "../Types";
+import { Selects, Name, SourceCompatible } from "../types";
 import { Expr } from "../exprs";
 import { QuerySet } from "../query";
 import { NamedSource } from "./Named";

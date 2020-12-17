@@ -1,4 +1,4 @@
-import { Selects, Sources } from '../Types';
+import { Selects, Sources } from '../types';
 import { Expr } from '../exprs/Expr';
 import { QueryCriteria } from './Criteria';
 import { ExprKind } from '../Kind';

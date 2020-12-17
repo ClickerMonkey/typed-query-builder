@@ -14,6 +14,7 @@ export * from './Field';
 export * from './Function';
 export * from './In';
 export * from './Not';
+export * from './Null';
 export * from './OperationBinary';
 export * from './OperationUnary';
 export * from './Param';
