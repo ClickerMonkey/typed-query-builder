@@ -35,4 +35,5 @@ export const enum ExprKind {
     QUERY_UPDATE            = 'upd',
     QUERY_DELETE            = 'del',
     QUERY_SET_OPERATION     = 'set',
+    USER_DEFINED            = 'user',
 }

@@ -27,8 +27,6 @@ export type JoinType = 'INNER' | 'LEFT' | 'RIGHT' | 'FULL';
 
 export type OrderDirection = 'ASC' | 'DESC';
 
-export type AggregateType = 'COUNT' | 'AVG' | 'SUM'| 'MIN' | 'MAX' | 'STDEV' | 'VAR';
-
 export type SetOperation = 'UNION' | 'INTERSECT' | 'EXCEPT';
 
 export type LockType = 'update' | 'share' | 'none';
@@ -36,3 +34,22 @@ export type LockType = 'update' | 'share' | 'none';
 export type ConditionBinaryListType = '>' | '>=' | '<' | '<=' | '=' | '!=' | '<>';
 
 export type ConditionBinaryListPass = 'ANY' | 'ALL';
+
+
+export interface AggregateFunctions
+{
+  count(value?: any): number;
+  countIf(condition: boolean): number;
+  sum(value: number): number;
+  avg(value: number): number;
+  min<T>(value: T): T;
+  max<T>(value: T): T;
+  deviation(values: number): number;
+  variance(values: number): number;
+  array<T>(value: T): T[];
+  string(value: string, delimiter: string): string;
+  bitAnd(value: number): number;
+  bitOr(value: number): number;
+  boolAnd(value: boolean): boolean;
+  boolOr(value: boolean): boolean;
+}

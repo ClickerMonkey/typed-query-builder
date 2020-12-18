@@ -1,7 +1,7 @@
 import { isArray, isString } from '../fns';
 import { Cast, Name, Selects, Sources, ArrayToTuple, SourcesFieldsFactory, SelectsKey, SelectsWithKey, SelectsNormalize, AppendTuples, Tuple, JoinedInner } from '../types';
 import { ExprFactory, ExprProvider } from '../exprs';
-import { NamedSource, Source, SourceRecursive, SourceType } from '../sources';
+import { NamedSource, Source, SourceRecursive, SourceTable } from '../sources';
 import { Select } from '../select';
 
 
@@ -49,7 +49,7 @@ export abstract class QueryModify<
     return this._returning;
   }
 
-  protected abstract getMainSource(): SourceType<N, S, any>;
+  protected abstract getMainSource(): SourceTable<N, S, any>;
 
   public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, Source<WS>>, all?: boolean): QueryModify<JoinedInner<T, WN, WS>, N, S, R> 
   {

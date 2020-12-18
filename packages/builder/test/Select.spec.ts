@@ -1,5 +1,5 @@
 import { describe, it } from '@jest/globals';
-import { define, query, from, Select, values, Expr, ExprValueObjects, ExprType } from '@typed-query-builder/builder';
+import { table, query, from, Select, values, Expr, ExprValueObjects, ExprType } from '@typed-query-builder/builder';
 import { expectExpr, expectExprType, expectSelect, expectExtends, expectTypeMatch } from './helper';
 
 
@@ -7,7 +7,7 @@ import { expectExpr, expectExprType, expectSelect, expectExtends, expectTypeMatc
 
 describe('Select', () => {
 
-  const Task = define({
+  const Task = table({
     name: 'task',
     fields: {
       id: 'INT',

@@ -8,7 +8,7 @@ import { ExprField } from '../exprs';
 import { SelectAliased } from '../select';
 
 
-export interface SourceTypeInput<N extends Name, F extends DataTypeInputMap>
+export interface SourceTableInput<N extends Name, F extends DataTypeInputMap>
 {
   name: N;
   table?: string;
@@ -19,12 +19,12 @@ export interface SourceTypeInput<N extends Name, F extends DataTypeInputMap>
   };
 }
 
-export class SourceType<N extends Name, S extends Selects, F extends DataTypeInputMap> extends Source<S> implements NamedSource<N, S>, SourceFieldsFunctions<S>
+export class SourceTable<N extends Name, S extends Selects, F extends DataTypeInputMap> extends Source<S> implements NamedSource<N, S>, SourceFieldsFunctions<S>
 {
   
-  public static create<N extends Name, F extends DataTypeInputMap>(input: SourceTypeInput<N, F>): SourceType<N, DataTypeInputMapSelects<F>, F> 
+  public static create<N extends Name, F extends DataTypeInputMap>(input: SourceTableInput<N, F>): SourceTable<N, DataTypeInputMapSelects<F>, F> 
   {
-    return new SourceType(input);
+    return new SourceTable(input);
   }
 
   public name: N;
@@ -36,7 +36,7 @@ export class SourceType<N extends Name, S extends Selects, F extends DataTypeInp
   protected fieldMap: SourceFieldsFromSelects<S>;
   protected selects: S;
 
-  public constructor(input: SourceTypeInput<N, F>) {
+  public constructor(input: SourceTableInput<N, F>) {
     super();
 
     this.name = input.name;
@@ -73,8 +73,8 @@ export class SourceType<N extends Name, S extends Selects, F extends DataTypeInp
     return this.fields;
   }
 
-  public extend<E extends Name, EF extends DataTypeInputMap>(input: SourceTypeInput<E, EF>): SourceType<E, AppendTuples<S, DataTypeInputMapSelects<EF>>, MergeObjects<F, EF>> {
-    return new SourceType({
+  public extend<E extends Name, EF extends DataTypeInputMap>(input: SourceTableInput<E, EF>): SourceTable<E, AppendTuples<S, DataTypeInputMapSelects<EF>>, MergeObjects<F, EF>> {
+    return new SourceTable({
       name: input.name,
       table: input.table || this.table,
       primary: input.primary,

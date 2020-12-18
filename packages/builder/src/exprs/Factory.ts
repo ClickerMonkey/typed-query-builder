@@ -1,7 +1,7 @@
 import { DataTypeInputs, DataTypeInputType } from '../DataTypes';
 import { isArray, isFunction } from '../fns';
 import { fns, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions } from '../Functions';
-import { AggregateType, ConditionBinaryListType, ConditionBinaryType, ConditionUnaryType, JoinTuples, OperationBinaryType, OperationUnaryType, Selects, SelectsExprs, Sources } from '../types';
+import { AggregateFunctions, ConditionBinaryListType, ConditionBinaryType, ConditionUnaryType, JoinTuples, OperationBinaryType, OperationUnaryType, Selects, SelectsExprs, Sources } from '../types';
 import { QuerySelect } from '../query/Select';
 import { ExprAggregate } from './Aggregate';
 import { ExprBetween } from './Between';
@@ -134,29 +134,29 @@ export class ExprFactory<T extends Sources, S extends Selects>
     );
   }
 
-  public aggregate(type: AggregateType, value?: ExprScalar<any>, distinct: boolean = false): ExprScalar<number> {
-    return new ExprAggregate(type, distinct, value);
+  public aggregate<A extends keyof Aggs, Aggs = AggregateFunctions>(type: A, ...args: FunctionArgumentInputs<A, Aggs>): ExprAggregate<A, Aggs> {
+    return new ExprAggregate(type, (args as any).map( ExprScalar.parse ));
   }
 
-  public count(distinct?: boolean, value?: ExprScalar<any>): ExprScalar<number> {
-    return this.aggregate('COUNT', value, distinct);
+  public count(value?: ExprScalar<any>): ExprAggregate<'count'> {
+    return this.aggregate('count', value);
   }
-  public countIf(condition: ExprScalar<boolean>): ExprScalar<number> {
-    return this.aggregate('COUNT', this.inspect().when<1 | null>(condition, 1).else(null), false);
+  public countIf(condition: ExprScalar<boolean>): ExprAggregate<'countIf'> {
+    return this.aggregate('countIf', condition);
+  }
+  public sum(value: ExprScalar<number>): ExprAggregate<'sum'> {
+    return this.aggregate('sum', value);
+  }
+  public avg(value: ExprScalar<number>): ExprAggregate<'avg'> {
+    return this.aggregate('avg', value);
+  }
+  public min(value: ExprScalar<number>): ExprAggregate<'min'> {
+    return this.aggregate('min', value);
+  }
+  public max(value: ExprScalar<number>): ExprAggregate<'max'> {
+    return this.aggregate('max', value);
   }
 
-  public sum(value: ExprScalar<number>): ExprScalar<number> {
-    return this.aggregate('SUM', value);
-  }
-  public avg(value: ExprScalar<number>): ExprScalar<number> {
-    return this.aggregate('AVG', value);
-  }
-  public min(value: ExprScalar<number>): ExprScalar<number> {
-    return this.aggregate('MIN', value);
-  }
-  public max(value: ExprScalar<number>): ExprScalar<number> {
-    return this.aggregate('MAX', value);
-  }
 
   public op(first: ExprInput<number>, op: OperationUnaryType): ExprScalar<number>
   public op(first: ExprInput<number>, op: OperationBinaryType, second: ExprInput<number>): ExprScalar<number> 

@@ -1,7 +1,7 @@
 import { isArray, isString } from '../fns';
 import { Name, Selects, Sources, MergeObjects, SelectsKey, Simplify, JoinedInner, Tuple } from '../types';
 import { ExprProvider, ExprScalar } from '../exprs';
-import { NamedSource, Source, SourceType } from '../sources';
+import { NamedSource, Source, SourceTable } from '../sources';
 import { ExprKind } from '../Kind';
 import { QueryModify, QueryModifyReturningColumns, QueryModifyReturningExpressions } from './Modify';
 import { Select } from '../select';
@@ -16,7 +16,7 @@ export class QueryDelete<
 
   public static readonly id = ExprKind.QUERY_DELETE;
 
-  public _from: SourceType<N, S, any>;
+  public _from: SourceTable<N, S, any>;
   public _where: ExprScalar<boolean>[];
 
   public constructor() 
@@ -32,7 +32,7 @@ export class QueryDelete<
     return ExprKind.QUERY_DELETE;
   }
 
-  protected getMainSource(): SourceType<N, S, any> 
+  protected getMainSource(): SourceTable<N, S, any> 
   {
     return this._from;
   }
@@ -42,7 +42,7 @@ export class QueryDelete<
     return super.with(sourceProvider, recursive, all) as any;
   }
 
-  public from<FN extends Name, FS extends Selects>(from: SourceType<FN, FS, any>): QueryDelete<T, FN, FS, []> 
+  public from<FN extends Name, FS extends Selects>(from: SourceTable<FN, FS, any>): QueryDelete<T, FN, FS, []> 
   {
     (this as any)._from = from;
     

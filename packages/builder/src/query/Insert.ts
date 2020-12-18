@@ -1,6 +1,6 @@
 import { Cast, Name, Selects, Sources, SelectsKeys, SelectsKey, SelectsWithKey, SelectsValuesExprs, SelectsRecordExprs, Tuple, JoinedInner } from '../types';
 import { Expr, ExprInput, ExprProvider, ExprScalar } from '../exprs';
-import { NamedSource, Source, SourceType } from '../sources';
+import { NamedSource, Source, SourceTable } from '../sources';
 import { ExprKind } from '../Kind';
 import { QueryModify, QueryModifyReturningColumns, QueryModifyReturningExpressions } from './Modify';
 import { Select } from '../select';
@@ -48,7 +48,7 @@ export class QueryInsert<
 
   public static readonly id = ExprKind.QUERY_INSERT;
 
-  public _into: SourceType<N, S, any>;
+  public _into: SourceTable<N, S, any>;
   public _columns: C[];
   public _values: QueryInsertValuesResolved<S, C>[];
   
@@ -65,7 +65,7 @@ export class QueryInsert<
     return ExprKind.QUERY_INSERT;
   }
 
-  protected getMainSource(): SourceType<N, S, any> {
+  protected getMainSource(): SourceTable<N, S, any> {
     return this._into;
   }
 
@@ -73,9 +73,9 @@ export class QueryInsert<
     return super.with(sourceProvider, recursive, all) as any;
   }
 
-  public into<IN extends Name, IT extends Selects>(into: SourceType<IN, IT, any>): QueryInsert<JoinedInner<T, IN, IT>, IN, IT, SelectsKey<IT>, []>
-  public into<IN extends Name, IT extends Selects, IC extends SelectsKey<IT>>(into: SourceType<IN, IT, any>, columns: IC[]): QueryInsert<JoinedInner<T, IN, IT>, IN, Cast<SelectsWithKey<IT, IC>, Selects>, Cast<IC, SelectsKeys<Cast<SelectsWithKey<IT, IC>, Selects>>>, []>
-  public into<IN extends Name, IT extends Selects, IC extends SelectsKey<IT>>(into: SourceType<IN, IT, any>, columns?: IC[]): never
+  public into<IN extends Name, IT extends Selects>(into: SourceTable<IN, IT, any>): QueryInsert<JoinedInner<T, IN, IT>, IN, IT, SelectsKey<IT>, []>
+  public into<IN extends Name, IT extends Selects, IC extends SelectsKey<IT>>(into: SourceTable<IN, IT, any>, columns: IC[]): QueryInsert<JoinedInner<T, IN, IT>, IN, Cast<SelectsWithKey<IT, IC>, Selects>, Cast<IC, SelectsKeys<Cast<SelectsWithKey<IT, IC>, Selects>>>, []>
+  public into<IN extends Name, IT extends Selects, IC extends SelectsKey<IT>>(into: SourceTable<IN, IT, any>, columns?: IC[]): never
   {
     (this as any)._into = into;
     (this as any)._columns = columns || into.getSelects().map( s => s.alias );

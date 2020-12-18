@@ -1,5 +1,5 @@
 import { isArray, isFunction, isString } from '../fns';
-import { SourcesFieldsFactory, AggregateType, JoinType, Selects, Sources, Name, OrderDirection, MergeObjects, SelectsKeys, LockType, SelectWithKey, Simplify, SelectValueWithKey, SelectsKey, Tuple, SelectsKeyWithType, JoinedInner, JoinedRight, JoinedLeft, JoinedFull, SelectAllSelects, SelectGivenSelects, MaybeSources, MaybeSelects } from '../types';
+import { SourcesFieldsFactory, JoinType, Selects, Sources, Name, OrderDirection, MergeObjects, SelectsKeys, LockType, SelectWithKey, Simplify, SelectValueWithKey, SelectsKey, Tuple, SelectsKeyWithType, JoinedInner, JoinedRight, JoinedLeft, JoinedFull, SelectAllSelects, SelectGivenSelects, MaybeSources, MaybeSelects, AggregateFunctions } from '../types';
 import { ExprAggregate } from '../exprs/Aggregate';
 import { ExprProvider, ExprFactory } from '../exprs/Factory';
 import { Expr, ExprType } from '../exprs/Expr';
@@ -11,7 +11,7 @@ import { Source } from '../sources/Source';
 import { SourceJoin } from '../sources/Join';
 import { OrderBy } from '../Order';
 import { Select } from '../select/Select';
-import { fns, FunctionProxy, Functions } from '../Functions';
+import { fns, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions } from '../Functions';
 import { QueryCriteria } from './Criteria';
 import { ExprKind } from '../Kind';
 import { NamedSource } from '../sources/Named';
@@ -210,13 +210,16 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
     return (condition ? maybeQuery(this) : this) as any;
   }
 
-  public aggregate<AT extends AggregateType, V extends SelectsKey<S>>(type: AT, value?: V | ExprProvider<T, S, ExprScalar<any>>, distinct: boolean = false): ExprScalar<number> {
+  public aggregate<A extends keyof Aggs, V extends SelectsKey<S>, Aggs = AggregateFunctions>(type: A, values: V | ExprProvider<T, S, FunctionArgumentInputs<A, Aggs>>, distinct?: boolean, filter?: ExprProvider<T, S, ExprScalar<boolean>>, orderBy?: OrderBy[]): ExprScalar<FunctionResult<A, Aggs>> {
     return new QuerySelectFirstValue(this._criteria.extend(), 
-      new ExprAggregate(type, distinct, 
-        isString(value)
-          ? this._criteria.selectsExpr[value as any]
-          : this._criteria.exprs.provide(value)
-      ).as(type)
+      new ExprAggregate<A, Aggs>(type,
+        isString(values)
+          ? this._criteria.selectsExpr[values as any]
+          : this._criteria.exprs.provide(values),
+        distinct,
+        this._criteria.exprs.provide(filter),
+        orderBy
+      ).as(String(type))
     );
   }
 
@@ -225,37 +228,37 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
   public count(distinct: boolean, value: ExprProvider<T, S, ExprScalar<any>>): ExprScalar<number>
   public count(distinct: boolean, value?: ExprProvider<T, S, ExprScalar<any>>): ExprScalar<number>
   public count(distinct: boolean = false, value?: ExprProvider<T, S, ExprScalar<any>>): ExprScalar<number> {
-    return this.aggregate('COUNT', value, distinct);
+    return this.aggregate('count', [value], distinct);
   }
 
   public countIf<V extends SelectsKeyWithType<S, boolean>>(select: V): ExprScalar<number>
   public countIf(value: ExprProvider<T, S, ExprScalar<boolean>>): ExprScalar<number>
   public countIf(condition: ExprScalar<boolean>): ExprScalar<number> {
-    return this.aggregate('COUNT', this._criteria.exprs.inspect().when<1 | null>(condition, 1).else(null), false);
+    return this.aggregate('countIf', [condition], false);
   }
 
   public sum<V extends SelectsKeyWithType<S, number>>(select: V): ExprScalar<number>
   public sum(value: ExprProvider<T, S, ExprScalar<number>>): ExprScalar<number>
   public sum(value: ExprScalar<number>): ExprScalar<number> {
-    return this.aggregate('SUM', value);
+    return this.aggregate('sum', [value]);
   }
 
   public avg<V extends SelectsKeyWithType<S, number>>(select: V): ExprScalar<number>
   public avg(value: ExprProvider<T, S, ExprScalar<number>>): ExprScalar<number>
   public avg(value: ExprScalar<number>): ExprScalar<number> {
-    return this.aggregate('AVG', value);
+    return this.aggregate('avg', [value]);
   }
 
-  public min<V extends SelectsKeyWithType<S, number>>(select: V): ExprScalar<number>
-  public min(value: ExprProvider<T, S, ExprScalar<number>>): ExprScalar<number>
-  public min(value: ExprScalar<number>): ExprScalar<number> {
-    return this.aggregate('MIN', value);
+  public min<V extends SelectsKey<S>>(select: V): ExprScalar<SelectValueWithKey<S, V>>
+  public min<V>(value: ExprProvider<T, S, ExprScalar<V>>): ExprScalar<V>
+  public min(value: ExprScalar<any>): ExprScalar<any> {
+    return this.aggregate('min', [value]);
   }
 
-  public max<V extends SelectsKeyWithType<S, number>>(select: V): ExprScalar<number>
-  public max(value: ExprProvider<T, S, ExprScalar<number>>): ExprScalar<number>
-  public max(value: ExprScalar<number>): ExprScalar<number> {
-    return this.aggregate('MAX', value);
+  public max<V extends SelectsKey<S>>(select: V): ExprScalar<SelectValueWithKey<S, V>>
+  public max<V>(value: ExprProvider<T, S, ExprScalar<V>>): ExprScalar<V>
+  public max(value: ExprScalar<any>): ExprScalar<any> {
+    return this.aggregate('max', [value]);
   }
 
   public first(): Expr<S> {

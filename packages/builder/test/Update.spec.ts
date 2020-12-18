@@ -1,5 +1,5 @@
 import { describe, it } from '@jest/globals';
-import { define, update, query } from '@typed-query-builder/builder';
+import { table, update, query } from '@typed-query-builder/builder';
 import { expectExpr, expectExprType } from './helper';
 
 
@@ -7,7 +7,7 @@ import { expectExpr, expectExprType } from './helper';
 
 describe('Select', () => {
 
-  const Task = define({
+  const Task = table({
     name: 'task',
     fields: {
       id: 'INT',
@@ -19,7 +19,7 @@ describe('Select', () => {
     },
   });
 
-  const People = define({
+  const People = table({
     name: 'people',
     fields: {
       id: 'INT',
