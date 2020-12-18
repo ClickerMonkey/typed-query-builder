@@ -1,5 +1,5 @@
 import { describe, it } from '@jest/globals';
-import { table, update, query } from '@typed-query-builder/builder';
+import { table, update, query } from '../src';
 import { expectExpr, expectExprType } from './helper';
 
 

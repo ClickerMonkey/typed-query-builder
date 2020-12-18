@@ -1,5 +1,5 @@
 import { isArray, isString } from '../fns';
-import { Cast, Name, Selects, Sources, ArrayToTuple, SourcesFieldsFactory, SelectsKey, SelectsWithKey, SelectsNormalize, AppendTuples, Tuple, JoinedInner } from '../types';
+import { Cast, Name, Selects, Sources, ArrayToTuple, SourcesFieldsFactory, SelectsKey, SelectsWithKey, SelectsNormalize, AppendTuples, JoinedInner, Tuple } from '../types';
 import { ExprFactory, ExprProvider } from '../exprs';
 import { NamedSource, Source, SourceRecursive, SourceTable } from '../sources';
 import { Select } from '../select';
@@ -18,7 +18,7 @@ export type QueryModifyReturningColumns<
 
 export type QueryModifyReturningExpressions<
   R extends Selects = [],
-  E extends Tuple<Select<any, any>> = []
+  E extends Tuple<Select<any, any>> = [any]
 > = AppendTuples<R, SelectsNormalize<ArrayToTuple<E>>>;
 
 export abstract class QueryModify<

@@ -1,4 +1,4 @@
-import { Cast, Name, Selects, Sources, SelectsKeys, SelectsKey, SelectsWithKey, SelectsValuesExprs, SelectsRecordExprs, Tuple, JoinedInner } from '../types';
+import { Cast, Name, Selects, Sources, SelectsKeys, SelectsKey, SelectsWithKey, SelectsValuesExprs, SelectsRecordExprs, JoinedInner, Tuple } from '../types';
 import { Expr, ExprInput, ExprProvider, ExprScalar } from '../exprs';
 import { NamedSource, Source, SourceTable } from '../sources';
 import { ExprKind } from '../Kind';

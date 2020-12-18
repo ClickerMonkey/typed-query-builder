@@ -1,6 +1,6 @@
 import { QuerySelect } from './query/Select';
 import { QueryInsert } from './query/Insert';
-import { Name, Selects, SelectsFromTypeAndColumns, Sources, Simplify, SelectsKey, MergeObjects } from './types';
+import { Name, Selects, SelectsFromTypeAndColumns, Sources, Simplify, SelectsKey, MergeObjects, Tuple } from './types';
 import { DataTypeInputMap, DataTypeInputMapSelects } from './DataTypes';
 import { NamedSource, SourceTableInput, Source, SourceTable, SourceValues } from './sources';
 import { ExprProvider } from './exprs';
@@ -11,7 +11,7 @@ import { QueryDelete } from './query/Delete';
 
 export function values<
   T extends Record<string, any>,
-  C extends Array<keyof T>
+  C extends Tuple<keyof T>
 >(constants: T[], columns?: C): Source<SelectsFromTypeAndColumns<T, C>> {
   return SourceValues.create(constants, columns);
 }

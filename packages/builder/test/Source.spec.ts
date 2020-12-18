@@ -1,5 +1,5 @@
 import { describe, it } from '@jest/globals';
-import { Select, Source, NamedSource, values } from '@typed-query-builder/builder';
+import { Select, Source, NamedSource, values } from '../src';
 import { expectType } from "./helper";
 
 
@@ -12,7 +12,7 @@ describe('Source', () =>
             id: 0,
             name: 'Task #1',
             done: false
-        }]);
+        }], ['id', 'name', 'done']);
 
         expectType<Source<[Select<'id', number>, Select<'name', string>, Select<'done', boolean>]>>(v);
 

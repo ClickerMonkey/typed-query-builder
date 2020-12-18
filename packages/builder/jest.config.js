@@ -1,12 +1,9 @@
 module.exports = {
   testURL: 'http://localhost',
   roots: [
-    '<rootDir>/test',
+    '<rootDir>/test/',
   ],
   testRegex: '(.*)\\.spec\\.ts$',
-  moduleNameMapper: {
-    '^@typed-query-builder/builder$': '<rootDir>/src/'
-  },
   moduleFileExtensions: [
     'js',
     'ts',

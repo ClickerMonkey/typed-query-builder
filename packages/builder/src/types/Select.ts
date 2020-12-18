@@ -3,7 +3,7 @@ import { Select } from '../select';
 import { Cast, Simplify, UndefinedToOptional, UnionToIntersection, UnionToTuple } from './Core';
 import { Name } from './Query';
 import { Sources } from './Source';
-import { AppendTuples, ArrayToTuple, FlattenTuple, Tuple } from './Tuple';
+import { AppendTuples, FlattenTuple, Tuple } from './Tuple';
 
 export type Selects = [...(Select<Name, any>)[]];
 
@@ -94,9 +94,9 @@ export type SelectsFromObjectSimple<T> =
   }>[keyof T]>>
 ;
 
-export type SelectsFromTypeAndColumns<T, C extends Array<keyof T>, K = ArrayToTuple<C>> = 
+export type SelectsFromTypeAndColumns<T, C extends Tuple<keyof T>> = 
   Cast<{
-    [I in keyof K]: K[I] extends keyof T ? Select<K[I], T[K[I]]> : never
+    [I in keyof C]: C[I] extends keyof T ? Select<C[I], T[C[I]]> : never
   }, Selects>
 ;
 

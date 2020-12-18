@@ -12,5 +12,5 @@ module.exports = {
         path: DESTINATION,
         libraryTarget: 'umd',
         library: '[name]',
-    },
+    }
 };

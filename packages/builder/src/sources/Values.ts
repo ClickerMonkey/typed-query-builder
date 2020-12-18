@@ -1,5 +1,5 @@
 import { keys } from '../fns';
-import { Selects, SelectsKeys, ObjectFromSelects } from '../types';
+import { Selects, SelectsKeys, ObjectFromSelects, Tuple } from '../types';
 import { Source } from './Source';
 import { ExprKind } from '../Kind';
 import { SelectsFromTypeAndColumns } from '..';
@@ -7,7 +7,7 @@ import { SelectsFromTypeAndColumns } from '..';
 export class SourceValues<S extends Selects> extends Source<S> 
 {
 
-  public static create<T extends Record<string, any>, C extends Array<keyof T>>(constants: T[], columns?: C): Source<SelectsFromTypeAndColumns<T, C>>
+  public static create<T extends Record<string, any>, C extends Tuple<keyof T>>(constants: T[], columns?: C): Source<SelectsFromTypeAndColumns<T, C>>
   {
     return new SourceValues<SelectsFromTypeAndColumns<T, C>>(constants as any, columns || SourceValues.calculateColumns(constants) as any);
   }

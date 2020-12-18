@@ -28,8 +28,13 @@ export type ToTuple<T extends any> =
   T extends any[] ? T : [T]
 ;
 
+export type TupleEmpty<T = unknown> = 
+  [] | [T, ...T[]]
+;
+
 export type Tuple<T = unknown> = 
-  [] | [T, ...T[]];
+  [T, ...T[]]
+;
 
 export type JoinTuples<T extends any[]> =
   T extends [infer A]

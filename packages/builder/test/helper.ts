@@ -1,5 +1,5 @@
 import { expect } from '@jest/globals';
-import { Name, ExprValueToExpr, Expr, Select } from '@typed-query-builder/builder';
+import { Name, ExprValueToExpr, Expr, Select } from '../src';
 
 
 export function expectType<T>(type: T) 
