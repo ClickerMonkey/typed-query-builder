@@ -2,7 +2,7 @@
 
 The most advanced TypeScript query builder available! It can generate SQL, be translated to and from JSON, or **run the query on local data**.
 
-[Examples](#examples)
+[Examples](#examples) | [FAQ](#faq) | [Todo](#sql-features-todo)
 
 ### Features
 - [Type safe](#type-safe)
@@ -16,8 +16,6 @@ The most advanced TypeScript query builder available! It can generate SQL, be tr
 - [`INSERT`](#insert)
 - [`UPDATE`](#update)
 - [`DELETE`](#delete)
-
-[FAQ](#faq)
 
 ## Type safe
 > A source is a table, a subquery, values (list of objects/tuples), or insert/update/delete expressions with a returning clause.
@@ -49,11 +47,15 @@ Comes with common functions, operations, expressions, and data types. Its trivia
 
 ### Custom Function Example
 ```ts
+import { DialectPgsql } from '@typed-query-builder/pgsql';
+
 interface UserFunctions {
-  random(min: number, max: number, whole?: boolean): number;
+  random(min: number, max: number): number;
 }
+// Adding to dialect
+DialectPgsql.func('random', '(random() * ({1} - {0}) + {0})');
 // the expression used in a query
-func<'random', UserFunctions>(0, from(Table).count(), true);
+func<'random', UserFunctions>(0, from(Table).count());
 ```
 
 ### Custom Expression Example
