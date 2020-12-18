@@ -3,7 +3,7 @@ import { Select } from '../select';
 import { Cast, Simplify, UndefinedToOptional, UnionToIntersection, UnionToTuple } from './Core';
 import { Name } from './Query';
 import { Sources } from './Source';
-import { AppendTuples, FlattenTuple, Tuple } from './Tuple';
+import { TupleAppend, TupleFlatten, Tuple, TupleFilter } from './Tuple';
 
 export type Selects = [...(Select<Name, any>)[]];
 
@@ -119,14 +119,15 @@ export type SelectValueWithKey<S extends Selects, K> = {
 ;
 
 export type SelectsWithKey<S extends Selects, K> = 
-  UnionToTuple<{
+  TupleFilter<{
     [P in keyof S]: S[P] extends Select<infer E, any> 
       ? E extends K
         ? S[P]
         : never
       : never
-  }[number]>
+  }>
 ;
+
 
 export type SelectsWithKeys<S extends Selects, K extends SelectsKeys<S>> = {
   [I in keyof K]: SelectWithKey<S, K[I]> 
@@ -152,13 +153,13 @@ export type SelectsMap<S extends Selects, K extends SelectsKey<S>, M extends Rec
 ;
 
 export type SelectAllSelects<T extends Sources, S extends Selects> = 
-  AppendTuples<S, FlattenTuple<T[keyof T]>>
+  TupleAppend<S, TupleFlatten<T[keyof T]>>
 ;
 
 export type SelectGivenSelects<S extends Selects, FS extends Tuple<Select<any, any>>> = 
-  AppendTuples<S, SelectsNormalize<FS>>
+  TupleAppend<S, SelectsNormalize<FS>>
 ;
   
 export type MaybeSelects<A extends Selects, B extends Selects> = 
-  AppendTuples<A, Cast<SelectsOptional<Cast<SelectsWithKey<B, Exclude<SelectsKey<B>, SelectsKey<A>>>, Selects>>, Selects>>
+  TupleAppend<A, Cast<SelectsOptional<Cast<SelectsWithKey<B, Exclude<SelectsKey<B>, SelectsKey<A>>>, Selects>>, Selects>>
 ;

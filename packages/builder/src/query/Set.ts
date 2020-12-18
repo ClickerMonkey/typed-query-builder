@@ -64,7 +64,7 @@ export class QuerySet<S extends Selects> extends Source<S>
     }
   }
 
-  public union(query: SourceCompatible<S>, all: boolean = false) {
+  public union<Q extends SourceCompatible<S>>(query: Q, all: boolean = false) {
     return this.addSet('UNION', query, all);
   }
 

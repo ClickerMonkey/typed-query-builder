@@ -120,14 +120,14 @@ describe('Select', () => {
           .as('people')
       )
       .into(Task)
-      .values(({ people }, { defaults, nulls }) => [
+      .values(({ people }, { defaults, nulls }) => [[
         defaults(),
         'Task #1',
         false,
         nulls(),
         nulls(),
         people.id
-      ])
+      ]])
       .returning(['id'])
     ;
 

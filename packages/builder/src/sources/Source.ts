@@ -16,7 +16,7 @@ export abstract class Source<S extends Selects> extends Expr<S[]>
     return new NamedSourceBase(name, this);
   }
 
-  public union<C extends SourceCompatible<S>>(query: C, all: boolean = false): QuerySet<S>
+  public union(query: SourceCompatible<S>, all: boolean = false): QuerySet<S>
   {
     return QuerySet.create('UNION', this, query, all);
   }

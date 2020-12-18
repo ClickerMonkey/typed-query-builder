@@ -1,6 +1,6 @@
 import { DataTypeInputMap, DataTypeInputMapSelects } from '../DataTypes';
 import { createFields, createFieldsFactory, isArray } from '../fns';
-import { AppendTuples, Name, Selects, MergeObjects, SourceFieldsFromSelects, SourceFieldsFunctions, SourceFieldsFactory, SelectsKey, SelectsWithKey, SelectsMap } from '../types';
+import { TupleAppend, Name, Selects, MergeObjects, SourceFieldsFromSelects, SourceFieldsFunctions, SourceFieldsFactory, SelectsKey, SelectsWithKey, SelectsMap } from '../types';
 import { Source } from './Source';
 import { NamedSource } from './Named';
 import { ExprKind } from '../Kind';
@@ -73,7 +73,7 @@ export class SourceTable<N extends Name, S extends Selects, F extends DataTypeIn
     return this.fields;
   }
 
-  public extend<E extends Name, EF extends DataTypeInputMap>(input: SourceTableInput<E, EF>): SourceTable<E, AppendTuples<S, DataTypeInputMapSelects<EF>>, MergeObjects<F, EF>> {
+  public extend<E extends Name, EF extends DataTypeInputMap>(input: SourceTableInput<E, EF>): SourceTable<E, TupleAppend<S, DataTypeInputMapSelects<EF>>, MergeObjects<F, EF>> {
     return new SourceTable({
       name: input.name,
       table: input.table || this.table,
@@ -93,6 +93,7 @@ export class SourceTable<N extends Name, S extends Selects, F extends DataTypeIn
     return this.selects;
   }
   
+  public only(): []
   public only<C extends SelectsKey<S>>(only: C[]): SelectsWithKey<S, unknown extends C ? never : C>
   public only<C extends SelectsKey<S> = never>(...onlyInput: C[]): SelectsWithKey<S, C>
   public only(...onlyInput: any[]): never {
@@ -101,6 +102,8 @@ export class SourceTable<N extends Name, S extends Selects, F extends DataTypeIn
     return only.map( (field) => this.fieldMap[field as any] ) as never;
   }
 
+  public exclude(): S
+  public exclude(exclude: []): S
   public exclude<C extends SelectsKey<S>>(exclude: C[]): SelectsWithKey<S, unknown extends C ? SelectsKey<S> : Exclude<SelectsKey<S>, C>>
   public exclude<C extends SelectsKey<S> = never>(...excludeInput: C[]): SelectsWithKey<S, Exclude<SelectsKey<S>, C>> 
   public exclude(...excludeInput: any[]): never {

@@ -40,9 +40,12 @@ export interface SourceFieldsFunctions<S extends Selects>
 {
   all(): S;
 
+  only(): [];
   only<C extends SelectsKey<S>>(only: C[]): SelectsWithKey<S, unknown extends C ? never : C>;
   only<C extends SelectsKey<S> = never>(...only: C[]): SelectsWithKey<S, C>;
 
+  exclude<C extends SelectsKey<S>>(): S
+  exclude<C extends SelectsKey<S>>(exclude: []): S
   exclude<C extends SelectsKey<S>>(exclude: C[]): SelectsWithKey<S, unknown extends C ? SelectsKey<S> : Exclude<SelectsKey<S>, C>>;
   exclude<C extends SelectsKey<S> = never>(...exclude: C[]): SelectsWithKey<S, Exclude<SelectsKey<S>, C>>;
 

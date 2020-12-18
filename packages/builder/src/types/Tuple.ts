@@ -7,15 +7,15 @@ export type ArrayToTuple<T> =
         : T
 ;
 
-export type AppendTuples<A extends any[], B extends any[]> = 
+export type TupleAppend<A extends any[], B extends any[]> = 
     Simplify<[...A, ...B]>
 ;
 
-export type FlattenTuple<T> = 
+export type TupleFlatten<T> = 
     T extends [infer A, ...infer B]
       ? A extends any[] 
-        ? FlattenTuple<AppendTuples<A, B>>
-        : [A, ...FlattenTuple<B>]
+        ? TupleFlatten<TupleAppend<A, B>>
+        : [A, ...TupleFlatten<B>]
       : T
 ;
 
@@ -36,10 +36,20 @@ export type Tuple<T = unknown> =
   [T, ...T[]]
 ;
 
-export type JoinTuples<T extends any[]> =
+export type TupleFilter<T extends any[], E = never> = 
+  T extends [] 
+    ? [] 
+    : T extends [infer H, ...infer R] 
+      ? [H] extends [E] 
+        ? TupleFilter<R, E> 
+        : [H, ...TupleFilter<R, E>] 
+      : T
+;
+
+export type TuplesJoin<T extends any[]> =
   T extends [infer A]
     ? ToTuple<A>
     : T extends [infer B, ...infer C]
-      ? [...ToTuple<B>, ...JoinTuples<C>]
+      ? [...ToTuple<B>, ...TuplesJoin<C>]
       : []
 ;

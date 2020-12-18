@@ -1,5 +1,5 @@
 import { isArray, isFunction, isString } from '../fns';
-import { SourcesFieldsFactory, JoinType, Selects, Sources, Name, OrderDirection, MergeObjects, SelectsKeys, LockType, SelectWithKey, Simplify, SelectValueWithKey, SelectsKey, SelectsKeyWithType, JoinedInner, JoinedRight, JoinedLeft, JoinedFull, SelectAllSelects, SelectGivenSelects, MaybeSources, MaybeSelects, AggregateFunctions, Tuple } from '../types';
+import { SourcesFieldsFactory, JoinType, Selects, Sources, Name, OrderDirection, MergeObjects, SelectsKeys, LockType, SelectWithKey, Simplify, SelectValueWithKey, SelectsKey, SelectsKeyWithType, JoinedInner, JoinedRight, JoinedLeft, JoinedFull, SelectAllSelects, SelectGivenSelects, MaybeSources, MaybeSelects, AggregateFunctions, Tuple, SourceCompatible } from '../types';
 import { ExprAggregate } from '../exprs/Aggregate';
 import { ExprProvider, ExprFactory } from '../exprs/Factory';
 import { Expr, ExprType } from '../exprs/Expr';
@@ -285,6 +285,10 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
       ? this._criteria.selectsExpr[value as any]
       : this._criteria.exprs.provide(value)
     );
+  }
+
+  public generic(): SourceCompatible<S> {
+    return this as any;
   }
 
   public hasSelect(name: any): name is SelectsKeys<S> {

@@ -127,8 +127,8 @@ describe('Select', () => {
     expectSelect<'count', number>(q.count().as('count'));
 
     const w = query()
-      .select(() => [
-        q.count().as('count')
+      .select((sources, { count }) => [
+        count().as('count')
       ])
     ;
 
@@ -138,7 +138,7 @@ describe('Select', () => {
   it('recursive', () => {
     const q = query()
       .with(
-        values([{ id: 43 }]).as('tasks'),
+        values([{ id: 43 }], ['id']).as('tasks'),
         ({ tasks }) =>
           from(Task)
           .select([Task.fields.id])
@@ -214,27 +214,21 @@ describe('Select', () => {
       ])
       .union(
         // TODO this is compatible
-        query()
-          .from(Task)
+        from(Task)
           .select(({ task }, {}, { length }) => [
             length(task.name).as('name_length'),
             task.name
           ])
-      )
-      .union(
-        // TODO this is NOT compatible
-        query()
-          .from(Task)
-          .count()
+          .generic()
       )
       .union(
         // TODO this is compatible
-        query()
-          .from(Task)
+        from(Task)
           .select(
             Task.fields.parentId,
             Task.fields.name
           )
+          .generic()
       )
       .orderBy(({ set }) => set.message, 'DESC')
       .offset(10)
