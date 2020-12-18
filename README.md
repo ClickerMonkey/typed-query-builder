@@ -11,6 +11,7 @@ The most advanced TypeScript query builder available! It can generate SQL, be tr
 - [Singular Interface](#singular-interface)
 - [Customizable](#customizable)
 - [Powerful](#powerful)
+- [SQL Implementations](#sql-implementations)
 - [Runtime Implementation](#runtime-implementation)
 - [`SELECT`](#select)
 - [`INSERT`](#insert)
@@ -100,6 +101,27 @@ from(Persons)
 
 ## Runtime Implementation
 `@typed-query-builder/run` is an implementation that allows you to perform any query on local data. A database implementation in TypeScript! This sort of functionality could be useful for any number of crazy scenarios. Imagine you have an application that you want to work offline. You can define all your business logic using query builders. A client and server could share the same logic however the client executes it on local data while sending the request off to the server to also process which runs the same logic against a real database. The client could verify the output from the server when it finally is able to communicate with it. If it doesn't match, and the client is carefully made, the local changes can be rolled back. If your application needs to work offline and you want to prevent concurrent modification of resources this may not work for you, but it is still possible to support advanced offline capabilities using this method.
+
+```ts
+import { runOn } from '@typed-query-builder/run';
+
+const DB = {
+  task: [
+    { id: 1, name: 'Task 1', done: true },
+    { id: 2, name: 'Task 2', done: false },
+  ]
+};
+
+const results = from(Task)
+  .select('*')
+  .where(Task.fields.done)
+  .run( runOn(DB) )
+; // [{ id: 1, name: 'Task 1', done: true }]
+```
+
+## SQL Implementations
+
+
 
 ### `SELECT`
 > A source is a table, a subquery, values (list of objects/tuples), or insert/update/delete expressions with a returning clause.
