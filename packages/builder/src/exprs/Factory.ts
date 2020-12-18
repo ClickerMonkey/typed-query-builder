@@ -32,7 +32,7 @@ import { ExprNull } from './Null';
 
 
 
-export type ExprProvider<T extends Sources, S extends Selects, R> = R | ((sources: SourcesFieldsFactory<T>, exprs: ExprFactory<T, S>, fns: FunctionProxy, selects: SelectsExprs<S>) => R);
+export type ExprProvider<T extends Sources, S extends Selects, R> = R | ((sources: SourcesFieldsFactory<T>, exprs: ExprFactory<T, S>, fns: FunctionProxy<Functions>, selects: SelectsExprs<S>) => R);
 
 
 export class ExprFactory<T extends Sources, S extends Selects>
@@ -85,7 +85,7 @@ export class ExprFactory<T extends Sources, S extends Selects>
     return new ExprConstant(value);
   }
 
-  public func<F extends keyof Functions>(func: F, ...args: FunctionArgumentInputs<F>): ExprScalar<FunctionResult<F>> {
+  public func<F extends keyof Funcs, Funcs = Functions>(func: F, ...args: FunctionArgumentInputs<F, Funcs>): ExprScalar<FunctionResult<F, Funcs>> {
     return new ExprFunction(func, (args as any).map( ExprScalar.parse ));
   }
 

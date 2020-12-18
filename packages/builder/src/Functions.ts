@@ -3,23 +3,23 @@ import { DataTypeBox, DataTypeCircle, DataTypeLine, DataTypePath, DataTypePoint,
 import { ExprScalar, ExprInput } from './exprs/Scalar';
 
 
-export type FunctionArguments<F extends keyof Functions> = 
-  Functions[F] extends (...args: infer A) => any
+export type FunctionArguments<F extends keyof Funcs, Funcs = Functions> = 
+  Funcs[F] extends (...args: infer A) => any
     ? A
     : never;
 
-export type FunctionArgumentValues<F extends keyof Functions> = 
-  Functions[F] extends (...args: infer A) => any
+export type FunctionArgumentValues<F extends keyof Funcs, Funcs = Functions> = 
+  Funcs[F] extends (...args: infer A) => any
     ? { [P in keyof A]: ExprScalar<A[P]> }
     : never;
 
-export type FunctionArgumentInputs<F extends keyof Functions> = 
-  Functions[F] extends (...args: infer A) => any
+export type FunctionArgumentInputs<F extends keyof Funcs, Funcs = Functions> = 
+  Funcs[F] extends (...args: infer A) => any
     ? { [P in keyof A]: ExprInput<A[P]> }
     : never;
 
-export type FunctionResult<F extends keyof Functions> = 
-  Functions[F] extends (...args: any[]) => infer R
+export type FunctionResult<F extends keyof Funcs, Funcs = Functions> = 
+  Funcs[F] extends (...args: any[]) => infer R
     ? R
     : never;
 
@@ -76,7 +76,7 @@ export interface Functions
   acosh(x: number): number;
   atanh(x: number): number;
   // Operations
-  coalesce<T extends any[]>(...values: T[]): T;
+  coalesce<T extends any[]>(...values: T): T[number];
   // String
   lower(x: string): string;
   upper(x: string): string;
@@ -186,18 +186,18 @@ export interface Functions
   >(a: T[0], b: T[1]): boolean;
 }
 
-export type FunctionProxy = {
-  [K in keyof Functions]: (...args: FunctionArgumentInputs<K>) => ExprScalar<FunctionResult<K>>;
+export type FunctionProxy<Funcs> = {
+  [K in keyof Funcs]: (...args: FunctionArgumentInputs<K, Funcs>) => ExprScalar<FunctionResult<K, Funcs>>;
 };
 
-export function createFunctionProxy(): FunctionProxy {
+export function createFunctionProxy<Funcs>(): FunctionProxy<Funcs> {
   return new Proxy({}, {
-    get: <K extends keyof Functions>(target: {}, func: K, reciever: any) => {
-      return (...args: FunctionArgumentInputs<K>): ExprScalar<FunctionResult<K>> => {
+    get: <K extends keyof Funcs>(target: {}, func: K, reciever: any) => {
+      return (...args: FunctionArgumentInputs<K, Funcs>): ExprScalar<FunctionResult<K, Funcs>> => {
         return new ExprFunction(func, (args as any).map( ExprScalar.parse ));
       };
     },
-  }) as FunctionProxy;
+  }) as FunctionProxy<Funcs>;
 }
 
-export const fns = createFunctionProxy();
+export const fns = createFunctionProxy<Functions>();

@@ -11,7 +11,7 @@ import { Source } from '../sources/Source';
 import { SourceJoin } from '../sources/Join';
 import { OrderBy } from '../Order';
 import { Select } from '../select/Select';
-import { fns, FunctionProxy } from '../Functions';
+import { fns, FunctionProxy, Functions } from '../Functions';
 import { QueryCriteria } from './Criteria';
 import { ExprKind } from '../Kind';
 import { NamedSource } from '../sources/Named';
@@ -202,7 +202,7 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
     return this;
   }
 
-  public using<R>(context: (query: this, selects: SourcesFieldsFactory<T>, exprs: ExprFactory<T, S>, fns: FunctionProxy) => R): R {
+  public using<R>(context: (query: this, selects: SourcesFieldsFactory<T>, exprs: ExprFactory<T, S>, fns: FunctionProxy<Functions>) => R): R {
     return context(this, this._criteria.sourcesFields, this._criteria.exprs, fns);
   }
 

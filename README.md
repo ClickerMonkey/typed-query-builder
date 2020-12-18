@@ -194,7 +194,6 @@ RETURNING (* | scalar, ...)
 - lock rules per table?
 - grouping sets?
 - FROM [ONLY] syntax, for pgsql's table inheritance
-- allow user to define their own functions which returns a ExprUserFunction defineFunction(name, args): (...Expr[]) => Expr
 - add filter to aggregate expr
 - add orderby to aggregate expr when type is array_agg or string_agg
 - [ { UNION | INTERSECT | EXCEPT } [ ALL | DISTINCT ] select ]

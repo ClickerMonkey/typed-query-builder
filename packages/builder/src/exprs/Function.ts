@@ -5,14 +5,14 @@ import { Expr } from './Expr';
 import { ExprScalar } from './Scalar';
 
 
-export class ExprFunction<F extends keyof Functions> extends ExprScalar<FunctionResult<F>> 
+export class ExprFunction<F extends keyof Funcs, Funcs = Functions> extends ExprScalar<FunctionResult<F, Funcs>> 
 {
   
   public static readonly id = 'f';
 
   public constructor(
     public func: F,
-    public args: FunctionArgumentValues<F>
+    public args: FunctionArgumentValues<F, Funcs>
   ) {
     super();
   }
