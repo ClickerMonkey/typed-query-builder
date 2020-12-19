@@ -8,7 +8,7 @@ import { ExprScalar } from './Scalar';
 export class ExprConditionUnary extends ExprScalar<boolean> 
 {
   
-  public static readonly id = 'a?';
+  public static readonly id = ExprKind.CONDITION_UNARY;
 
   public constructor(
     public type: ConditionUnaryType,

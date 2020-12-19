@@ -8,7 +8,7 @@ import { ExprScalar } from './Scalar';
 export class ExprConditions extends ExprScalar<boolean> 
 {
   
-  public static readonly id = '&|';
+  public static readonly id = ExprKind.CONDITIONS;
 
   public constructor(
     public type: ConditionsType,

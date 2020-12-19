@@ -11,12 +11,13 @@ import { Source } from '../sources/Source';
 import { SourceJoin } from '../sources/Join';
 import { OrderBy } from '../Order';
 import { Select } from '../select/Select';
-import { fns, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions } from '../Functions';
+import { FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions } from '../Functions';
 import { QueryCriteria } from './Criteria';
 import { ExprKind } from '../Kind';
 import { NamedSource } from '../sources/Named';
 import { SourceRecursive } from '../sources/Recursive';
 import { ExprInput, ExprScalar } from '../exprs/Scalar';
+import { fns } from '../exprs/Function';
 
 
 

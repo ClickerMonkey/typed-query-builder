@@ -1,4 +1,3 @@
-import { ExprFunction } from './exprs/Function';
 import { DataTypeBox, DataTypeCircle, DataTypeLine, DataTypePath, DataTypePoint, DataTypePolygon, DataTypeSegment } from './DataTypes';
 import { ExprScalar, ExprInput } from './exprs/Scalar';
 
@@ -189,15 +188,3 @@ export interface Functions
 export type FunctionProxy<Funcs> = {
   [K in keyof Funcs]: (...args: FunctionArgumentInputs<K, Funcs>) => ExprScalar<FunctionResult<K, Funcs>>;
 };
-
-export function createFunctionProxy<Funcs>(): FunctionProxy<Funcs> {
-  return new Proxy({}, {
-    get: <K extends keyof Funcs>(target: {}, func: K, reciever: any) => {
-      return (...args: FunctionArgumentInputs<K, Funcs>): ExprScalar<FunctionResult<K, Funcs>> => {
-        return new ExprFunction(func, (args as any).map( ExprScalar.parse ));
-      };
-    },
-  }) as FunctionProxy<Funcs>;
-}
-
-export const fns = createFunctionProxy<Functions>();

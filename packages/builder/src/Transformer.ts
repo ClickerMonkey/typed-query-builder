@@ -1,7 +1,8 @@
 import { Expr } from './exprs/Expr';
+import { ExprKind } from './Kind';
 
 
-export type ExprClass<T extends Expr<any>> = { new(...args: any[]): T, id: string };
+export type ExprClass<T extends Expr<any>> = { new(...args: any[]): T, id: ExprKind };
 
 export type ExprValidator<T extends Expr<T>> = (value: T) => boolean;
 
@@ -16,12 +17,12 @@ export class Transformer<T extends TransformFactory<any>>
   public transform: T;
 
   public constructor(
-    public transformers: Map<ExprClass<any>, TransformFunction<any, T>> = new Map(),
-    public validators: Map<ExprClass<any>, ExprValidator<any>> = new Map(),
+    public transformers: Map<ExprKind, TransformFunction<any, T>> = new Map(),
+    public validators: Map<ExprKind, ExprValidator<any>> = new Map(),
   ) {
     this.transform = ((value) => 
     {
-      const transformer = this.transformers.get((value as any).constructor);
+      const transformer = this.transformers.get(value.getKind());
       if (!transformer) {
         throw new Error(`Missing transformer for ${value}`);
       }
@@ -32,14 +33,14 @@ export class Transformer<T extends TransformFactory<any>>
 
   public setTransformer<V extends Expr<any>>(construct: ExprClass<V>, transform: TransformFunction<V, T>): this 
   {
-    this.transformers.set(construct, transform);
+    this.transformers.set(construct.id, transform);
 
     return this;
   }
 
   public setValidator<V extends Expr<any>>(construct: ExprClass<V>, validator: ExprValidator<V>): this
   {
-    this.validators.set(construct, validator);
+    this.validators.set(construct.id, validator);
 
     return this;
   }

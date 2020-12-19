@@ -7,7 +7,7 @@ import { ExprScalar } from './Scalar';
 export class ExprBetween<T> extends ExprScalar<boolean> 
 {
   
-  public static readonly id = 'between';
+  public static readonly id = ExprKind.BETWEEN;
 
   public constructor(
     public value: ExprScalar<T>,

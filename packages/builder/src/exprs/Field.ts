@@ -1,16 +1,58 @@
-import { Name } from '../types';
+import { Name, SourceFieldsFunctions, Selects, SourceFieldsFromSelects, SourceFieldsFactory } from '../types';
 import { Select } from '../select/Select';
+import { SelectAliased } from '../select/Aliased';
 import { ExprScalar } from './Scalar';
 import { ExprKind } from '../Kind';
 import { NamedSource } from '../sources';
 import { query } from '../helpers';
 import { Expr } from './Expr';
+import { isArray } from '../fns';
 
 
 export class ExprField<F extends Name, T> extends ExprScalar<T> implements Select<F, T>
 {
+
   
-  public static readonly id = 'field';
+  public static createFields<N extends Name, S extends Selects>(source: NamedSource<N, S>, selects: S): SourceFieldsFromSelects<S>
+  {
+    return selects.reduce((fields, select) => 
+    {
+      fields[select.alias] = new ExprField(source as any, select.alias);
+
+      return fields;
+    }, {} as SourceFieldsFromSelects<S>);
+  }
+
+  public static createFieldsFactory<S extends Selects>(selects: S, fields: SourceFieldsFromSelects<S>): SourceFieldsFactory<S> 
+  {
+    const fns: SourceFieldsFunctions<S> = {
+      all: () => selects,
+      only: (...onlyInput: any[]) => {
+        const only = isArray(onlyInput[0]) ? onlyInput[0] : onlyInput;
+
+        return only.map( (field) => fields[field] ) as any;
+      },
+      exclude: (...excludeInput: any[]) => {
+        const exclude = isArray(excludeInput[0]) ? excludeInput[0] : excludeInput;
+
+        return selects.filter( s => exclude.indexOf(s.alias) === -1 ) as any;
+      },
+      mapped: (map) => {
+        const out = [];
+
+        for (const prop in map)
+        {
+          out.push(new SelectAliased(prop, fields[map[prop] as any]));
+        }
+    
+        return out as any;
+      },
+    };
+
+    return Object.assign(fns, fields) as any;
+  }
+  
+  public static readonly id = ExprKind.FIELD;
 
   public constructor(
     public source: NamedSource<any, any>,

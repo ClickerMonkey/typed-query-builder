@@ -8,7 +8,7 @@ import { ExprKind } from '../Kind';
 export class QuerySelectFirstValue<T extends Sources, S extends Selects, R> extends ExprScalar<R>
 {
   
-  public static readonly id = 'svalue';
+  public static readonly id = ExprKind.QUERY_FIRST_VALUE;
 
   public constructor(
     public criteria: QueryCriteria<T, S>,

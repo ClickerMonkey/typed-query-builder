@@ -1,4 +1,4 @@
-import { isArray } from '..';
+import { isArray } from '../fns';
 import { ExprKind } from '../Kind';
 import { Traverser } from '../Traverser';
 import { Expr } from './Expr';
@@ -8,7 +8,7 @@ import { ExprScalar } from './Scalar';
 export class ExprIn<T> extends ExprScalar<boolean> 
 {
   
-  public static readonly id = 'in';
+  public static readonly id = ExprKind.IN;
 
   public constructor(
     public value: ExprScalar<T>,

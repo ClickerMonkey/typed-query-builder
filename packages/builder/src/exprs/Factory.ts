@@ -1,7 +1,7 @@
 import { DataTypeInputs, DataTypeInputType } from '../DataTypes';
 import { isArray, isFunction } from '../fns';
-import { fns, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions } from '../Functions';
-import { AggregateFunctions, ConditionBinaryListType, ConditionBinaryType, ConditionUnaryType, JoinTuples, OperationBinaryType, OperationUnaryType, Selects, SelectsExprs, Sources } from '../types';
+import { FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions } from '../Functions';
+import { AggregateFunctions, SourcesFieldsFactory, ConditionBinaryListType, ConditionBinaryType, ConditionUnaryType, TuplesJoin, OperationBinaryType, OperationUnaryType, Selects, SelectsExprs, Sources } from '../types';
 import { QuerySelect } from '../query/Select';
 import { ExprAggregate } from './Aggregate';
 import { ExprBetween } from './Between';
@@ -12,7 +12,7 @@ import { ExprConditions } from './Conditions';
 import { ExprConditionUnary } from './ConditionUnary';
 import { ExprConstant } from './Constant';
 import { ExprExists } from './Exists';
-import { ExprFunction } from './Function';
+import { ExprFunction, fns } from './Function';
 import { ExprIn } from './In';
 import { ExprNot } from './Not';
 import { ExprOperationBinary } from './OperationBinary';
@@ -24,9 +24,8 @@ import { ExprRaw } from './Raw';
 import { ExprRow } from './Row';
 import { ExprDefault } from './Default';
 import { ExprConditionBinaryList } from './ConditionBinaryList';
+import { ExprScalar, ExprInput } from './Scalar';
 import { Select } from '../select';
-import { ExprScalar, SourcesFieldsFactory } from '..';
-import { ExprInput } from './Scalar';
 import { SourceUnspecified } from '../sources/Unspecified';
 import { ExprNull } from './Null';
 
@@ -71,7 +70,7 @@ export class ExprFactory<T extends Sources, S extends Selects>
     return new ExprParam<V>(param);
   }
 
-  public row<E extends ExprInput<any | any[]>[]>(...elements: E): Expr<ExprTypeMap<JoinTuples<E>>> {
+  public row<E extends ExprInput<any | any[]>[]>(...elements: E): Expr<ExprTypeMap<TuplesJoin<E>>> {
     return new ExprRow(elements.map( ExprScalar.parse )) as any;
   }
 

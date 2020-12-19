@@ -1,5 +1,5 @@
 import { Name } from '../types';
-import { ExprScalar } from '..';
+import { ExprScalar } from '../exprs/Scalar';
 
 
 export interface Select<A extends Name, V>

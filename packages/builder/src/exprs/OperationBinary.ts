@@ -1,4 +1,4 @@
-import { ExprScalar } from '..';
+import { ExprScalar } from './Scalar';
 import { ExprKind } from '../Kind';
 import { Traverser } from '../Traverser';
 import { OperationBinaryType } from '../types';
@@ -8,7 +8,7 @@ import { Expr } from './Expr';
 export class ExprOperationBinary extends ExprScalar<number> 
 {
   
-  public static readonly id = 'a+b';
+  public static readonly id = ExprKind.OPERATION_BINARY;
 
   public constructor(
     public type: OperationBinaryType,

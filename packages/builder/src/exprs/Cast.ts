@@ -8,7 +8,7 @@ import { ExprScalar } from './Scalar';
 export class ExprCast<I extends DataTypeInputs> extends ExprScalar<DataTypeInputType<I>> 
 {
   
-  public static readonly id = 'cast';
+  public static readonly id = ExprKind.CAST;
 
   public constructor(
     public type: I,

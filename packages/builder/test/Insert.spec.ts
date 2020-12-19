@@ -1,4 +1,3 @@
-import { describe, it } from '@jest/globals';
 import { table, insert, query } from '../src/';
 import { expectExpr, expectExprType } from './helper';
 
@@ -69,14 +68,14 @@ describe('Select', () => {
           .as('people')
       )
       .into(Task)
-      .values(({ people }, { defaults, nulls }) => [
+      .values(({ people }, { defaults, nulls }) => [[
         defaults(),
         'Task #1',
         false,
         nulls(),
         nulls(),
         people.id
-      ])
+      ]])
     ;
 
     expectExprType<[][]>(q);

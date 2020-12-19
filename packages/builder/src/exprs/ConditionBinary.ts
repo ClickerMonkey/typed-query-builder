@@ -8,7 +8,7 @@ import { ExprScalar } from './Scalar';
 export class ExprConditionBinary<T> extends ExprScalar<boolean> 
 {
   
-  public static readonly id = 'a?b';
+  public static readonly id = ExprKind.CONDITION_BINARY;
 
   public constructor(
     public type: ConditionBinaryType,

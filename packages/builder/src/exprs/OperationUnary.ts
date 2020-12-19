@@ -1,4 +1,4 @@
-import { ExprScalar } from '..';
+import { ExprScalar } from './Scalar';
 import { ExprKind } from '../Kind';
 import { Traverser } from '../Traverser';
 import { OperationUnaryType } from '../types';
@@ -8,7 +8,7 @@ import { Expr } from './Expr';
 export class ExprOperationUnary extends ExprScalar<number> 
 {
   
-  public static readonly id = '-a';
+  public static readonly id = ExprKind.OPERATION_UNARY;
   
   public constructor(
     public type: OperationUnaryType,

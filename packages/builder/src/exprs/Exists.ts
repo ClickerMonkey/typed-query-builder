@@ -8,7 +8,7 @@ import { ExprScalar } from './Scalar';
 export class ExprExists extends ExprScalar<boolean> 
 {
   
-  public static readonly id = 'exists';
+  public static readonly id = ExprKind.EXISTS;
 
   public constructor(
     public value: Expr<[Select<any, 1 | null>]> | Expr<1 | null>,

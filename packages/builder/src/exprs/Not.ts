@@ -1,4 +1,4 @@
-import { ExprScalar } from '..';
+import { ExprScalar } from './Scalar';
 import { ExprKind } from '../Kind';
 import { Traverser } from '../Traverser';
 import { Expr } from './Expr';
@@ -7,7 +7,7 @@ import { Expr } from './Expr';
 export class ExprNot extends ExprScalar<boolean> 
 {
   
-  public static readonly id = '!';
+  public static readonly id = ExprKind.NOT;
 
   public constructor(
     public value: ExprScalar<boolean>

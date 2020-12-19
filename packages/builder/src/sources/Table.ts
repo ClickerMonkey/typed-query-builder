@@ -1,5 +1,5 @@
 import { DataTypeInputMap, DataTypeInputMapSelects } from '../DataTypes';
-import { createFields, createFieldsFactory, isArray } from '../fns';
+import { isArray } from '../fns';
 import { TupleAppend, Name, Selects, MergeObjects, SourceFieldsFromSelects, SourceFieldsFunctions, SourceFieldsFactory, SelectsKey, SelectsWithKey, SelectsMap } from '../types';
 import { Source } from './Source';
 import { NamedSource } from './Named';
@@ -45,8 +45,8 @@ export class SourceTable<N extends Name, S extends Selects, F extends DataTypeIn
     this.fieldColumn = input.fieldColumn || {};
     this.primary = input.primary || [Object.keys(input.fields)[0]];
     this.selects = Object.keys(input.fields).map( field => new ExprField( this as any, field ) ) as any;
-    this.fieldMap = createFields(this as any, this.selects);
-    this.fields = createFieldsFactory(this.selects, this.fieldMap);
+    this.fieldMap = ExprField.createFields(this as any, this.selects);
+    this.fields = ExprField.createFieldsFactory(this.selects, this.fieldMap);
   }
 
   public getKind(): ExprKind {

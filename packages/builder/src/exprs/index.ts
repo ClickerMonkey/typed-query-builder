@@ -1,3 +1,5 @@
+export * from './Expr';
+export * from './Scalar';
 export * from './Aggregate';
 export * from './Between';
 export * from './Case';
@@ -8,7 +10,6 @@ export * from './Conditions';
 export * from './Constant';
 export * from './Default';
 export * from './Exists';
-export * from './Expr';
 export * from './Factory';
 export * from './Field';
 export * from './Function';
@@ -20,4 +21,3 @@ export * from './OperationUnary';
 export * from './Param';
 export * from './Raw';
 export * from './Row';
-export * from './Scalar';

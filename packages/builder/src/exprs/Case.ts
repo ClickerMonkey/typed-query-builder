@@ -7,7 +7,7 @@ import { ExprInput, ExprScalar } from './Scalar';
 export class ExprCase<I, O> extends ExprScalar<O> 
 {
   
-  public static readonly id = 'case';
+  public static readonly id = ExprKind.CASE;
   
   public constructor(
     public value: ExprScalar<I>, 

@@ -1,4 +1,3 @@
-import { describe, it } from '@jest/globals';
 import { Select, Source, NamedSource, values } from '../src';
 import { expectType } from "./helper";
 

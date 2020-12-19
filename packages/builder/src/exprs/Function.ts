@@ -1,14 +1,25 @@
-import { FunctionArgumentValues, FunctionResult, Functions } from '../Functions';
+import { FunctionArgumentInputs, FunctionArgumentValues, FunctionProxy, FunctionResult, Functions } from '../Functions';
 import { ExprKind } from '../Kind';
 import { Traverser } from '../Traverser';
 import { Expr } from './Expr';
 import { ExprScalar } from './Scalar';
 
 
+
 export class ExprFunction<F extends keyof Funcs, Funcs = Functions> extends ExprScalar<FunctionResult<F, Funcs>> 
 {
   
-  public static readonly id = 'f';
+  public static createFunctionProxy<Funcs>(): FunctionProxy<Funcs> {
+    return new Proxy({}, {
+      get: <K extends keyof Funcs>(target: {}, func: K, reciever: any) => {
+        return (...args: FunctionArgumentInputs<K, Funcs>): ExprScalar<FunctionResult<K, Funcs>> => {
+          return new ExprFunction(func, (args as any).map( ExprScalar.parse ));
+        };
+      },
+    }) as FunctionProxy<Funcs>;
+  }
+    
+  public static readonly id = ExprKind.FUNCTION;
 
   public constructor(
     public func: F,
@@ -36,3 +47,5 @@ export class ExprFunction<F extends keyof Funcs, Funcs = Functions> extends Expr
   }
 
 }
+
+export const fns = ExprFunction.createFunctionProxy<Functions>();

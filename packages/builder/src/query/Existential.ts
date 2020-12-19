@@ -7,7 +7,7 @@ import { QueryCriteria } from './Criteria';
 export class QuerySelectExistential<T extends Sources, S extends Selects> extends ExprScalar<1 | null>
 { 
   
-  public static readonly id = 's1';
+  public static readonly id = ExprKind.QUERY_EXISTENTIAL;
 
   public constructor(
     public _criteria: QueryCriteria<T, S>

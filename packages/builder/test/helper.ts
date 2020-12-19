@@ -1,4 +1,3 @@
-import { expect } from '@jest/globals';
 import { Name, ExprValueToExpr, Expr, Select } from '../src';
 
 

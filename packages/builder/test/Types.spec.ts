@@ -1,4 +1,3 @@
-import { describe, it } from '@jest/globals';
 import { Expr, Select, ExprValueObjects, ExprValueTuples, TupleFlatten, ExprValueToExpr, MergeObjects, UndefinedKeys, SelectWithKey, UnionToIntersection, UnionToTuple, ArrayToTuple, TupleAppend, ObjectKeys, SelectsKeys, SelectsValues, SelectsNameless, ObjectFromSelects, SelectsExprs, TuplesJoin, ExprField, SelectsFromObject, values, SelectsWithKey, Source, NamedSource } from '../src';
 import { expectType, expectTypeMatch } from './helper';
 

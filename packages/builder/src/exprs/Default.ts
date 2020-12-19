@@ -6,7 +6,7 @@ import { Expr } from './Expr';
 export class ExprDefault extends Expr<any>
 {
 
-  public static readonly id = 'default';
+  public static readonly id = ExprKind.DEFAULT;
 
   public getKind(): ExprKind {
     return ExprKind.DEFAULT;

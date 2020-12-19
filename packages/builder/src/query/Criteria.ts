@@ -1,9 +1,8 @@
-import { Selects, SelectsExprs, Sources } from '../types';
+import { Selects, SelectsExprs, Sources, SourceForType, SourcesFieldsFactory } from '../types';
 import { ExprFactory } from '../exprs/Factory';
 import { OrderBy } from '../Order';
 import { Select } from '../select/Select';
 import { NamedSource } from '../sources';
-import { SourceForType, SourcesFieldsFactory } from '..';
 import { ExprScalar } from '../exprs';
 
 

@@ -1,4 +1,4 @@
-import { isArray } from '..';
+import { isArray } from '../fns';
 import { ExprKind } from '../Kind';
 import { Traverser } from '../Traverser';
 import { ConditionBinaryListPass, ConditionBinaryListType } from '../types';
@@ -9,7 +9,7 @@ import { ExprScalar } from './Scalar';
 export class ExprConditionBinaryList<T> extends ExprScalar<boolean> 
 {
   
-  public static readonly id = 'a?b[]';
+  public static readonly id = ExprKind.CONDITION_BINARY_LIST;
 
   public constructor(
     public type: ConditionBinaryListType,
