@@ -2,10 +2,10 @@ import { Transformer, Expr, isString, isFunction } from '@typed-query-builder/bu
 
 
 interface DialectTransformFunction<T> {
-  (params?: Record<string, any>): T;
+  (params?: Record<string, any>, dialect: Dialect): T;
 }
 interface DialectTransformTransformer{
-  <T>(value: Expr<T>, dialect: Dialect): DialectTransformFunction<T>;
+  <T>(value: Expr<T>): DialectTransformFunction<T>;
 }
 
 type DialectQuoteFormatter = (value: string, dialect: Dialect) => string;

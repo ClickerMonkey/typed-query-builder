@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "moduleResolution": "node",
-    "module": "esnext",
+    "module": "commonjs",
     "target": "es5",
     "lib": [
       "dom",
@@ -25,7 +25,10 @@
     "declarationDir": "typings",
     "stripInternal": true,
     "noUnusedLocals": true,
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "composite": true,
+    "outDir": "./dist",
+    "rootDir": ".",
   },
   "compileOnSave": false,
   "buildOnSave": false,
