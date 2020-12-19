@@ -1,5 +1,4 @@
-import { Expr } from './exprs/Expr';
-import { ExprKind } from './Kind';
+import { Expr, ExprKind } from './internal';
 
 
 export type ExprClass<T extends Expr<any>> = { new(...args: any[]): T, id: ExprKind };

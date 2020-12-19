@@ -1,7 +1,4 @@
-import { Selects, Sources } from '../types';
-import { Expr } from '../exprs/Expr';
-import { QueryCriteria } from './Criteria';
-import { ExprKind } from '../Kind';
+import { Selects, Sources, Expr, QueryCriteria, ExprKind } from '../internal';
 
 
 export class QuerySelectList<T extends Sources, S extends Selects, R> extends Expr<R[]> 

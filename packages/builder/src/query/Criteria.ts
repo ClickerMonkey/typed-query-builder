@@ -1,9 +1,4 @@
-import { Selects, SelectsExprs, Sources, SourceForType, SourcesFieldsFactory } from '../types';
-import { ExprFactory } from '../exprs/Factory';
-import { OrderBy } from '../Order';
-import { Select } from '../select/Select';
-import { NamedSource } from '../sources';
-import { ExprScalar } from '../exprs';
+import { createExprFactory, SourceKind, SourceKindPair, Selects, SelectsExprs, Sources, SourcesFieldsFactory, ExprFactory, OrderBy, Select, NamedSource, ExprScalar } from '../internal';
 
 
 
@@ -11,7 +6,7 @@ export class QueryCriteria<T extends Sources, S extends Selects>
 {
 
   public exprs: ExprFactory<T, S>;
-  public sources: SourceForType<T>;
+  public sources: SourceKindPair<keyof T, any>[];
   public sourcesFields: SourcesFieldsFactory<T>;
   public selects: S;
   public selectsExpr: SelectsExprs<S>;
@@ -24,7 +19,7 @@ export class QueryCriteria<T extends Sources, S extends Selects>
 
   public constructor(base?: QueryCriteria<T, S>) 
   { 
-    this.sources = base ? { ...base.sources } : {} as any;
+    this.sources = base ? base.sources.slice() : [] as any;
     this.sourcesFields = base ? { ...base.sourcesFields } : {} as any;
     this.selects = base ? base.selects.slice() : [] as any;
     this.selectsExpr = base ? { ...base.selectsExpr } : {} as any;
@@ -34,20 +29,25 @@ export class QueryCriteria<T extends Sources, S extends Selects>
     this.orderBy = base ? base.orderBy.slice() : [];
     this.limit = base?.limit;
     this.offset = base?.offset;
-    this.exprs = new ExprFactory(this.sourcesFields, this.selectsExpr);
+    this.exprs = createExprFactory(this.sourcesFields, this.selectsExpr);
   }
 
-  public addSource(source: NamedSource<any, any>): void {
-    (this.sources as any)[source.getName()] = source;
+  public addSource(source: NamedSource<any, any>, kind: SourceKind): void {
+    this.sources.push(new SourceKindPair(kind, source));
     (this.sourcesFields as any)[source.getName()] = source.getFieldsFactory();
   }
 
-  public addSources(sources: NamedSource<any, any>[]): void {
-    sources.forEach( source => this.addSource( source ) );
+  public replaceSource(source: NamedSource<any, any>, kind: SourceKind): void {
+    this.sources.pop();
+    this.addSource(source, kind);
+  }
+
+  public addSources(sources: NamedSource<any, any>[], kind: SourceKind): void {
+    sources.forEach( source => this.addSource( source, kind ) );
   }
 
   public addSelect(select: Select<any, any>): void {
-    this.selects[select.alias] = select;
+    this.selects.push(select);
     this.selectsExpr[select.alias] = select.getExpr();
   }
 

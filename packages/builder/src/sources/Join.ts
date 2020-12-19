@@ -1,7 +1,4 @@
-import { Name, JoinType, Selects } from '../types';
-import { NamedSourceBase } from './NamedBase';
-import { NamedSource } from './Named';
-import { ExprScalar } from '../exprs';
+import { Name, JoinType, Selects, NamedSourceBase, NamedSource, ExprScalar } from '../internal';
 
 
 export class SourceJoin<N extends Name, S extends Selects> extends NamedSourceBase<N, S>

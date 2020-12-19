@@ -1,4 +1,4 @@
-import { isFunction } from './fns';
+import { isFunction } from './internal';
 
 
 export type TraverseStep = string | number;

@@ -1,6 +1,4 @@
-import { ExprKind } from '../Kind';
-import { Traverser } from '../Traverser';
-import { Expr } from './Expr';
+import { ExprKind, Traverser, Expr } from '../internal';
 
 
 export class ExprRow<V extends any[]> extends Expr<V>

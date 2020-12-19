@@ -1,7 +1,4 @@
-import { ExprKind } from '../Kind';
-import { Traverser } from '../Traverser';
-import { Expr } from './Expr';
-import { ExprInput, ExprScalar } from './Scalar';
+import { ExprKind, ExprScalar, Traverser, Expr, ExprInput } from '../internal';
 
 
 export class ExprCase<I, O> extends ExprScalar<O> 

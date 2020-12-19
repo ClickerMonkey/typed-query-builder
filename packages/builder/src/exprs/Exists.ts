@@ -1,8 +1,4 @@
-import { ExprKind } from '../Kind';
-import { Select } from '../select';
-import { Traverser } from '../Traverser';
-import { Expr } from './Expr';
-import { ExprScalar } from './Scalar';
+import { ExprKind, ExprScalar, Traverser, Expr, Select } from '../internal';
 
 
 export class ExprExists extends ExprScalar<boolean> 

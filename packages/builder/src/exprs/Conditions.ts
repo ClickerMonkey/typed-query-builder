@@ -1,8 +1,4 @@
-import { ExprKind } from '../Kind';
-import { Traverser } from '../Traverser';
-import { ConditionsType } from '../types';
-import { Expr } from './Expr';
-import { ExprScalar } from './Scalar';
+import { ExprKind, ExprScalar, Traverser, Expr, ConditionsType } from '../internal';
 
 
 export class ExprConditions extends ExprScalar<boolean> 

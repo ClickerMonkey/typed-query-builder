@@ -1,10 +1,5 @@
-import { OrderBy } from '../Order';
-import { FunctionArgumentValues, FunctionResult } from '../Functions';
-import { ExprKind } from '../Kind';
-import { Traverser } from '../Traverser';
-import { AggregateFunctions, OrderDirection } from '../types';
-import { Expr } from './Expr';
-import { ExprScalar } from './Scalar';
+import { FunctionResult, ExprKind, FunctionArgumentValues, OrderBy, Traverser, Expr, ExprScalar, AggregateFunctions, OrderDirection } from '../internal';
+
 
 
 export class ExprAggregate<A extends keyof Aggs, Aggs = AggregateFunctions> extends ExprScalar<FunctionResult<A, Aggs>> 

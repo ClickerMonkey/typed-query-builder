@@ -1,10 +1,5 @@
-import { isArray, isString } from '../fns';
-import { Name, Selects, Sources, MergeObjects, SelectsKey, Simplify, JoinedInner, Tuple } from '../types';
-import { ExprProvider, ExprScalar } from '../exprs';
-import { NamedSource, Source, SourceTable } from '../sources';
-import { ExprKind } from '../Kind';
-import { QueryModify, QueryModifyReturningColumns, QueryModifyReturningExpressions } from './Modify';
-import { Select } from '../select';
+import { SourceKind, isArray, isString, Name, Selects, Sources, MergeObjects, SelectsKey, Simplify, JoinedInner, Tuple, ExprProvider, ExprScalar, NamedSource, Source, SourceTable, ExprKind, QueryModify, QueryModifyReturningColumns, QueryModifyReturningExpressions, Select } from '../internal';
+
 
 export class QueryDelete<
   T extends Sources = {}, 
@@ -46,7 +41,7 @@ export class QueryDelete<
   {
     (this as any)._from = from;
     
-    this.addSource(from as any);
+    this.addSource(from as any, SourceKind.TARGET);
     
     return this as never;
   }
@@ -57,7 +52,7 @@ export class QueryDelete<
   {
     if (!isString(source)) 
     {
-      this.addSource(this._exprs.provide(source) as any);
+      this.addSource(this._exprs.provide(source) as any, SourceKind.USING);
     }
 
     return this as never;

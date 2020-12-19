@@ -1,4 +1,5 @@
-import { ObjectKeys } from './types';
+import { ObjectKeys } from './internal';
+
 
 
 export function isString(x: any): x is string 

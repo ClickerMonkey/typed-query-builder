@@ -1,6 +1,4 @@
-import { Expr } from '../exprs';
-import { Select } from '../select';
-import { Selects, SelectsFromObject, SelectsValues, ObjectFromSelects } from './Select';
+import { Expr, Select, Selects, SelectsFromObject, SelectsValues, ObjectFromSelects } from '../internal';
 
 
 export type ExprValueToExpr<T> = 

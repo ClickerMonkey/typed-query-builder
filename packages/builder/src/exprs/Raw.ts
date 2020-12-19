@@ -1,5 +1,4 @@
-import { ExprScalar } from './Scalar';
-import { ExprKind } from '../Kind';
+import { ExprKind, ExprScalar } from '../internal';
 
 
 export class ExprRaw extends ExprScalar<any> 

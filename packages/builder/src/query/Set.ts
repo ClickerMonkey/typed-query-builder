@@ -1,11 +1,4 @@
-import { isArray, isString } from '../fns';
-import { OrderDirection, Selects, SelectsKeys, SetOperation, SourceCompatible } from '../types';
-import { Expr, ExprField, ExprProvider } from '../exprs';
-import { OrderBy } from '../Order';
-import { Source } from '../sources';
-import { ExprKind } from '../Kind';
-import { QueryCriteria } from './Criteria';
-
+import { SourceKind, isArray, isString, OrderDirection, Selects, SelectsKeys, SetOperation, SourceCompatible, Expr, ExprField, ExprProvider, OrderBy, Source, ExprKind, QueryCriteria } from '../internal';
 
 
 export class QuerySet<S extends Selects> extends Source<S>
@@ -41,7 +34,7 @@ export class QuerySet<S extends Selects> extends Source<S>
     this._all = [all];
     this._criteria = new QueryCriteria();
     this._criteria.addSelects(_first.getSelects().map( s => new ExprField(set as any, s.alias )));
-    this._criteria.addSource(set as any);
+    this._criteria.addSource(set as any, SourceKind.TARGET);
   }
 
   public getKind(): ExprKind {

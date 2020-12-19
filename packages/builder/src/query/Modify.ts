@@ -1,8 +1,4 @@
-import { isArray, isString } from '../fns';
-import { Cast, Name, Selects, Sources, ArrayToTuple, SourcesFieldsFactory, SelectsKey, SelectsWithKey, SelectsNormalize, TupleAppend, JoinedInner, Tuple } from '../types';
-import { ExprFactory, ExprProvider } from '../exprs';
-import { NamedSource, Source, SourceRecursive, SourceTable } from '../sources';
-import { Select } from '../select';
+import { createExprFactory, SourceKindPair, SourceKind, isArray, isString, Cast, Name, Selects, Sources, ArrayToTuple, SourcesFieldsFactory, SelectsKey, SelectsWithKey, SelectsNormalize, TupleAppend, JoinedInner, Tuple, ExprFactory, ExprProvider, NamedSource, Source, SourceRecursive, SourceTable, Select } from '../internal';
 
 
 export type QueryModifyReturning<
@@ -30,7 +26,7 @@ export abstract class QueryModify<
 {
 
   public _exprs: ExprFactory<T, R>;
-  public _sources: NamedSource<keyof T, any>[];
+  public _sources: SourceKindPair<keyof T, any>[];
   public _sourceFields: SourcesFieldsFactory<T>;
   public _returning: R;
 
@@ -41,7 +37,7 @@ export abstract class QueryModify<
     this._sources = [];
     this._sourceFields = Object.create(null);
     this._returning = [] as any;
-    this._exprs = new ExprFactory(this._sourceFields as any, [] as any);
+    this._exprs = createExprFactory(this._sourceFields as any, [] as any);
   }
 
   public getSelects(): R 
@@ -55,28 +51,28 @@ export abstract class QueryModify<
   {
     const source = this._exprs.provide(sourceProvider as any);
 
-    this.addSource(source as any);
+    this.addSource(source as any, SourceKind.WITH);
 
     if (recursive) 
     {
       const recursiveSource = this._exprs.provide(recursive as any);
 
-      this.replaceSource(new SourceRecursive(source.getName(), source.getSource(), recursiveSource, all) as any);
+      this.replaceSource(new SourceRecursive(source.getName(), source.getSource(), recursiveSource, all) as any, SourceKind.WITH);
     }
 
     return this as any;
   }
 
-  protected addSource(source: NamedSource<any, any>): void 
+  protected addSource(source: NamedSource<any, any>, kind: SourceKind): void 
   {
-    this._sources.push(source);
+    this._sources.push(new SourceKindPair(kind, source));
     (this._sourceFields as any)[source.getName()] = source.getFieldsFactory();
   }
 
-  protected replaceSource(source: NamedSource<any, any>): void 
+  protected replaceSource(source: NamedSource<any, any>, kind: SourceKind): void 
   {
     this._sources.pop();
-    this.addSource(source);
+    this.addSource(source, kind);
   }
 
   public returning(output: '*'): QueryModify<T, N, S, S>

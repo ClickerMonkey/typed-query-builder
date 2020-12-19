@@ -1,8 +1,4 @@
-import { ExprScalar } from './Scalar';
-import { ExprKind } from '../Kind';
-import { Traverser } from '../Traverser';
-import { OperationUnaryType } from '../types';
-import { Expr } from './Expr';
+import { ExprKind, Traverser, Expr, ExprScalar, OperationUnaryType } from '../internal';
 
 
 export class ExprOperationUnary extends ExprScalar<number> 

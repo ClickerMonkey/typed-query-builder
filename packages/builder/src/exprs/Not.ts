@@ -1,7 +1,4 @@
-import { ExprScalar } from './Scalar';
-import { ExprKind } from '../Kind';
-import { Traverser } from '../Traverser';
-import { Expr } from './Expr';
+import { ExprKind, Traverser, Expr, ExprScalar } from '../internal';
 
 
 export class ExprNot extends ExprScalar<boolean> 

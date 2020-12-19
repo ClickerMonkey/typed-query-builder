@@ -337,7 +337,10 @@ You can pass expressions directly to many functions, but you can also use a "pro
      (field, ...) = Query<value, ...>
    WHERE condition 
    RETURNING [* | value, ...]
+- INSERT ON DUPLICATE KEY UPDATE [x = y]
+- INSERT priority
 - stored procedures support?
+- Insert or update|replace
 
 ### Refined TODO
 - for SQL transformers...

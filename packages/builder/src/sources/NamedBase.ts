@@ -1,7 +1,4 @@
-import { Name, Selects, SourceFieldsFromSelects, SourceFieldsFactory } from "../types";
-import { NamedSource } from "./Named";
-import { Source } from "./Source";
-import { ExprField } from '../exprs/Field';
+import { Name, Selects, SourceFieldsFromSelects, SourceFieldsFactory, NamedSource, Source, ExprField } from '../internal';
 
 
 export class NamedSourceBase<N extends Name, S extends Selects> implements NamedSource<N, S>

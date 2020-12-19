@@ -1,9 +1,4 @@
-import { Selects, Name, SourceCompatible } from "../types";
-import { Expr } from "../exprs";
-import { QuerySet } from "../query";
-import { NamedSource } from "./Named";
-import { NamedSourceBase } from "./NamedBase";
-
+import { Selects, Name, SourceCompatible, Expr, QuerySet, NamedSource, NamedSourceBase } from "../internal";
 
 
 export abstract class Source<S extends Selects> extends Expr<S[]>

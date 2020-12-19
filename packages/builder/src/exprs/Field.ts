@@ -1,12 +1,14 @@
-import { Name, SourceFieldsFunctions, Selects, SourceFieldsFromSelects, SourceFieldsFactory } from '../types';
-import { Select } from '../select/Select';
-import { SelectAliased } from '../select/Aliased';
-import { ExprScalar } from './Scalar';
-import { ExprKind } from '../Kind';
-import { NamedSource } from '../sources';
-import { query } from '../helpers';
-import { Expr } from './Expr';
-import { isArray } from '../fns';
+import {
+  Name, SourceFieldsFunctions, Selects, SourceFieldsFromSelects, SourceFieldsFactory,
+  Select,
+  SelectAliased,
+  ExprScalar,
+  ExprKind,
+  NamedSource,
+  query,
+  Expr,
+  isArray
+} from '../internal';
 
 
 export class ExprField<F extends Name, T> extends ExprScalar<T> implements Select<F, T>

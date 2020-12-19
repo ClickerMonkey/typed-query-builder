@@ -1,4 +1,4 @@
-import { Simplify, UnionToTuple } from './Core';
+import { Simplify, UnionToTuple } from '../internal';
 
 
 export type ArrayToTuple<T> =

@@ -1,5 +1,4 @@
-import { ExprKind } from '../Kind';
-import { Source } from './Source';
+import { ExprKind, Source } from '../internal';
 
 
 export class SourceUnspecified extends Source<[]>

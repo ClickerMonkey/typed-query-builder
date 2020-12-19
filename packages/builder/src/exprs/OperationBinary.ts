@@ -1,8 +1,4 @@
-import { ExprScalar } from './Scalar';
-import { ExprKind } from '../Kind';
-import { Traverser } from '../Traverser';
-import { OperationBinaryType } from '../types';
-import { Expr } from './Expr';
+import { ExprKind, Traverser, Expr, ExprScalar, OperationBinaryType } from '../internal';
 
 
 export class ExprOperationBinary extends ExprScalar<number> 

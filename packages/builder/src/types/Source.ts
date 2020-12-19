@@ -1,8 +1,4 @@
-import { ExprField } from '../exprs';
-import { NamedSource, Source } from '../sources';
-import { Name } from './Query';
-import { Cast, MergeObjects, Simplify, UnionToIntersection } from './Core';
-import { ObjectFromSelects, Selects, SelectsOptional, SelectsKey, SelectsWithKey, SelectsMap, SelectsNameless } from './Select';
+import { ExprField, NamedSource, Source, Name, Cast, MergeObjects, Simplify, UnionToIntersection, ObjectFromSelects, Selects, SelectsOptional, SelectsKey, SelectsWithKey, SelectsMap, SelectsNameless } from '../internal';
 
 
 export type Sources = { [source: string]: Selects };

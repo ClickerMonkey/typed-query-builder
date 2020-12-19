@@ -1,9 +1,5 @@
-import { Expr, ExprInput } from '../exprs';
-import { Select } from '../select';
-import { Cast, Simplify, UndefinedToOptional, UnionToIntersection, UnionToTuple } from './Core';
-import { Name } from './Query';
-import { Sources } from './Source';
-import { TupleAppend, TupleFlatten, Tuple, TupleFilter } from './Tuple';
+import { Expr, ExprInput, Select, Cast, Simplify, UndefinedToOptional, UnionToIntersection, UnionToTuple, Name, Sources, TupleAppend, TupleFlatten, Tuple, TupleFilter } from '../internal';
+
 
 export type Selects = [...(Select<Name, any>)[]];
 

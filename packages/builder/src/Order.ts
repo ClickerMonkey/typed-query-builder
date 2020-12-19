@@ -1,5 +1,4 @@
-import { OrderDirection } from './types';
-import { Expr } from './exprs/Expr';
+import { OrderDirection, Expr } from './internal';
 
 
 export class OrderBy 

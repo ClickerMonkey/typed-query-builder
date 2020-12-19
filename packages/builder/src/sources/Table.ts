@@ -1,11 +1,4 @@
-import { DataTypeInputMap, DataTypeInputMapSelects } from '../DataTypes';
-import { isArray } from '../fns';
-import { TupleAppend, Name, Selects, MergeObjects, SourceFieldsFromSelects, SourceFieldsFunctions, SourceFieldsFactory, SelectsKey, SelectsWithKey, SelectsMap } from '../types';
-import { Source } from './Source';
-import { NamedSource } from './Named';
-import { ExprKind } from '../Kind';
-import { ExprField } from '../exprs';
-import { SelectAliased } from '../select';
+import { DataTypeInputMap, DataTypeInputMapSelects, isArray, TupleAppend, Name, Selects, MergeObjects, SourceFieldsFromSelects, SourceFieldsFunctions, SourceFieldsFactory, SelectsKey, SelectsWithKey, SelectsMap, Source, NamedSource, ExprKind, ExprField, SelectAliased } from '../internal';
 
 
 export interface SourceTableInput<N extends Name, F extends DataTypeInputMap>

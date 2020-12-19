@@ -1,8 +1,4 @@
-import { isArray } from '../fns';
-import { ExprKind } from '../Kind';
-import { Traverser } from '../Traverser';
-import { Expr } from './Expr';
-import { ExprScalar } from './Scalar';
+import { isArray, ExprKind, Traverser, Expr, ExprScalar } from '../internal';
 
 
 export class ExprIn<T> extends ExprScalar<boolean> 

@@ -1,5 +1,4 @@
-import { Name, Selects, SourceFieldsFactory, SourceFieldsFromSelects } from "..";
-import { Source } from "./Source";
+import { Name, Selects, SourceFieldsFactory, SourceFieldsFromSelects, Source } from "../internal";
 
 
 export interface NamedSource<N extends Name, S extends Selects>

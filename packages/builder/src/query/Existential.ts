@@ -1,7 +1,4 @@
-import { ExprScalar } from '../exprs';
-import { ExprKind } from '../Kind';
-import { Selects, Sources } from '../types';
-import { QueryCriteria } from './Criteria';
+import { ExprScalar, ExprKind, Selects, Sources, QueryCriteria } from '../internal';
 
 
 export class QuerySelectExistential<T extends Sources, S extends Selects> extends ExprScalar<1 | null>

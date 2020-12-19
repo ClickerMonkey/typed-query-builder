@@ -1,9 +1,4 @@
-import { Cast, Name, Selects, Sources, SelectsKeys, SelectsKey, SelectsWithKey, SelectsValuesExprs, SelectsRecordExprs, JoinedInner, Tuple } from '../types';
-import { Expr, ExprInput, ExprProvider, ExprScalar } from '../exprs';
-import { NamedSource, Source, SourceTable } from '../sources';
-import { ExprKind } from '../Kind';
-import { QueryModify, QueryModifyReturningColumns, QueryModifyReturningExpressions } from './Modify';
-import { Select } from '../select';
+import { SourceKind, Cast, Name, Selects, Sources, SelectsKeys, SelectsKey, SelectsWithKey, SelectsValuesExprs, SelectsRecordExprs, JoinedInner, Tuple, Expr, ExprInput, ExprProvider, ExprScalar, NamedSource, Source, SourceTable, ExprKind, QueryModify, QueryModifyReturningColumns, QueryModifyReturningExpressions, Select } from '../internal';
 
 
 export type QueryInsertValuesTuple<
@@ -80,7 +75,7 @@ export class QueryInsert<
     (this as any)._into = into;
     (this as any)._columns = columns || into.getSelects().map( s => s.alias );
 
-    this.addSource(into as any);
+    this.addSource(into as any, SourceKind.TARGET);
     
     return this as never;
   }

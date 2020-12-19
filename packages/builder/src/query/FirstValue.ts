@@ -1,8 +1,4 @@
-import { Selects, Sources } from '../types';
-import { Select } from '../select';
-import { ExprScalar } from '../exprs';
-import { QueryCriteria } from './Criteria';
-import { ExprKind } from '../Kind';
+import { Selects, Sources, Select, ExprScalar, QueryCriteria, ExprKind } from '../internal';
 
 
 export class QuerySelectFirstValue<T extends Sources, S extends Selects, R> extends ExprScalar<R>

@@ -1,24 +1,4 @@
-import { isArray, isFunction, isString } from '../fns';
-import { SourcesFieldsFactory, JoinType, Selects, Sources, Name, OrderDirection, MergeObjects, SelectsKeys, LockType, SelectWithKey, Simplify, SelectValueWithKey, SelectsKey, SelectsKeyWithType, JoinedInner, JoinedRight, JoinedLeft, JoinedFull, SelectAllSelects, SelectGivenSelects, MaybeSources, MaybeSelects, AggregateFunctions, Tuple, SourceCompatible } from '../types';
-import { ExprAggregate } from '../exprs/Aggregate';
-import { ExprProvider, ExprFactory } from '../exprs/Factory';
-import { Expr, ExprType } from '../exprs/Expr';
-import { QuerySelectExistential } from './Existential';
-import { QuerySelectFirst } from './First';
-import { QuerySelectFirstValue } from './FirstValue';
-import { QuerySelectList } from './List';
-import { Source } from '../sources/Source';
-import { SourceJoin } from '../sources/Join';
-import { OrderBy } from '../Order';
-import { Select } from '../select/Select';
-import { FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions } from '../Functions';
-import { QueryCriteria } from './Criteria';
-import { ExprKind } from '../Kind';
-import { NamedSource } from '../sources/Named';
-import { SourceRecursive } from '../sources/Recursive';
-import { ExprInput, ExprScalar } from '../exprs/Scalar';
-import { fns } from '../exprs/Function';
-
+import { SourceKind, isArray, isFunction, isString, SourcesFieldsFactory, JoinType, Selects, Sources, Name, OrderDirection, MergeObjects, SelectsKeys, LockType, SelectWithKey, Simplify, SelectValueWithKey, SelectsKey, SelectsKeyWithType, JoinedInner, JoinedRight, JoinedLeft, JoinedFull, SelectAllSelects, SelectGivenSelects, MaybeSources, MaybeSelects, AggregateFunctions, Tuple, SourceCompatible, ExprAggregate, ExprProvider, ExprFactory, Expr, ExprType, QuerySelectExistential, QuerySelectFirst, QuerySelectFirstValue, QuerySelectList,  Source, SourceJoin, OrderBy, Select, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions, QueryCriteria, ExprKind, NamedSource, SourceRecursive, ExprInput, ExprScalar, fns } from '../internal';
 
 
 export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
@@ -55,12 +35,12 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
   public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, Source<WS>>, all?: boolean): QuerySelect<JoinedInner<T, WN, WS>, S> {
     const source = this._criteria.exprs.provide(sourceProvider);
 
-    this._criteria.addSource(source as any);
+    this._criteria.addSource(source as any, SourceKind.WITH);
 
     if (recursive) {
       const recursiveSource = this._criteria.exprs.provide(recursive as any);
 
-      this._criteria.addSource(new SourceRecursive(source.getName(), source.getSource(), recursiveSource, all) as any);
+      this._criteria.replaceSource(new SourceRecursive(source.getName(), source.getSource(), recursiveSource, all) as any, SourceKind.WITH);
     }
 
     return this as any;
@@ -71,7 +51,7 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
   public from<FN extends Name, FS extends Selects>(source: keyof T | ExprProvider<T, S, NamedSource<FN, FS>>): never {
     
     if (!isString(source)) {
-      this._criteria.addSource(this._criteria.exprs.provide(source) as any);
+      this._criteria.addSource(this._criteria.exprs.provide(source) as any, SourceKind.FROM);
     }
 
     return this as never;
@@ -84,7 +64,7 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
   public join<JN extends Name, JT extends Selects>(type: JoinType, source: NamedSource<JN, JT>, on: any): never  {
     const onExpr = ExprScalar.parse(this._criteria.exprs.provide(on as any));
 
-    this._criteria.addSource(new SourceJoin(source as any, type, onExpr));
+    this._criteria.addSource(new SourceJoin(source as any, type, onExpr), SourceKind.JOIN);
 
     return this as never;
   }
@@ -111,11 +91,25 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
       ? this._criteria.exprs.provide(selectInput[0])
       : isArray(selectInput[0])
         ? selectInput[0]
-        : selectInput;
+        : selectInput[0] === '*'
+          ? this.selectAll()
+          : selectInput;
 
     this._criteria.addSelects(selects);
 
     return this as never;
+  }
+
+  protected selectAll(): Selects {
+    const all: Selects = [];
+
+    for (const source of this._criteria.sources) {
+      if (source.kind !== SourceKind.WITH) {
+        all.push(...source.source.getSource().getSelects());
+      }
+    }
+
+    return all;
   }
 
   public clearSelect(): QuerySelect<Sources, []> {

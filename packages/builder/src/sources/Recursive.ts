@@ -1,6 +1,4 @@
-import { Name, Selects } from '../types';
-import { NamedSourceBase } from './NamedBase';
-import { Source } from './Source';
+import { Name, Selects, NamedSourceBase, Source } from '../internal';
 
 
 export class SourceRecursive<N extends Name, S extends Selects> extends NamedSourceBase<N, S> 

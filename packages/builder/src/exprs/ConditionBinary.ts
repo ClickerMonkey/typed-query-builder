@@ -1,8 +1,4 @@
-import { ExprKind } from '../Kind';
-import { Traverser } from '../Traverser';
-import { ConditionBinaryType } from '../types';
-import { Expr } from './Expr';
-import { ExprScalar } from './Scalar';
+import { ExprKind, ExprScalar, Traverser, Expr, ConditionBinaryType } from '../internal';
 
 
 export class ExprConditionBinary<T> extends ExprScalar<boolean> 

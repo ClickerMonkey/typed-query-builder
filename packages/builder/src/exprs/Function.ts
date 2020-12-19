@@ -1,15 +1,16 @@
-import { FunctionArgumentInputs, FunctionArgumentValues, FunctionProxy, FunctionResult, Functions } from '../Functions';
-import { ExprKind } from '../Kind';
-import { Traverser } from '../Traverser';
-import { Expr } from './Expr';
-import { ExprScalar } from './Scalar';
-
+import {
+  FunctionArgumentInputs, FunctionArgumentValues, FunctionProxy, FunctionResult, Functions,
+  ExprKind,
+  Traverser,
+  Expr,
+  ExprScalar
+} from '../internal';
 
 
 export class ExprFunction<F extends keyof Funcs, Funcs = Functions> extends ExprScalar<FunctionResult<F, Funcs>> 
 {
   
-  public static createFunctionProxy<Funcs>(): FunctionProxy<Funcs> {
+  public static createProxy<Funcs>(): FunctionProxy<Funcs> {
     return new Proxy({}, {
       get: <K extends keyof Funcs>(target: {}, func: K, reciever: any) => {
         return (...args: FunctionArgumentInputs<K, Funcs>): ExprScalar<FunctionResult<K, Funcs>> => {
@@ -48,4 +49,4 @@ export class ExprFunction<F extends keyof Funcs, Funcs = Functions> extends Expr
 
 }
 
-export const fns = ExprFunction.createFunctionProxy<Functions>();
+export const fns = ExprFunction.createProxy<Functions>();

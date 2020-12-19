@@ -1,5 +1,4 @@
-import { ExprScalar } from '../exprs';
-import { Select } from './Select';
+import { ExprScalar, Select } from '../internal';
 
 
 export class SelectExpr<A extends string, V> implements Select<A, V> 

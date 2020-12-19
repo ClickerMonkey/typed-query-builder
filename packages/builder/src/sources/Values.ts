@@ -1,7 +1,4 @@
-import { keys } from '../fns';
-import { Selects, SelectsKeys, ObjectFromSelects, Tuple, SelectsFromTypeAndColumns } from '../types';
-import { Source } from './Source';
-import { ExprKind } from '../Kind';
+import { keys, Selects, SelectsKeys, ObjectFromSelects, Tuple, SelectsFromTypeAndColumns, Source, ExprKind } from '../internal';
 
 
 export class SourceValues<S extends Selects> extends Source<S> 

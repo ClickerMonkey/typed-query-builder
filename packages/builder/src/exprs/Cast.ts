@@ -1,8 +1,4 @@
-import { DataTypeInputs, DataTypeInputType } from '../DataTypes';
-import { ExprKind } from '../Kind';
-import { Traverser } from '../Traverser';
-import { Expr } from './Expr';
-import { ExprScalar } from './Scalar';
+import { ExprKind, ExprScalar, Traverser, Expr, DataTypeInputs, DataTypeInputType } from '../internal';
 
 
 export class ExprCast<I extends DataTypeInputs> extends ExprScalar<DataTypeInputType<I>> 

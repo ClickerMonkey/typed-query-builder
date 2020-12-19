@@ -1,11 +1,4 @@
-import { QuerySelect } from './query/Select';
-import { QueryInsert } from './query/Insert';
-import { Name, Selects, SelectsFromTypeAndColumns, Sources, Simplify, SelectsKey, MergeObjects, Tuple } from './types';
-import { DataTypeInputMap, DataTypeInputMapSelects } from './DataTypes';
-import { NamedSource, SourceTableInput, Source, SourceTable, SourceValues } from './sources';
-import { ExprProvider } from './exprs';
-import { QueryUpdate } from './query/Update';
-import { QueryDelete } from './query/Delete';
+import { QuerySelect, QueryInsert, Name, Selects, SelectsFromTypeAndColumns, Sources, Simplify, SelectsKey, MergeObjects, Tuple, DataTypeInputMap, DataTypeInputMapSelects, NamedSource, SourceTableInput, Source, SourceTable, SourceValues, ExprProvider, QueryUpdate, QueryDelete } from './internal';
 
 
 

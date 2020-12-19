@@ -1,6 +1,4 @@
-
-import { ExprKind } from '../Kind';
-import { Expr } from './Expr';
+import { ExprKind, Expr } from '../internal';
 
 
 export class ExprDefault extends Expr<any>

@@ -1,7 +1,4 @@
-import { ExprKind } from '../Kind';
-import { Traversable, Traverser } from '../Traverser';
-import { Simplify } from '../types';
-
+import { ExprKind, Traverser, Simplify, Traversable } from '../internal';
 
 
 export type ExprType<T> = T extends { getInferredType(): infer V } ? V : T;

@@ -1,7 +1,4 @@
- import { ExprKind } from '../Kind';
-import { Traverser } from '../Traverser';
-import { Expr } from './Expr';
-import { ExprScalar } from './Scalar';
+import { ExprKind, ExprScalar, Traverser, Expr } from '../internal';
 
 
 export class ExprBetween<T> extends ExprScalar<boolean> 

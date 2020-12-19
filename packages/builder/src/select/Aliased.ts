@@ -1,5 +1,4 @@
-import { Select } from './Select';
-import { ExprScalar } from '../exprs';
+import { Select, ExprScalar } from '../internal';
 
 
 export class SelectAliased<A extends string, V> implements Select<A, V> 

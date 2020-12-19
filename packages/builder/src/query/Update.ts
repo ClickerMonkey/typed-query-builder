@@ -1,10 +1,4 @@
-import { isArray, isString } from '../fns';
-import { Name, Selects, Sources, SelectsKey, SelectsTupleEquivalent, ObjectExprFromSelects, Tuple, JoinedInner, SelectValueWithKey } from '../types';
-import { ExprField, ExprInput, ExprProvider, ExprScalar } from '../exprs';
-import { NamedSource, Source, SourceTable } from '../sources';
-import { ExprKind } from '../Kind';
-import { Select } from '../select';
-import { QueryModify, QueryModifyReturningColumns, QueryModifyReturningExpressions } from './Modify';
+import { SourceKind, isArray, isString, Name, Selects, Sources, SelectsKey, SelectsTupleEquivalent, ObjectExprFromSelects, Tuple, JoinedInner, SelectValueWithKey, ExprField, ExprInput, ExprProvider, ExprScalar, NamedSource, Source, SourceTable, ExprKind, Select, QueryModify, QueryModifyReturningColumns, QueryModifyReturningExpressions } from '../internal';
 
 
 export class QueryUpdateSet<S extends Selects>
@@ -59,7 +53,7 @@ export class QueryUpdate<
   {
     (this as any)._target = target;
     
-    this.addSource(target as any);
+    this.addSource(target as any, SourceKind.TARGET);
     
     return this as never;
   }
@@ -101,7 +95,7 @@ export class QueryUpdate<
   {    
     if (!isString(source)) 
     {
-      this.addSource(this._exprs.provide(source) as any);
+      this.addSource(this._exprs.provide(source) as any, SourceKind.FROM);
     }
 
     return this as never;

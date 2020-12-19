@@ -1,9 +1,4 @@
-import { isArray } from '../fns';
-import { ExprKind } from '../Kind';
-import { Traverser } from '../Traverser';
-import { ConditionBinaryListPass, ConditionBinaryListType } from '../types';
-import { Expr } from './Expr';
-import { ExprScalar } from './Scalar';
+ import { ExprKind, ExprScalar, Traverser, Expr, ConditionBinaryListPass, ConditionBinaryListType, isArray } from '../internal';
 
 
 export class ExprConditionBinaryList<T> extends ExprScalar<boolean> 
