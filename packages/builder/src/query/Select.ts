@@ -1,4 +1,19 @@
-import { SourceKind, isArray, isFunction, isString, SourcesFieldsFactory, JoinType, Selects, Sources, Name, OrderDirection, MergeObjects, SelectsKeys, LockType, SelectWithKey, Simplify, SelectValueWithKey, SelectsKey, SelectsKeyWithType, JoinedInner, JoinedRight, JoinedLeft, JoinedFull, SelectAllSelects, SelectGivenSelects, MaybeSources, MaybeSelects, AggregateFunctions, Tuple, SourceCompatible, ExprAggregate, ExprProvider, ExprFactory, Expr, ExprType, QuerySelectExistential, QuerySelectFirst, QuerySelectFirstValue, QuerySelectList,  Source, SourceJoin, OrderBy, Select, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions, QueryCriteria, ExprKind, NamedSource, SourceRecursive, ExprInput, ExprScalar, fns } from '../internal';
+import { SourceKind, isArray, isFunction, isString, SourcesFieldsFactory, JoinType, Selects, Sources, Name, OrderDirection, MergeObjects, LockType, SelectWithKey, Simplify, SelectValueWithKey, SelectsKey, SelectsKeyWithType, JoinedInner, JoinedRight, JoinedLeft, JoinedFull, SelectAllSelects, SelectGivenSelects, MaybeSources, MaybeSelects, AggregateFunctions, Tuple, SourceCompatible, ExprAggregate, ExprProvider, ExprFactory, Expr, ExprType, QuerySelectExistential, QuerySelectFirst, QuerySelectFirstValue, QuerySelectList,  Source, SourceJoin, OrderBy, Select, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions, QueryCriteria, ExprKind, NamedSource, SourceRecursive, ExprInput, ExprScalar, fns } from '../internal';
+
+
+export type QuerySelectScalarProvider<T extends Sources, S extends Selects, R = any> = 
+  ExprProvider<T, S, QuerySelectScalar<S, R> | QuerySelectScalar<S, R>[]>
+;
+export type QuerySelectScalar<S extends Selects, R = any> = 
+  SelectsKeyWithType<S, R> | ExprScalar<R>
+;
+export type QuerySelectScalarSpread<S extends Selects, R = any> = 
+  QuerySelectScalar<S, R>[]
+;
+export type QuerySelectScalarInput<T extends Sources, S extends Selects, R = any> = 
+  QuerySelectScalar<S, R>[] | [QuerySelectScalarProvider<T, S, R>]
+;
+
 
 
 export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
@@ -11,13 +26,17 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
   }
 
   public _lock: LockType;
+  public _distinct: boolean;
+  public _distinctOn: ExprScalar<any>[];
   public _criteria: QueryCriteria<T, S>;
 
   public constructor(extend?: QuerySelect<T, S>) {
     super();
 
     this._criteria = new QueryCriteria(extend?._criteria);
-    this._lock = 'none';
+    this._lock = extend?._lock || 'none';
+    this._distinct = extend?._distinct || false;
+    this._distinctOn = extend?._distinctOn?.slice() || [];
   }
 
   public getKind(): ExprKind {
@@ -46,12 +65,12 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
     return this as any;
   }
 
-  public from<FN extends keyof T>(source: FN): QuerySelect<T, S>
-  public from<FN extends Name, FS extends Selects>(source: ExprProvider<T, S, NamedSource<FN, FS>>): QuerySelect<Simplify<MergeObjects<T, Record<FN, FS>>>, S> 
-  public from<FN extends Name, FS extends Selects>(source: keyof T | ExprProvider<T, S, NamedSource<FN, FS>>): never {
+  public from<FN extends keyof T>(source: FN, only?: boolean): QuerySelect<T, S>
+  public from<FN extends Name, FS extends Selects>(source: ExprProvider<T, S, NamedSource<FN, FS>>, only?: boolean): QuerySelect<Simplify<MergeObjects<T, Record<FN, FS>>>, S> 
+  public from<FN extends Name, FS extends Selects>(source: keyof T | ExprProvider<T, S, NamedSource<FN, FS>>, only: boolean = false): never {
     
     if (!isString(source)) {
-      this._criteria.addSource(this._criteria.exprs.provide(source) as any, SourceKind.FROM);
+      this._criteria.addSource(this._criteria.exprs.provide(source) as any, only ? SourceKind.ONLY : SourceKind.FROM);
     }
 
     return this as never;
@@ -82,6 +101,22 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
     return this.join('FULL', source, on);
   }
 
+  public distinct(): this {
+    this._distinct = true;
+    this._distinctOn = [];
+
+    return this;
+  }
+
+  public distinctOn(...values: QuerySelectScalarInput<T, S, any>): this {
+    const exprs = this.parseScalar(values);
+    
+    for (const expr of exprs) {
+      this._distinctOn.push(expr);
+    }
+
+    return this;
+  }
 
   public select(selects: '*'): QuerySelect<T, SelectAllSelects<T, S>>
   public select<FS extends Tuple<Select<any, any>>>(selects: ExprProvider<T, S, FS>): QuerySelect<T, SelectGivenSelects<S, FS>>
@@ -112,19 +147,18 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
     return all;
   }
 
-  public clearSelect(): QuerySelect<Sources, []> {
+  public clearSelect(): QuerySelect<T, []> {
     this._criteria.clearSelects();
     
     return this as any;
   }
 
-  public where(conditions: ExprProvider<T, S, ExprScalar<boolean> | ExprScalar<boolean>[]>): this {
-    const resolved = this._criteria.exprs.provide(conditions);
-    const values = isArray(resolved)
-      ? resolved
-      : [ resolved ];
+  public where(...values: QuerySelectScalarInput<T, S, boolean>): this {
+    const exprs = this.parseScalar(values);
 
-    this._criteria.where.push(...values);
+    for (const expr of exprs) {
+      this._criteria.where.push(expr);
+    }
 
     return this;
   }
@@ -135,13 +169,12 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
     return this;
   }
 
-  public groupBy(value: Expr<any>): this
-  public groupBy<K extends SelectsKeys<S>>(value: K): this
-  public groupBy<K extends SelectsKeys<S>>(value: K | ExprScalar<any>): this {
-    this._criteria.groupBy.push(isString(value)
-      ? this._criteria.selectsExpr[value as any]
-      : value
-    );
+  public groupBy(...values: QuerySelectScalarInput<T, S, any>): this {
+    const exprs = this.parseScalar(values);
+
+    for (const expr of exprs) {
+      this._criteria.groupBy.push(expr);
+    }
 
     return this;
   }
@@ -158,17 +191,12 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
     return this;
   }
 
-  public orderBy<K extends SelectsKeys<S>>(select: K, order?: OrderDirection, nullsLast?: boolean): this
-  public orderBy(values: ExprProvider<T, S, ExprScalar<any> | ExprScalar<any>[]>, order?: OrderDirection, nullsLast?: boolean): this
-  public orderBy<K extends SelectsKeys<S>>(values: K | ExprProvider<T, S, ExprScalar<any> | ExprScalar<any>[]>, order?: OrderDirection, nullsLast?: boolean): this {
-    const resolved = isString(values)
-      ? this._criteria.selectsExpr[values as any]
-      : this._criteria.exprs.provide(values);
-    const resolvedArray = isArray(resolved)
-      ? resolved
-      : [ resolved ];
+  public orderBy(values: QuerySelectScalarProvider<T, S, any>, order?: OrderDirection, nullsLast?: boolean): this {
+    const exprs = this.parseScalar([values]);
 
-    this._criteria.orderBy.push(...resolvedArray.map((value) => new OrderBy(value, order, nullsLast)));
+    for (const expr of exprs) {
+      this._criteria.orderBy.push(new OrderBy(expr, order, nullsLast));
+    }
 
     return this;
   }
@@ -282,11 +310,27 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
     );
   }
 
+  protected parseScalar<R = any>(input: QuerySelectScalarInput<T, S, R>): ExprScalar<R>[]
+  {
+    const resolved = isFunction(input[0])
+      ? this._criteria.exprs.provide(input[0])
+      : input as QuerySelectScalar<S, R> | QuerySelectScalar<S, R>[];
+    const array = isArray(resolved)
+      ? resolved
+      : [ resolved ];
+
+    return array.map((item) => 
+      isString(item)
+        ? this._criteria.selectsExpr[item as string]
+        : item
+    );
+  }
+
   public generic(): SourceCompatible<S> {
     return this as any;
   }
 
-  public hasSelect(name: any): name is SelectsKeys<S> {
+  public hasSelect(name: any): name is SelectsKey<S> {
     return Boolean(this._criteria.selectsExpr[name as any]);
   }
 

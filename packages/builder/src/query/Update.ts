@@ -1,4 +1,4 @@
-import { SourceKind, isArray, isString, Name, Selects, Sources, SelectsKey, SelectsTupleEquivalent, ObjectExprFromSelects, Tuple, JoinedInner, SelectValueWithKey, ExprField, ExprInput, ExprProvider, ExprScalar, NamedSource, Source, SourceTable, ExprKind, Select, QueryModify, QueryModifyReturningColumns, QueryModifyReturningExpressions } from '../internal';
+import { SelectsFromKeys, SourceKind, isArray, isString, Name, Selects, Sources, SelectsKey, SelectsTupleEquivalent, ObjectExprFromSelects, Tuple, JoinedInner, SelectValueWithKey, ExprField, ExprInput, ExprProvider, ExprScalar, NamedSource, Source, SourceTable, ExprKind, Select, QueryModify, QueryModifyReturningColumns, QueryModifyReturningExpressions } from '../internal';
 
 
 export class QueryUpdateSet<S extends Selects>
@@ -49,11 +49,11 @@ export class QueryUpdate<
     return super.with(sourceProvider, recursive, all) as any;
   }
 
-  public update<FN extends Name, FS extends Selects>(target: SourceTable<FN, FS, any>): QueryUpdate<JoinedInner<T, FN, FS>, FN, FS, []> 
+  public update<FN extends Name, FS extends Selects>(target: SourceTable<FN, FS, any>, only: boolean = false): QueryUpdate<JoinedInner<T, FN, FS>, FN, FS, []> 
   {
     (this as any)._target = target;
     
-    this.addSource(target as any, SourceKind.TARGET);
+    this.addSource(target as any, only ? SourceKind.ONLY : SourceKind.TARGET);
     
     return this as never;
   }
@@ -61,7 +61,8 @@ export class QueryUpdate<
   public set<V>(field: ExprField<any, V>, value: ExprProvider<T, S, ExprInput<V>>): this
   public set<K extends SelectsKey<S>>(field: K, value: ExprProvider<T, S, ExprInput<SelectValueWithKey<S, K>>>): this
   public set<M extends ObjectExprFromSelects<S>>(multiple: ExprProvider<T, S, M>): this
-  public set<U extends Selects>(fields: ExprProvider<T, S, U>, value: ExprProvider<T, S, SelectsTupleEquivalent<U>>): this
+  public set<U extends Tuple<Select<any, any>>>(fields: ExprProvider<T, S, U>, value: ExprProvider<T, S, SelectsTupleEquivalent<U>>): this
+  public set<U extends Tuple<SelectsKey<S>>>(fields: U, value: ExprProvider<T, S, SelectsTupleEquivalent<SelectsFromKeys<S, U>>>): this
   public set(a0: any, a1?: any): this 
   {
     if (a0 instanceof ExprField) 
@@ -81,9 +82,21 @@ export class QueryUpdate<
         this._sets.push(new QueryUpdateSet([this._target.fields[field]], ExprScalar.parse(multiple[field])));
       }
     }
-    else 
+    else if (isArray(a0))
     {
-      this._sets.push(new QueryUpdateSet(this._exprs.provide(a0), this._exprs.provide(a1)));
+      const selects = isString(a0[0])
+        ? a0.map((field) => this._target.fields[ field ])
+        : this._exprs.provide(a0);
+
+      const values = this._exprs.provide(a1);
+
+      if (isArray(values)) {
+        for (let i = 0; i < values.length; i++) {
+          values[i] = ExprScalar.parse(values[i]);
+        }
+      }
+
+      this._sets.push(new QueryUpdateSet(selects, values));
     }
 
     return this;

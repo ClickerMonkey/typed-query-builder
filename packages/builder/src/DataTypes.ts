@@ -69,15 +69,24 @@ export type DataTypeInputs =
   'PATH' | 
   'POLYGON' | 
   'CIRCLE' | 
-  'ARRAY' |
-  [ type: 'ARRAY', length: number ]
+  [ type: 'ARRAY', element: DataTypeInputs, length?: number ] |
+  'ANY' |
+  [ nulls: 'NULL', type: DataTypeInputs ]
 ;
 
-
 export type DataTypeInputType<I extends DataTypeInputs> =
-  DataTypeInputName<I> extends DataTypeNames
-    ? DataTypeTypes[DataTypeInputName<I>]
-    : never;
+  I extends [ type: 'ARRAY', element: infer E, length?: number ]
+    ? E extends DataTypeInputs
+      ? DataTypeInputType<E>[]
+      : never
+    : I extends [ nulls: 'NULL', type: infer T ]
+      ? T extends DataTypeInputs
+        ? DataTypeInputType<T> | undefined
+        : never
+      : DataTypeInputName<I> extends DataTypeNames
+        ? DataTypeTypes[DataTypeInputName<I>]
+        : never
+;
 
 export type DataTypeInputName<I extends DataTypeInputs> =
   I extends DataTypeNames
@@ -173,5 +182,5 @@ export interface DataTypeTypes {
   PATH: DataTypePath;
   CIRCLE: DataTypeCircle;
 
-  ARRAY: any[];
+  ANY: any;
 }

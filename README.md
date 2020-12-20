@@ -316,7 +316,6 @@ You can pass expressions directly to many functions, but you can also use a "pro
 
 
 ### SQL Features TODO
-- priority to sources for evaluation (withs, froms, joins)
 - partitions? (pgsql, mysql)
 - windows? (pgsql, mysql)
   1. specify window (name, [partition by, ...], [order by, ...])
@@ -325,18 +324,9 @@ You can pass expressions directly to many functions, but you can also use a "pro
 - rollup?
 - lock rules per table?
 - grouping sets?
-- FROM [ONLY] syntax, for pgsql's table inheritance
-- [ { UNION | INTERSECT | EXCEPT } [ ALL | DISTINCT ] select ]
 - row constructor (ie tuple) takes comma delimited list of values, or source.* (use JoinTuples)
 - row comparisons (row op row, row IS [NOT] NULL)
    - op: =, !=, <>, <, <=, >, >=, IS DISTINCT FROM, IS NOT DISTINCT FROM
-- select `DISTINCT` and `DISTINCT ON (value, ...) alias` 
-- UPDATE source, ... SET 
-     field = value, ... 
-     (field, ...) = ROW(value, ...)
-     (field, ...) = Query<value, ...>
-   WHERE condition 
-   RETURNING [* | value, ...]
 - INSERT ON DUPLICATE KEY UPDATE [x = y]
 - INSERT priority
 - stored procedures support?

@@ -41,6 +41,44 @@ describe('Select', () => {
     expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number }]>(q);
   });
 
+  it('select distinct', () => {
+    from(Task)
+      .select('*')
+      .distinct()
+      .run((q) => {
+        expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number }]>(q);
+      })
+    ;
+  });
+
+  it('select distinct on', () => {
+    from(Task)
+      .select('*')
+      .distinctOn('name')
+      .orderBy('doneAt')
+      .run((q) => {
+        expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number }]>(q);
+      })
+    ;
+  });
+
+  it('select orderBy', () => {
+    from(Task)
+      .select('*')
+      .orderBy('done')
+      .orderBy('done')
+      .orderBy(Task.fields.doneAt)
+      .orderBy(['done', 'name'])
+      .orderBy(() => 'done')
+      .orderBy(({ task }) => task.done)
+      .orderBy(() => ['done'])
+      .orderBy(({ task }) => ['done', task.done])
+      .run((q) => {
+        expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number }]>(q);
+      })
+    ;
+  });
+
   it('field shorthand', () => {
     expectExpr<number>(Task$.id.min());
     expectExpr<number>(Task$.id.max());

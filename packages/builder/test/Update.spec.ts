@@ -1,4 +1,4 @@
-import { table, update, query } from '../src';
+import { table, update, query, from } from '../src';
 import { expectExpr, expectExprType } from './helper';
 
 
@@ -73,8 +73,49 @@ describe('Select', () => {
     expectExprType<[][]>(q);
   });
 
+  it('update row dynamic constant', () => {
+    update(Task)
+      .set(({ task }) => [
+        task.id,
+        task.name
+      ], [
+        43,
+        'hello!'
+      ])
+    ;
+  });
 
-  it('insert with multiple returning columns', () => {
+  it('update row dynamic dynamic', () => {
+    update(Task)
+      .set(({ task }) => [
+        task.id,
+        task.name
+      ], ({ task }, exprs, { concat }) => [
+        task.id.add(1),
+        concat(task.name, '+')
+      ])
+    ;
+  });
+
+  it('update row constant dynamic', () => {
+    update(Task)
+      .set(['id', 'name'], ({ task }, exprs, { concat }) => [
+        task.id.add(1),
+        concat(task.name, '+')
+      ])
+    ;
+  });
+
+  it('update row constant select', () => {
+    update(Task)
+      .set(
+        ['id', 'name'], 
+        from(Task).select(({ task }) => [task.id, task.name]).first()
+      )
+    ;
+  });
+
+  it('update with multiple returning columns', () => {
     const q = update(Task)
       .set(Task.fields.done, true)
       .where(Task.fields.doneAt.lt(new Date()))
@@ -85,7 +126,7 @@ describe('Select', () => {
     expectExpr<{ id: number, done: boolean }[]>(q);
   });
 
-  it('insert with multiple returning expression', () => {
+  it('update with multiple returning expression', () => {
     const q = update(Task)
       .set(Task.fields.done, true)
       .where(Task.fields.doneAt.lt(new Date()))
@@ -98,7 +139,7 @@ describe('Select', () => {
     expectExpr<{ lower: string }[]>(q);
   });
 
-  it('insert with multiple returning expression with rest', () => {
+  it('update with multiple returning expression with rest', () => {
     const q = update(Task)
       .set(Task.fields.done, true)
       .where(Task.fields.doneAt.lt(new Date()))

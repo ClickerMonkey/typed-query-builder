@@ -52,7 +52,9 @@ export type SelectsNameless<T extends Selects> = {
   [K in keyof T]: T[K] extends Select<any, infer V> ? Select<any, V> : never;
 };
 
-export type SelectsTupleEquivalent<S extends Selects> = 
+
+
+export type SelectsTupleEquivalent<S extends Selects> =
   S extends [] 
     ? never
     : S extends [Select<any, infer V>]
@@ -96,6 +98,10 @@ export type SelectsFromTypeAndColumns<T, C extends Tuple<keyof T>> =
   }, Selects>
 ;
 
+export type SelectsFromKeys<S extends Selects, K extends Tuple<SelectsKey<S>>> = {
+    [I in keyof K]: SelectWithKey<S, K[I]>
+};
+
 export type SelectWithKey<S extends Selects, K> = {
   [P in keyof S]: S[P] extends Select<infer N, infer V> 
     ? N extends K
@@ -132,8 +138,7 @@ export type SelectsWithKeys<S extends Selects, K extends SelectsKeys<S>> = {
 export type SelectsOptional<S extends Selects> = {
   [K in keyof S]: S[K] extends Select<infer A, infer V> ? Select<A, V | undefined> : S[K]
 };
-  
-  
+
 export type SelectsExprs<T extends Selects> =
   Required<Simplify<UnionToIntersection<{
     [K in keyof T]: T[K] extends Select<infer P, infer V>
