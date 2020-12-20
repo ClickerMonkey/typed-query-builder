@@ -28,14 +28,15 @@ import {
   ExprScalar, ExprInput,
   Select,
   SourceUnspecified,
-  ExprNull 
+  ExprNull,
+  Name
 } from '../internal';
 
 
 export type ExprProvider<T extends Sources, S extends Selects, R> = R | ((sources: SourcesFieldsFactory<T>, exprs: ExprFactory<T, S>, fns: FunctionProxy<Functions>, selects: SelectsExprs<S>) => R);
 
 
-export interface ExprFactory<T extends Sources, S extends Selects>
+export interface ExprFactory<T extends Sources, S extends Selects, W extends Name = never>
 {
   provide<R>(provider: ExprProvider<T, S, R>): R;
   field<A extends keyof T & string, V extends T[A], F extends keyof V & string>(source: A, field: F): ExprScalar<V[F]>;
@@ -61,13 +62,22 @@ export interface ExprFactory<T extends Sources, S extends Selects>
   or(...conditions: Expr<boolean>[]): ExprScalar<boolean>;
   or(getConditions: ExprProvider<T, S, ExprScalar<boolean>[]>): ExprScalar<boolean>;
   or(...conditions: any[]): ExprScalar<boolean>;
-  aggregate<A extends keyof Aggs, Aggs = AggregateFunctions>(type: A, ...args: FunctionArgumentInputs<A, Aggs>): ExprAggregate<A, Aggs>;
-  count(value?: ExprScalar<any>): ExprAggregate<'count'>;
-  countIf(condition: ExprScalar<boolean>): ExprAggregate<'countIf'>;
-  sum(value: ExprScalar<number>): ExprAggregate<'sum'>;
-  avg(value: ExprScalar<number>): ExprAggregate<'avg'>;
-  min(value: ExprScalar<number>): ExprAggregate<'min'>;
-  max(value: ExprScalar<number>): ExprAggregate<'max'>;
+  aggregate<A extends keyof Aggs, Aggs = AggregateFunctions, V = FunctionResult<A, Aggs>>(type: A, ...args: FunctionArgumentInputs<A, Aggs>): ExprAggregate<T, S, W, A, Aggs, V>;
+  count(value?: ExprScalar<any>): ExprAggregate<T, S, W, 'count'>;
+  countIf(condition: ExprScalar<boolean>): ExprAggregate<T, S, W, 'countIf'>;
+  sum(value: ExprScalar<number>): ExprAggregate<T, S, W, 'sum'>;
+  avg(value: ExprScalar<number>): ExprAggregate<T, S, W, 'avg'>;
+  min(value: ExprScalar<number>): ExprAggregate<T, S, W, 'min'>;
+  max(value: ExprScalar<number>): ExprAggregate<T, S, W, 'max'>;
+  rowNumber(): ExprAggregate<T, S, W, 'rowNumber'>;
+  rank(): ExprAggregate<T, S, W, 'rank'>;
+  denseRank(): ExprAggregate<T, S, W, 'denseRank'>;
+  percentRank(): ExprAggregate<T, S, W, 'percentRank'>;
+  lag<V>(value: ExprInput<V>, offset?: number, defaultValue?: ExprInput<V>): ExprAggregate<T, S, W, 'lag', AggregateFunctions, V> ;
+  lead<V>(value: ExprInput<V>, offset?: number, defaultValue?: ExprInput<V>): ExprAggregate<T, S, W, 'lead', AggregateFunctions, V>;
+  firstValue<V>(value: ExprInput<V>): ExprAggregate<T, S, W, 'firstValue', AggregateFunctions, V>;
+  lastValue<V>(value: ExprInput<V>): ExprAggregate<T, S, W, 'lastValue', AggregateFunctions, V>;
+  nthValue<V>(value: ExprInput<V>, n: number): ExprAggregate<T, S, W, 'nthValue', AggregateFunctions, V>;
   op(first: ExprInput<number>, op: OperationUnaryType): ExprScalar<number>;
   op(first: ExprInput<number>, op: OperationBinaryType, second: ExprInput<number>): ExprScalar<number>;
   op(first: ExprInput<number>, op: OperationBinaryType | OperationUnaryType, second?: ExprInput<number>): ExprScalar<number>;
@@ -88,13 +98,13 @@ export interface ExprFactory<T extends Sources, S extends Selects>
   notIn<V>(value: ExprInput<V>, ...values: any[]): ExprScalar<boolean>;
 }
 
-export function createExprFactory<T extends Sources, S extends Selects>(sources: SourcesFieldsFactory<T>, selects: SelectsExprs<S>): ExprFactory<T, S>
+export function createExprFactory<T extends Sources, S extends Selects, W extends Name>(sources: SourcesFieldsFactory<T>, selects: SelectsExprs<S>): ExprFactory<T, S>
 {
   const exprs = {
       
     provide<R>(provider: ExprProvider<T, S, R>): R {
       return isFunction(provider)
-        ? provider(sources, exprs as ExprFactory<T, S>, fns, selects)
+        ? provider(sources, exprs as ExprFactory<T, S, W>, fns, selects)
         : provider;
     },
 
@@ -175,27 +185,54 @@ export function createExprFactory<T extends Sources, S extends Selects>(sources:
       );
     },
 
-    aggregate<A extends keyof Aggs, Aggs = AggregateFunctions>(type: A, ...args: FunctionArgumentInputs<A, Aggs>): ExprAggregate<A, Aggs> {
-      return new ExprAggregate<A, Aggs>(type, (args as any).map( ExprScalar.parse ));
+    aggregate<A extends keyof Aggs, Aggs = AggregateFunctions, V = FunctionResult<A, Aggs>>(type: A, ...args: FunctionArgumentInputs<A, Aggs>): ExprAggregate<T, S, W, A, Aggs, V> {
+      return new ExprAggregate<T, S, W, A, Aggs, V>(type, (args as any).map( ExprScalar.parse ));
     },
 
-    count(value?: ExprScalar<any>): ExprAggregate<'count'> {
+    count(value?: ExprScalar<any>): ExprAggregate<T, S, W, 'count'> {
       return exprs.aggregate('count', value);
     },
-    countIf(condition: ExprScalar<boolean>): ExprAggregate<'countIf'> {
+    countIf(condition: ExprScalar<boolean>): ExprAggregate<T, S, W, 'countIf'> {
       return exprs.aggregate('countIf', condition);
     },
-    sum(value: ExprScalar<number>): ExprAggregate<'sum'> {
+    sum(value: ExprScalar<number>): ExprAggregate<T, S, W, 'sum'> {
       return exprs.aggregate('sum', value);
     },
-    avg(value: ExprScalar<number>): ExprAggregate<'avg'> {
+    avg(value: ExprScalar<number>): ExprAggregate<T, S, W, 'avg'> {
       return exprs.aggregate('avg', value);
     },
-    min(value: ExprScalar<number>): ExprAggregate<'min'> {
+    min(value: ExprScalar<number>): ExprAggregate<T, S, W, 'min'> {
       return exprs.aggregate('min', value);
     },
-    max(value: ExprScalar<number>): ExprAggregate<'max'> {
+    max(value: ExprScalar<number>): ExprAggregate<T, S, W, 'max'> {
       return exprs.aggregate('max', value);
+    },
+    rowNumber(): ExprAggregate<T, S, W, 'rowNumber'> {
+      return exprs.aggregate('rowNumber');
+    },
+    rank(): ExprAggregate<T, S, W, 'rank'> {
+      return exprs.aggregate('rank');
+    },
+    denseRank(): ExprAggregate<T, S, W, 'denseRank'> {
+      return exprs.aggregate('denseRank');
+    },
+    percentRank(): ExprAggregate<T, S, W, 'percentRank'> {
+      return exprs.aggregate('percentRank');
+    },
+    lag<V>(value: ExprInput<V>, offset?: number, defaultValue?: ExprInput<V>): ExprAggregate<T, S, W, 'lag', AggregateFunctions, V> {
+      return exprs.aggregate('lag', value, offset, defaultValue);
+    },
+    lead<V>(value: ExprInput<V>, offset?: number, defaultValue?: ExprInput<V>): ExprAggregate<T, S, W, 'lead', AggregateFunctions, V> {
+      return exprs.aggregate('lead', value, offset, defaultValue);
+    },
+    firstValue<V>(value: ExprInput<V>): ExprAggregate<T, S, W, 'firstValue', AggregateFunctions, V> {
+      return exprs.aggregate('firstValue', value);
+    },
+    lastValue<V>(value: ExprInput<V>): ExprAggregate<T, S, W, 'lastValue', AggregateFunctions, V> {
+      return exprs.aggregate('lastValue', value);
+    },
+    nthValue<V>(value: ExprInput<V>, n: number): ExprAggregate<T, S, W, 'nthValue', AggregateFunctions, V> {
+      return exprs.aggregate('nthValue', value, n);
     },
 
     op(first: ExprInput<number>, op: OperationBinaryType | OperationUnaryType, second?: ExprInput<number>): ExprScalar<number> {
@@ -265,7 +302,7 @@ export function createExprFactory<T extends Sources, S extends Selects>(sources:
     },
   };
 
-  return exprs as ExprFactory<T, S>;
+  return exprs as ExprFactory<T, S, W>;
 }
 
 /*

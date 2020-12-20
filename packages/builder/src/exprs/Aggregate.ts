@@ -1,18 +1,20 @@
-import { FunctionResult, ExprKind, FunctionArgumentValues, OrderBy, Traverser, Expr, ExprScalar, AggregateFunctions, OrderDirection } from '../internal';
+import { isName, Name, QueryWindow, Sources, Selects, FunctionResult, ExprKind, FunctionArgumentValues, OrderBy, Traverser, Expr, ExprScalar, AggregateFunctions, OrderDirection } from '../internal';
 
 
 
-export class ExprAggregate<A extends keyof Aggs, Aggs = AggregateFunctions> extends ExprScalar<FunctionResult<A, Aggs>> 
+export class ExprAggregate<T extends Sources, S extends Selects, W extends Name, A extends keyof Aggs, Aggs = AggregateFunctions, R = FunctionResult<A, Aggs>> extends ExprScalar<R> 
 {
 
   public static readonly id = ExprKind.AGGREGATE;
 
   public constructor(
-    public type: A,
-    public values: FunctionArgumentValues<A, Aggs>,
-    public distinct?: boolean,
-    public filter?: ExprScalar<boolean>,
-    public order: OrderBy[] = [],
+    public _type: A,
+    public _values: FunctionArgumentValues<A, Aggs>,
+    public _distinct?: boolean,
+    public _filter?: ExprScalar<boolean>,
+    public _order: OrderBy[] = [],
+    public _overWindow?: W,
+    public _overWindowDefinition?: QueryWindow<W, T, S>
   ) {
     super();
   }
@@ -21,26 +23,30 @@ export class ExprAggregate<A extends keyof Aggs, Aggs = AggregateFunctions> exte
     return ExprKind.AGGREGATE;
   }
 
-  public aggregateDistinct(): this {
-    this.distinct = true;
+  public distinct(distinct: boolean = true): this {
+    this._distinct = distinct;
 
     return this;
   }
 
-  public aggregateAll(): this {
-    this.distinct = false;
+  public filter(condition: ExprScalar<boolean>): this {
+    this._filter = condition;
 
     return this;
   }
 
-  public filterBy(condition: ExprScalar<boolean>): this {
-    this.filter = condition;
+  public order(expr: ExprScalar<any>, dir?: OrderDirection, nullsLast?: boolean): this {
+    this._order.push(new OrderBy(expr, dir, nullsLast));
 
     return this;
   }
 
-  public orderBy(expr: ExprScalar<any>, dir?: OrderDirection, nullsLast?: boolean): this {
-    this.order.push(new OrderBy(expr, dir, nullsLast));
+  public over<WN extends W>(windowInput: WN | ((w: QueryWindow<'', T, S>) => QueryWindow<WN, T, S>)): this {
+    if (isName(windowInput)) {
+      this._overWindow = windowInput;
+    } else {
+      this._overWindowDefinition = windowInput(new QueryWindow(null as any, ''));
+    }
 
     return this;
   }
@@ -48,23 +54,23 @@ export class ExprAggregate<A extends keyof Aggs, Aggs = AggregateFunctions> exte
   public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
     return traverse.enter(this, () => {
       traverse.step('values', () => {
-        for (let i = 0; this.values.length; i++) {
-          traverse.step(i, this.values[i], (replace) => this.values[i] = replace as any);
+        for (let i = 0; this._values.length; i++) {
+          traverse.step(i, this._values[i], (replace) => this._values[i] = replace as any);
         }
       });
       traverse.step('orderBy', () => {
-        for (let i = 0; i < this.order.length; i++) {
-          traverse.step(i, this.order[i].value, (replace) => this.order[i].value = replace as any);
+        for (let i = 0; i < this._order.length; i++) {
+          traverse.step(i, this._order[i].value, (replace) => this._order[i].value = replace as any);
         }
       });
-      if (this.filter) {
-        traverse.step('filter', this.filter, (replace) => this.filter = replace as any, () => this.filter = undefined);
+      if (this._filter) {
+        traverse.step('filter', this._filter, (replace) => this._filter = replace as any, () => this._filter = undefined);
       }
     });
   }
   
   public isSimple(): boolean {
-    return !this.filter;
+    return !this._filter || !this._overWindow || !this._overWindowDefinition;
   }
 
 }

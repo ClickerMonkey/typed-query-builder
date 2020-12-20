@@ -1,10 +1,15 @@
-import { ObjectKeys } from './internal';
+import { Name, ObjectKeys } from './internal';
 
 
 
 export function isString(x: any): x is string 
 {
   return typeof x === 'string';
+}
+
+export function isName(x: any): x is Name
+{
+  return isString(x) || isNumber(x) || typeof x === 'symbol';
 }
 
 export function isNumber(x: any): x is number 

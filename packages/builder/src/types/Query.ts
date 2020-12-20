@@ -35,6 +35,9 @@ export type ConditionBinaryListType = '>' | '>=' | '<' | '<=' | '=' | '!=' | '<>
 
 export type ConditionBinaryListPass = 'ANY' | 'ALL';
 
+export type WindowFrameMode = 'RANGE' | 'ROWS' | 'GROUPS';
+
+export type WindowFrameExclusion = 'CURRENT ROW' | 'GROUP' | 'TIES' | 'NO OTHERS';
 
 export interface AggregateFunctions
 {
@@ -52,4 +55,16 @@ export interface AggregateFunctions
   bitOr(value: number): number;
   boolAnd(value: boolean): boolean;
   boolOr(value: boolean): boolean;
+
+  rowNumber(): number;
+  rank(): number;
+  denseRank(): number;
+  percentRank(): number;
+  culmulativeDistribution(): number;
+  ntile(buckets: number): number;
+  lag<T>(value: T, offset?: number, defaultValue?: T): T;
+  lead<T>(value: T, offset?: number, defaultValue?: T): T;
+  firstValue<T>(value: T): T;
+  lastValue<T>(value: T): T;
+  nthValue<T>(value: T, n: number): T;
 }

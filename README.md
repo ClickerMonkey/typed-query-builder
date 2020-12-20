@@ -126,10 +126,14 @@ const results = from(Task)
 ### `SELECT`
 > A source is a table, a subquery, values (list of objects/tuples), or insert/update/delete expressions with a returning clause.
 
+*(the following is the recommended order of operations)*
+
 - `WITH` given a source or recursive expression.
 - `FROM` given any number of sources.
 - `JOIN` given any number of sources.
+- `WINDOW` define any number of windows.
 - `SELECT` any number of expressions.
+- `DISTINCT` on all values or specific expressions.
 - `WHERE` any number of conditions.
 - `GROUP BY` any number of expressions.
 - `HAVING` met some group condition.

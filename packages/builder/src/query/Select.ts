@@ -1,20 +1,4 @@
-import { SourceKind, isArray, isFunction, isString, SourcesFieldsFactory, JoinType, Selects, Sources, Name, OrderDirection, MergeObjects, LockType, SelectWithKey, Simplify, SelectValueWithKey, SelectsKey, SelectsKeyWithType, JoinedInner, JoinedRight, JoinedLeft, JoinedFull, SelectAllSelects, SelectGivenSelects, MaybeSources, MaybeSelects, AggregateFunctions, Tuple, SourceCompatible, ExprAggregate, ExprProvider, ExprFactory, Expr, ExprType, QuerySelectExistential, QuerySelectFirst, QuerySelectFirstValue, QuerySelectList,  Source, SourceJoin, OrderBy, Select, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions, QueryCriteria, ExprKind, NamedSource, SourceRecursive, ExprInput, ExprScalar, fns } from '../internal';
-
-
-export type QuerySelectScalarProvider<T extends Sources, S extends Selects, R = any> = 
-  ExprProvider<T, S, QuerySelectScalar<S, R> | QuerySelectScalar<S, R>[]>
-;
-export type QuerySelectScalar<S extends Selects, R = any> = 
-  SelectsKeyWithType<S, R> | ExprScalar<R>
-;
-export type QuerySelectScalarSpread<S extends Selects, R = any> = 
-  QuerySelectScalar<S, R>[]
-;
-export type QuerySelectScalarInput<T extends Sources, S extends Selects, R = any> = 
-  QuerySelectScalar<S, R>[] | [QuerySelectScalarProvider<T, S, R>]
-;
-
-
+import { QuerySelectScalar, QuerySelectScalarProvider, QuerySelectScalarInput, SourceKind, isArray, isFunction, isString, SourcesFieldsFactory, JoinType, Selects, Sources, Name, OrderDirection, MergeObjects, LockType, SelectWithKey, Simplify, SelectValueWithKey, SelectsKey, SelectsKeyWithType, JoinedInner, JoinedRight, JoinedLeft, JoinedFull, SelectAllSelects, SelectGivenSelects, MaybeSources, MaybeSelects, AggregateFunctions, Tuple, SourceCompatible, ExprAggregate, ExprProvider, ExprFactory, Expr, ExprType, QuerySelectExistential, QuerySelectFirst, QuerySelectFirstValue, QuerySelectList,  Source, SourceJoin, OrderBy, Select, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions, QueryCriteria, ExprKind, NamedSource, SourceRecursive, ExprInput, ExprScalar, fns } from '../internal';
 
 export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
 {
@@ -310,7 +294,7 @@ export class QuerySelect<T extends Sources, S extends Selects> extends Source<S>
     );
   }
 
-  protected parseScalar<R = any>(input: QuerySelectScalarInput<T, S, R>): ExprScalar<R>[]
+  public parseScalar<R = any>(input: QuerySelectScalarInput<T, S, R>): ExprScalar<R>[]
   {
     const resolved = isFunction(input[0])
       ? this._criteria.exprs.provide(input[0])

@@ -1,4 +1,4 @@
-import { Expr, ExprInput, Select, Cast, Simplify, UndefinedToOptional, UnionToIntersection, UnionToTuple, Name, Sources, TupleAppend, TupleFlatten, Tuple, TupleFilter } from '../internal';
+import { Expr, ExprScalar, ExprProvider, ExprInput, Select, Cast, Simplify, UndefinedToOptional, UnionToIntersection, UnionToTuple, Name, Sources, TupleAppend, TupleFlatten, Tuple, TupleFilter } from '../internal';
 
 
 export type Selects = [...(Select<Name, any>)[]];
@@ -164,3 +164,22 @@ export type SelectGivenSelects<S extends Selects, FS extends Tuple<Select<any, a
 export type MaybeSelects<A extends Selects, B extends Selects> = 
   TupleAppend<A, Cast<SelectsOptional<Cast<SelectsWithKey<B, Exclude<SelectsKey<B>, SelectsKey<A>>>, Selects>>, Selects>>
 ;
+
+
+
+
+
+export type QuerySelectScalarProvider<T extends Sources, S extends Selects, R = any> = 
+  ExprProvider<T, S, QuerySelectScalar<S, R> | QuerySelectScalar<S, R>[]>
+;
+export type QuerySelectScalar<S extends Selects, R = any> = 
+  SelectsKeyWithType<S, R> | ExprScalar<R>
+;
+export type QuerySelectScalarSpread<S extends Selects, R = any> = 
+  QuerySelectScalar<S, R>[]
+;
+export type QuerySelectScalarInput<T extends Sources, S extends Selects, R = any> = 
+  QuerySelectScalar<S, R>[] | [QuerySelectScalarProvider<T, S, R>]
+;
+
+
