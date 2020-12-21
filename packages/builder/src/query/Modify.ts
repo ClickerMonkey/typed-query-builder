@@ -1,4 +1,8 @@
-import { createExprFactory, SourceKindPair, SourceKind, isArray, isString, Cast, Name, Selects, Sources, ArrayToTuple, SourcesFieldsFactory, SelectsKey, SelectsWithKey, SelectsNormalize, TupleAppend, JoinedInner, Tuple, ExprFactory, ExprProvider, NamedSource, Source, SourceRecursive, SourceTable, Select } from '../internal';
+import { 
+  createExprFactory, SourceKindPair, SourceKind, isArray, isString, Cast, Name, Selects, Sources, ArrayToTuple, 
+  SourcesFieldsFactory, SelectsKey, SelectsWithKey, SelectsNormalize, TupleAppend, JoinedInner, Tuple, ExprFactory, 
+  ExprProvider, NamedSource, Source, SourceRecursive, SourceTable, Select 
+} from '../internal';
 
 
 export type QueryModifyReturning<
@@ -25,7 +29,7 @@ export abstract class QueryModify<
 > extends Source<R>
 {
 
-  public _exprs: ExprFactory<T, R>;
+  public _exprs: ExprFactory<T, R, never>;
   public _sources: SourceKindPair<keyof T, any>[];
   public _sourceFields: SourcesFieldsFactory<T>;
   public _returning: R;
@@ -47,7 +51,7 @@ export abstract class QueryModify<
 
   protected abstract getMainSource(): SourceTable<N, S, any>;
 
-  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, Source<WS>>, all?: boolean): QueryModify<JoinedInner<T, WN, WS>, N, S, R> 
+  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, never, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, never, Source<WS>>, all?: boolean): QueryModify<JoinedInner<T, WN, WS>, N, S, R> 
   {
     const source = this._exprs.provide(sourceProvider as any);
 
@@ -77,7 +81,7 @@ export abstract class QueryModify<
 
   public returning(output: '*'): QueryModify<T, N, S, S>
   public returning<RC extends SelectsKey<S>>(output: RC[]): QueryModify<T, N, S, QueryModifyReturningColumns<R, S, RC>>
-  public returning<RS extends Tuple<Select<any, any>>>(output: ExprProvider<T, [], RS>): QueryModify<T, N, S, QueryModifyReturningExpressions<R, RS>>
+  public returning<RS extends Tuple<Select<any, any>>>(output: ExprProvider<T, [], never, RS>): QueryModify<T, N, S, QueryModifyReturningExpressions<R, RS>>
   public returning<RS extends Selects>(output: RS | '*' | Array<keyof S>): never
   {
     const main = this.getMainSource();

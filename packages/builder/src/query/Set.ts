@@ -1,4 +1,7 @@
-import { SourceKind, isArray, isString, OrderDirection, Selects, SelectsKeys, SetOperation, SourceCompatible, Expr, ExprField, ExprProvider, OrderBy, Source, ExprKind, QueryCriteria } from '../internal';
+import { 
+  SourceKind, isArray, isString, OrderDirection, Selects, SelectsKeys, SetOperation, SourceCompatible, Expr, ExprField, 
+  ExprProvider, OrderBy, Source, ExprKind, QueryCriteria 
+} from '../internal';
 
 
 export class QuerySet<S extends Selects> extends Source<S>
@@ -16,7 +19,7 @@ export class QuerySet<S extends Selects> extends Source<S>
   } 
 
 
-  public _criteria: QueryCriteria<{ set: S }, S>;
+  public _criteria: QueryCriteria<{ set: S }, S, any>;
   public _sources: SourceCompatible<S>[];
   public _all: boolean[];
 
@@ -82,8 +85,8 @@ export class QuerySet<S extends Selects> extends Source<S>
   }
 
   public orderBy<K extends SelectsKeys<S>>(select: K, order?: OrderDirection, nullsLast?: boolean): this
-  public orderBy(values: ExprProvider<{ set: S }, S, Expr<any> | Expr<any>[]>, order?: OrderDirection, nullsLast?: boolean): this
-  public orderBy<K extends SelectsKeys<S>>(values: K | ExprProvider<{ set: S }, S, Expr<any> | Expr<any>[]>, order?: OrderDirection, nullsLast?: boolean): this {
+  public orderBy(values: ExprProvider<{ set: S }, S, never, Expr<any> | Expr<any>[]>, order?: OrderDirection, nullsLast?: boolean): this
+  public orderBy<K extends SelectsKeys<S>>(values: K | ExprProvider<{ set: S }, S, never, Expr<any> | Expr<any>[]>, order?: OrderDirection, nullsLast?: boolean): this {
     const resolved = isString(values)
       ? this._criteria.selectsExpr[values as any]
       : this._criteria.exprs.provide(values);

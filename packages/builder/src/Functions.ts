@@ -1,4 +1,7 @@
-import { DataTypeBox, DataTypeCircle, DataTypeLine, DataTypePath, DataTypePoint, DataTypePolygon, DataTypeSegment, ExprScalar, ExprInput } from './internal';
+import { 
+  DataTypeBox, DataTypeCircle, DataTypeLine, DataTypePath, DataTypePoint, DataTypePolygon, DataTypeSegment, ExprScalar, 
+  ExprInput 
+} from './internal';
 
 
 export type FunctionArguments<F extends keyof Funcs, Funcs = Functions> = 

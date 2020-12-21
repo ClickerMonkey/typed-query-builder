@@ -1,4 +1,8 @@
-import { SourceKind, Cast, Name, Selects, Sources, SelectsKeys, SelectsKey, SelectsWithKey, SelectsValuesExprs, SelectsRecordExprs, JoinedInner, Tuple, Expr, ExprInput, ExprProvider, ExprScalar, NamedSource, Source, SourceTable, ExprKind, QueryModify, QueryModifyReturningColumns, QueryModifyReturningExpressions, Select } from '../internal';
+import { 
+  SourceKind, Cast, Name, Selects, Sources, SelectsKeys, SelectsKey, SelectsWithKey, SelectsValuesExprs, 
+  SelectsRecordExprs, JoinedInner, Tuple, Expr, ExprInput, ExprProvider, ExprScalar, NamedSource, Source, SourceTable, 
+  ExprKind, QueryModify, QueryModifyReturningColumns, QueryModifyReturningExpressions, Select 
+} from '../internal';
 
 
 export type QueryInsertValuesTuple<
@@ -64,7 +68,7 @@ export class QueryInsert<
     return this._into;
   }
 
-  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, Source<WS>>, all?: boolean): QueryInsert<JoinedInner<T, WN, WS>, N, S, C, R> {
+  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, never, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, never, Source<WS>>, all?: boolean): QueryInsert<JoinedInner<T, WN, WS>, N, S, C, R> {
     return super.with(sourceProvider, recursive, all) as any;
   }
 
@@ -80,7 +84,7 @@ export class QueryInsert<
     return this as never;
   }
 
-  public values(values: ExprProvider<T, [], QueryInsertValuesInput<S, C>>): this 
+  public values(values: ExprProvider<T, [], never, QueryInsertValuesInput<S, C>>): this 
   {
     this._values.push(ExprScalar.parse(this._exprs.provide(values as any)));
 
@@ -96,7 +100,7 @@ export class QueryInsert<
 
   public returning(output: '*'): QueryInsert<T, N, S, C, S>
   public returning<RC extends SelectsKey<S>>(output: RC[]): QueryInsert<T, N, S, C, QueryModifyReturningColumns<R, S, RC>>
-  public returning<RS extends Tuple<Select<any, any>>>(output: ExprProvider<T, [], RS>): QueryInsert<T, N, S, C, QueryModifyReturningExpressions<R, RS>>
+  public returning<RS extends Tuple<Select<any, any>>>(output: ExprProvider<T, [], never, RS>): QueryInsert<T, N, S, C, QueryModifyReturningExpressions<R, RS>>
   public returning<RS extends Tuple<Select<any, any>>>(output: RS | '*' | Array<keyof S>): never
   {
     return super.returning(output as any) as never;

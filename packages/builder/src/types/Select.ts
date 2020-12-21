@@ -169,8 +169,8 @@ export type MaybeSelects<A extends Selects, B extends Selects> =
 
 
 
-export type QuerySelectScalarProvider<T extends Sources, S extends Selects, R = any> = 
-  ExprProvider<T, S, QuerySelectScalar<S, R> | QuerySelectScalar<S, R>[]>
+export type QuerySelectScalarProvider<T extends Sources, S extends Selects, W extends Name, R = any> = 
+  ExprProvider<T, S, W, QuerySelectScalar<S, R> | QuerySelectScalar<S, R>[]>
 ;
 export type QuerySelectScalar<S extends Selects, R = any> = 
   SelectsKeyWithType<S, R> | ExprScalar<R>
@@ -178,8 +178,8 @@ export type QuerySelectScalar<S extends Selects, R = any> =
 export type QuerySelectScalarSpread<S extends Selects, R = any> = 
   QuerySelectScalar<S, R>[]
 ;
-export type QuerySelectScalarInput<T extends Sources, S extends Selects, R = any> = 
-  QuerySelectScalar<S, R>[] | [QuerySelectScalarProvider<T, S, R>]
+export type QuerySelectScalarInput<T extends Sources, S extends Selects, W extends Name, R = any> = 
+  QuerySelectScalar<S, R>[] | [QuerySelectScalarProvider<T, S, W, R>]
 ;
 
 

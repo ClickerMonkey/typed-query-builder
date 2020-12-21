@@ -1,11 +1,14 @@
-import { isFunction, isString, isArray, QuerySelectScalar, QuerySelectScalarInput, createExprFactory, SourceKind, SourceKindPair, Selects, SelectsExprs, Sources, SourcesFieldsFactory, ExprFactory, OrderBy, Select, NamedSource, ExprScalar } from '../internal';
+import { 
+  Name, createExprFactory, SourceKind, SourceKindPair, Selects, SelectsExprs, Sources, SourcesFieldsFactory, ExprFactory, 
+  OrderBy, Select, NamedSource, ExprScalar 
+} from '../internal';
 
 
 
-export class QueryCriteria<T extends Sources, S extends Selects>
+export class QueryCriteria<T extends Sources, S extends Selects, W extends Name>
 {
 
-  public exprs: ExprFactory<T, S>;
+  public exprs: ExprFactory<T, S, W>;
   public sources: SourceKindPair<keyof T, any>[];
   public sourcesFields: SourcesFieldsFactory<T>;
   public selects: S;
@@ -17,7 +20,7 @@ export class QueryCriteria<T extends Sources, S extends Selects>
   public limit?: number;
   public offset?: number;
 
-  public constructor(base?: QueryCriteria<T, S>) 
+  public constructor(base?: QueryCriteria<T, S, W>) 
   { 
     this.sources = base ? base.sources.slice() : [] as any;
     this.sourcesFields = base ? { ...base.sourcesFields } : {} as any;
@@ -60,23 +63,7 @@ export class QueryCriteria<T extends Sources, S extends Selects>
     selects.forEach( select => this.addSelect( select ) );
   }
 
-  public parseScalar<R = any>(input: QuerySelectScalarInput<T, S, R>): ExprScalar<R>[]
-  {
-    const resolved = isFunction(input[0])
-      ? this.exprs.provide(input[0])
-      : input as QuerySelectScalar<S, R> | QuerySelectScalar<S, R>[];
-    const array = isArray(resolved)
-      ? resolved
-      : [ resolved ];
-
-    return array.map((item) => 
-      isString(item)
-        ? this.selectsExpr[item as string]
-        : item
-    );
-  }
-
-  public extend(): QueryCriteria<T, S> {
+  public extend(): QueryCriteria<T, S, W> {
     return new QueryCriteria(this);
   }
 

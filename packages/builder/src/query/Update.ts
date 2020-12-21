@@ -1,4 +1,8 @@
-import { SelectsFromKeys, SourceKind, isArray, isString, Name, Selects, Sources, SelectsKey, SelectsTupleEquivalent, ObjectExprFromSelects, Tuple, JoinedInner, SelectValueWithKey, ExprField, ExprInput, ExprProvider, ExprScalar, NamedSource, Source, SourceTable, ExprKind, Select, QueryModify, QueryModifyReturningColumns, QueryModifyReturningExpressions } from '../internal';
+import { 
+  SelectsFromKeys, SourceKind, isArray, isString, Name, Selects, Sources, SelectsKey, SelectsTupleEquivalent, 
+  ObjectExprFromSelects, Tuple, JoinedInner, SelectValueWithKey, ExprField, ExprInput, ExprProvider, ExprScalar, NamedSource, 
+  Source, SourceTable, ExprKind, Select, QueryModify, QueryModifyReturningColumns, QueryModifyReturningExpressions 
+} from '../internal';
 
 
 export class QueryUpdateSet<S extends Selects>
@@ -44,7 +48,7 @@ export class QueryUpdate<
     return this._target;
   }
 
-  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, Source<WS>>, all?: boolean): QueryUpdate<JoinedInner<T, WN, WS>, N, S, R> 
+  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, never, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, never, Source<WS>>, all?: boolean): QueryUpdate<JoinedInner<T, WN, WS>, N, S, R> 
   {
     return super.with(sourceProvider, recursive, all) as any;
   }
@@ -58,11 +62,11 @@ export class QueryUpdate<
     return this as never;
   }
 
-  public set<V>(field: ExprField<any, V>, value: ExprProvider<T, S, ExprInput<V>>): this
-  public set<K extends SelectsKey<S>>(field: K, value: ExprProvider<T, S, ExprInput<SelectValueWithKey<S, K>>>): this
-  public set<M extends ObjectExprFromSelects<S>>(multiple: ExprProvider<T, S, M>): this
-  public set<U extends Tuple<Select<any, any>>>(fields: ExprProvider<T, S, U>, value: ExprProvider<T, S, SelectsTupleEquivalent<U>>): this
-  public set<U extends Tuple<SelectsKey<S>>>(fields: U, value: ExprProvider<T, S, SelectsTupleEquivalent<SelectsFromKeys<S, U>>>): this
+  public set<V>(field: ExprField<any, V>, value: ExprProvider<T, S, never, ExprInput<V>>): this
+  public set<K extends SelectsKey<S>>(field: K, value: ExprProvider<T, S, never, ExprInput<SelectValueWithKey<S, K>>>): this
+  public set<M extends ObjectExprFromSelects<S>>(multiple: ExprProvider<T, S, never, M>): this
+  public set<U extends Tuple<Select<any, any>>>(fields: ExprProvider<T, S, never, U>, value: ExprProvider<T, S, never, SelectsTupleEquivalent<U>>): this
+  public set<U extends Tuple<SelectsKey<S>>>(fields: U, value: ExprProvider<T, S, never, SelectsTupleEquivalent<SelectsFromKeys<S, U>>>): this
   public set(a0: any, a1?: any): this 
   {
     if (a0 instanceof ExprField) 
@@ -103,8 +107,8 @@ export class QueryUpdate<
   }
 
   public from<FN extends keyof T>(source: FN): QueryUpdate<T, N, S, R>
-  public from<FN extends Name, FS extends Selects>(source: ExprProvider<T, S, NamedSource<FN, FS>>): QueryUpdate<JoinedInner<T, FN, FS>, N, S, R>
-  public from<FN extends Name, FS extends Selects>(source: keyof T | ExprProvider<T, S, NamedSource<FN, FS>>): never 
+  public from<FN extends Name, FS extends Selects>(source: ExprProvider<T, S, never, NamedSource<FN, FS>>): QueryUpdate<JoinedInner<T, FN, FS>, N, S, R>
+  public from<FN extends Name, FS extends Selects>(source: keyof T | ExprProvider<T, S, never, NamedSource<FN, FS>>): never 
   {    
     if (!isString(source)) 
     {
@@ -114,7 +118,7 @@ export class QueryUpdate<
     return this as never;
   }
 
-  public where(conditions: ExprProvider<T, S, ExprScalar<boolean> | ExprScalar<boolean>[]>): this 
+  public where(conditions: ExprProvider<T, S, never, ExprScalar<boolean> | ExprScalar<boolean>[]>): this 
   {
     const resolved = this._exprs.provide(conditions);
     const values = isArray(resolved)
@@ -135,7 +139,7 @@ export class QueryUpdate<
 
   public returning(output: '*'): QueryUpdate<T, N, S, S>
   public returning<RC extends SelectsKey<S>>(output: RC[]): QueryUpdate<T, N, S, QueryModifyReturningColumns<R, S, RC>>
-  public returning<RS extends Tuple<Select<any, any>>>(output: ExprProvider<T, [], RS>): QueryUpdate<T, N, S, QueryModifyReturningExpressions<R, RS>>
+  public returning<RS extends Tuple<Select<any, any>>>(output: ExprProvider<T, [], never, RS>): QueryUpdate<T, N, S, QueryModifyReturningExpressions<R, RS>>
   public returning<RS extends Tuple<Select<any, any>>>(output: RS | '*' | Array<keyof S>): never
   {
     return super.returning(output as any) as never;

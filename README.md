@@ -126,8 +126,6 @@ const results = from(Task)
 ### `SELECT`
 > A source is a table, a subquery, values (list of objects/tuples), or insert/update/delete expressions with a returning clause.
 
-*(the following is the recommended order of operations)*
-
 - `WITH` given a source or recursive expression.
 - `FROM` given any number of sources.
 - `JOIN` given any number of sources.
@@ -142,6 +140,8 @@ const results = from(Task)
 - `OFFSET` by a certain number of results.
 - `LOCK` certain objects depending our goal.
 - `UNION` or `INTERSECT` or `EXCEPT` another source.
+
+*(the order above is the recommended order, since sources need to be established before selects are defined, and the following functions after that can reference the sources and the defined selects.)*
 
 You can resolve a `SELECT` down to a list of objects or tuples, a first row, a singular value, an array of values, or a boolean on whether it returns results or not.
 
@@ -297,6 +297,7 @@ remove(Task).where(Task.fields.id.eq(10)).returning('name');
 // - update with multi-set with subquery
 // - update with from
 // - select with subquery, values, insert/update/delete returning sources
+// - select with window
 // - delete with using
 // - insert with values from any source
 ```
@@ -320,11 +321,6 @@ You can pass expressions directly to many functions, but you can also use a "pro
 
 
 ### SQL Features TODO
-- partitions? (pgsql, mysql)
-- windows? (pgsql, mysql)
-  1. specify window (name, [partition by, ...], [order by, ...])
-    - frame: {RANGE|ROWS|GROUPS} [BETWEEN rel AND ] {UNBOUNDED PRECEDING|offset PRECEDINGI|CURRENT ROW|offset FOLLOWING|UNBOUNDED FOLLOWING} [EXCLUDE {CURRENT ROW|GROUP|TIES|NO OTHERS}]
-  2. in select, window is available in ExprAggregate to call .over(windowName)
 - rollup?
 - lock rules per table?
 - grouping sets?

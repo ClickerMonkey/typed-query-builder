@@ -1,4 +1,8 @@
-import { SourceKind, isArray, isString, Name, Selects, Sources, MergeObjects, SelectsKey, Simplify, JoinedInner, Tuple, ExprProvider, ExprScalar, NamedSource, Source, SourceTable, ExprKind, QueryModify, QueryModifyReturningColumns, QueryModifyReturningExpressions, Select } from '../internal';
+import { 
+  SourceKind, isArray, isString, Name, Selects, Sources, MergeObjects, SelectsKey, Simplify, JoinedInner, Tuple, ExprProvider, 
+  ExprScalar, NamedSource, Source, SourceTable, ExprKind, QueryModify, QueryModifyReturningColumns, 
+  QueryModifyReturningExpressions, Select 
+} from '../internal';
 
 
 export class QueryDelete<
@@ -32,7 +36,7 @@ export class QueryDelete<
     return this._from;
   }
 
-  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, Source<WS>>, all?: boolean): QueryDelete<JoinedInner<T, WN, WS>, N, S, R> 
+  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, never, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, never, Source<WS>>, all?: boolean): QueryDelete<JoinedInner<T, WN, WS>, N, S, R> 
   {
     return super.with(sourceProvider, recursive, all) as any;
   }
@@ -47,8 +51,8 @@ export class QueryDelete<
   }
 
   public using<FN extends keyof T>(source: FN): QueryDelete<T, N, S, R>
-  public using<FN extends Name, FS extends Selects>(source: ExprProvider<T, S, NamedSource<FN, FS>>): QueryDelete<Simplify<MergeObjects<T, Record<FN, FS>>>, N, S, R>
-  public using<FN extends Name, FS extends Selects>(source: keyof T | ExprProvider<T, S, NamedSource<FN, FS>>): never 
+  public using<FN extends Name, FS extends Selects>(source: ExprProvider<T, S, never, NamedSource<FN, FS>>): QueryDelete<Simplify<MergeObjects<T, Record<FN, FS>>>, N, S, R>
+  public using<FN extends Name, FS extends Selects>(source: keyof T | ExprProvider<T, S, never, NamedSource<FN, FS>>): never 
   {
     if (!isString(source)) 
     {
@@ -58,7 +62,7 @@ export class QueryDelete<
     return this as never;
   }
 
-  public where(conditions: ExprProvider<T, S, ExprScalar<boolean> | ExprScalar<boolean>[]>): this 
+  public where(conditions: ExprProvider<T, S, never, ExprScalar<boolean> | ExprScalar<boolean>[]>): this 
   {
     const resolved = this._exprs.provide(conditions);
     const values = isArray(resolved)
@@ -79,7 +83,7 @@ export class QueryDelete<
 
   public returning(output: '*'): QueryDelete<T, N, S, S>
   public returning<RC extends SelectsKey<S>>(output: RC[]): QueryDelete<T, N, S, QueryModifyReturningColumns<R, S, RC>>
-  public returning<RS extends Tuple<Select<any, any>>>(output: ExprProvider<T, [], RS>): QueryDelete<T, N, S, QueryModifyReturningExpressions<R, RS>>
+  public returning<RS extends Tuple<Select<any, any>>>(output: ExprProvider<T, [], never, RS>): QueryDelete<T, N, S, QueryModifyReturningExpressions<R, RS>>
   public returning<RS extends Tuple<Select<any, any>>>(output: RS | '*' | Array<keyof S>): never 
   {
     return super.returning(output as any) as never;

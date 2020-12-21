@@ -79,6 +79,31 @@ describe('Select', () => {
     ;
   });
 
+  it('window named', () =>
+  {
+    from(Task)
+      .window('nameWindow', (w, { task }) => w.partition(task.name).order(task.doneAt))
+      .select((_, { rank }) => [
+        rank().over('nameWindow').as('rank'),
+      ])
+      .run((q) => {
+        expectExpr<[{ rank: number }]>(q);
+      })
+    ;
+  });
+
+  it('aggregate over', () =>
+  {
+    from(Task)
+      .select(({ task }, { rank }) => [
+        rank().over((w) => w.partition(task.name).order(task.doneAt)).as('rank'),
+      ])
+      .run((q) => {
+        expectExpr<[{ rank: number }]>(q);
+      })
+    ;
+  });
+
   it('field shorthand', () => {
     expectExpr<number>(Task$.id.min());
     expectExpr<number>(Task$.id.max());

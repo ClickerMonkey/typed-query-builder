@@ -1,9 +1,10 @@
-import { WindowFrameMode } from 'types/Query';
-import { ExprScalar, OrderBy, WindowFrameExclusion, QuerySelectScalarProvider, OrderDirection, Name, Sources, Selects, QuerySelectScalarInput } from '../internal';
-import { QueryCriteria } from './Criteria';
+import { 
+  ExprFactory, WindowFrameMode, ExprScalar, OrderBy, WindowFrameExclusion, QuerySelectScalarProvider, OrderDirection, Name, 
+  Sources, Selects, QuerySelectScalarInput 
+} from '../internal';
 
 
-export class QueryWindow<N extends Name, T extends Sources, S extends Selects>
+export class QueryWindow<N extends Name, T extends Sources, S extends Selects, W extends Name>
 {
 
   public static readonly DEFAULT_MODE = 'RANGE';
@@ -14,7 +15,7 @@ export class QueryWindow<N extends Name, T extends Sources, S extends Selects>
   public static readonly DEFAULT_EXCLUSION = 'NO OTHERS';
 
   public constructor(
-    public _query: QueryCriteria<T, S>,
+    public _exprs: ExprFactory<T, S, W>,
     public _name: N,
     public _partitionBy: ExprScalar<any>[] = [],
     public _orderBy: OrderBy[] = [],
@@ -29,7 +30,7 @@ export class QueryWindow<N extends Name, T extends Sources, S extends Selects>
   }
 
   public partition(...values: QuerySelectScalarInput<T, S, any>): this {
-    const exprs = this._query.parseScalar(values);
+    const exprs = this._exprs.parse(values);
 
     for (const expr of exprs) {
       this._partitionBy.push(expr);
@@ -44,8 +45,8 @@ export class QueryWindow<N extends Name, T extends Sources, S extends Selects>
     return this;
   }
 
-  public order(values: QuerySelectScalarProvider<T, S, any>, order?: OrderDirection, nullsLast?: boolean): this {
-    const exprs = this._query.parseScalar([values]);
+  public order(values: QuerySelectScalarProvider<T, S, W, any>, order?: OrderDirection, nullsLast?: boolean): this {
+    const exprs = this._exprs.parse([values]);
 
     for (const expr of exprs) {
       this._orderBy.push(new OrderBy(expr, order, nullsLast));
@@ -136,9 +137,9 @@ export class QueryWindow<N extends Name, T extends Sources, S extends Selects>
     return this;
   }
   
-  public extend<A extends Name>(alias: A): QueryWindow<A, T, S> {
+  public extend<A extends Name>(alias: A): QueryWindow<A, T, S, W> {
     return new QueryWindow(
-      this._query, 
+      this._exprs, 
       alias, 
       this._partitionBy.slice(), 
       this._orderBy.slice(),

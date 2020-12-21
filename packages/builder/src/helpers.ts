@@ -1,4 +1,8 @@
-import { QuerySelect, QueryInsert, Name, Selects, SelectsFromTypeAndColumns, Sources, Simplify, SelectsKey, MergeObjects, Tuple, DataTypeInputMap, DataTypeInputMapSelects, NamedSource, SourceTableInput, Source, SourceTable, SourceValues, ExprProvider, QueryUpdate, QueryDelete } from './internal';
+import { 
+  QuerySelect, QueryInsert, Name, Selects, SelectsFromTypeAndColumns, Sources, Simplify, SelectsKey, MergeObjects, Tuple, 
+  DataTypeInputMap, DataTypeInputMapSelects, NamedSource, SourceTableInput, Source, SourceTable, SourceValues, ExprProvider, 
+  QueryUpdate, QueryDelete 
+} from './internal';
 
 
 
@@ -19,13 +23,14 @@ export function table<
 
 export function query<
   T extends Sources = {}, 
-  S extends Selects = []
->(): QuerySelect<T, S> 
+  S extends Selects = [],
+  W extends Name = never
+>(): QuerySelect<T, S, W> 
 {
   return QuerySelect.create();
 }
 
-export function from<FN extends Name, FS extends Selects>(source: ExprProvider<{}, [], NamedSource<FN, FS>>): QuerySelect<Simplify<Record<FN, FS>>, []> { 
+export function from<FN extends Name, FS extends Selects>(source: ExprProvider<{}, [], never, NamedSource<FN, FS>>): QuerySelect<Simplify<Record<FN, FS>>, [], never> { 
   return QuerySelect.create().from(source) as any;
 }
 

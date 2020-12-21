@@ -1,13 +1,6 @@
 import {
-  Name, SourceFieldsFunctions, Selects, SourceFieldsFromSelects, SourceFieldsFactory,
-  Select,
-  SelectAliased,
-  ExprScalar,
-  ExprKind,
-  NamedSource,
-  query,
-  Expr,
-  isArray
+  Name, SourceFieldsFunctions, Selects, SourceFieldsFromSelects, SourceFieldsFactory, Select, SelectAliased, ExprScalar,
+  ExprKind, NamedSource, query, Expr, isArray
 } from '../internal';
 
 

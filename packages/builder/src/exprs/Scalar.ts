@@ -1,20 +1,7 @@
 import {  
-  OperationUnaryType, OperationBinaryType, ConditionBinaryType, ConditionUnaryType, ConditionBinaryListType,
-  DataTypeInputs, DataTypeInputType,
-  Select, SelectExpr,
-  ExprCast,
-  ExprCase,
-  ExprConditionBinaryList,
-  ExprConstant,
-  ExprOperationUnary,
-  ExprOperationBinary,
-  ExprConditionUnary,
-  ExprConditionBinary,
-  ExprBetween,
-  ExprIn,
-  ExprConditions,
-  Expr,
-  isArray
+  OperationUnaryType, OperationBinaryType, ConditionBinaryType, ConditionUnaryType, ConditionBinaryListType, DataTypeInputs, 
+  DataTypeInputType, Select, SelectExpr, ExprCast, ExprCase, ExprConditionBinaryList, ExprConstant, ExprOperationUnary,
+  ExprOperationBinary, ExprConditionUnary, ExprConditionBinary, ExprBetween, ExprIn, ExprConditions, Expr, isArray
 } from '../internal';
 
 
@@ -26,9 +13,9 @@ export abstract class ExprScalar<T> extends Expr<T>
   public static parse<T>(input: ExprInput<T>): ExprScalar<T> {
       return input instanceof ExprScalar 
       ? input
-      : new ExprConstant(input);
+      : new ExprConstant(input); // tslint:disable-line
   }
-    
+  
   public as<A extends string>(alias: A): Select<A, T> {
     return new SelectExpr<A, T>(alias, this);
   }

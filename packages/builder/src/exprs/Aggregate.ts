@@ -1,4 +1,4 @@
-import { isName, Name, QueryWindow, Sources, Selects, FunctionResult, ExprKind, FunctionArgumentValues, OrderBy, Traverser, Expr, ExprScalar, AggregateFunctions, OrderDirection } from '../internal';
+import { ExprFactory, isName, Name, QueryWindow, Sources, Selects, FunctionResult, ExprKind, FunctionArgumentValues, OrderBy, Traverser, Expr, ExprScalar, AggregateFunctions, OrderDirection } from '../internal';
 
 
 
@@ -8,13 +8,14 @@ export class ExprAggregate<T extends Sources, S extends Selects, W extends Name,
   public static readonly id = ExprKind.AGGREGATE;
 
   public constructor(
+    public _exprs: ExprFactory<T, S, W>,
     public _type: A,
     public _values: FunctionArgumentValues<A, Aggs>,
     public _distinct?: boolean,
     public _filter?: ExprScalar<boolean>,
     public _order: OrderBy[] = [],
     public _overWindow?: W,
-    public _overWindowDefinition?: QueryWindow<W, T, S>
+    public _overWindowDefinition?: QueryWindow<never, T, S, W>
   ) {
     super();
   }
@@ -41,11 +42,11 @@ export class ExprAggregate<T extends Sources, S extends Selects, W extends Name,
     return this;
   }
 
-  public over<WN extends W>(windowInput: WN | ((w: QueryWindow<'', T, S>) => QueryWindow<WN, T, S>)): this {
+  public over<WN extends W = never>(windowInput: WN | ((w: QueryWindow<never, T, S, W>) => QueryWindow<never, T, S, W>)): this {
     if (isName(windowInput)) {
       this._overWindow = windowInput;
     } else {
-      this._overWindowDefinition = windowInput(new QueryWindow(null as any, ''));
+      this._overWindowDefinition = windowInput(new QueryWindow(this._exprs, '' as never));
     }
 
     return this;
