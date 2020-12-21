@@ -57,6 +57,7 @@ export * from './sources/Values';
 export * from './query/Criteria';
 export * from './query/Modify';
 export * from './query/Window';
+export * from './query/Group';
 export * from './query/Delete';
 export * from './query/Existential';
 export * from './query/First';

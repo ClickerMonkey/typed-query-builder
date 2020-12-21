@@ -39,6 +39,8 @@ export type WindowFrameMode = 'RANGE' | 'ROWS' | 'GROUPS';
 
 export type WindowFrameExclusion = 'CURRENT ROW' | 'GROUP' | 'TIES' | 'NO OTHERS';
 
+export type GroupingSetType = 'BY' | 'GROUPING SET' | 'ROLLUP' | 'CUBE';
+
 export interface AggregateFunctions
 {
   count(value?: any): number;

@@ -1,6 +1,7 @@
+import { SelectsKey } from 'types/Select';
 import { 
   Name, createExprFactory, SourceKind, SourceKindPair, Selects, SelectsExprs, Sources, SourcesFieldsFactory, ExprFactory, 
-  OrderBy, Select, NamedSource, ExprScalar 
+  OrderBy, Select, NamedSource, ExprScalar, QueryWindow, fns, FunctionProxy, Functions, QueryGroup
 } from '../internal';
 
 
@@ -14,8 +15,10 @@ export class QueryCriteria<T extends Sources, S extends Selects, W extends Name>
   public selects: S;
   public selectsExpr: SelectsExprs<S>;
   public where: ExprScalar<boolean>[];
-  public groupBy: ExprScalar<any>[];
+  public group: QueryGroup<SelectsKey<S>>[];
   public having?: ExprScalar<boolean>;
+  public windows: { [K in W]: QueryWindow<K, T, S, W> };
+  public groupingSets: SelectsKey<S>[][];
   public orderBy: OrderBy[];
   public limit?: number;
   public offset?: number;
@@ -24,10 +27,12 @@ export class QueryCriteria<T extends Sources, S extends Selects, W extends Name>
   { 
     this.sources = base ? base.sources.slice() : [] as any;
     this.sourcesFields = base ? { ...base.sourcesFields } : {} as any;
+    this.windows = base ? { ...base.windows } : {} as any;
     this.selects = base ? base.selects.slice() : [] as any;
     this.selectsExpr = base ? { ...base.selectsExpr } : {} as any;
     this.where = base ? base.where.slice() : [];
-    this.groupBy = base ? base.groupBy.slice() : [];
+    this.group = base ? base.group.slice() : [];
+    this.groupingSets = [];
     this.having = base?.having;
     this.orderBy = base ? base.orderBy.slice() : [];
     this.limit = base?.limit;
@@ -61,6 +66,16 @@ export class QueryCriteria<T extends Sources, S extends Selects, W extends Name>
 
   public addSelects(selects: Select<any, any>[]): void {
     selects.forEach( select => this.addSelect( select ) );
+  }
+
+  public addWindow<WA extends Name>(name: WA, defined: (window: QueryWindow<WA, T, S, W>, sources: SourcesFieldsFactory<T>, exprs: ExprFactory<T, S, W>, fns: FunctionProxy<Functions>, selects: SelectsExprs<S>) => QueryWindow<WA, T, S, W>): void {
+    const { exprs, sourcesFields, selectsExpr } = this;
+
+    this.windows[name as string] = defined(new QueryWindow(exprs, name), sourcesFields, exprs, fns, selectsExpr);
+  }
+
+  public clearWindows(): void {
+    this.windows = {} as any;
   }
 
   public extend(): QueryCriteria<T, S, W> {

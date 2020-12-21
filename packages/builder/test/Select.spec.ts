@@ -104,6 +104,66 @@ describe('Select', () => {
     ;
   });
 
+  it('group by', () =>
+  {
+    from(Task)
+      .select(({ task }, { min, count }) => [
+        task.doneAt,
+        min(task.name).as('name'),
+        count().as('count')
+      ])
+      .groupBy('doneAt')
+      .run((q) => {
+        expectExpr<[{ name: string, doneAt: Date, count: number }]>(q);
+      })
+    ;
+  });
+
+  it('group rollup', () =>
+  {
+    from(Task)
+      .select(({ task }, { min, count }) => [
+        task.doneAt,
+        min(task.name).as('name'),
+        count().as('count')
+      ])
+      .groupByRollup([['doneAt'], []])
+      .run((q) => {
+        expectExpr<[{ name: string, doneAt: Date, count: number }]>(q);
+      })
+    ;
+  });
+
+  it('group sets', () =>
+  {
+    from(Task)
+      .select(({ task }, { min, count }) => [
+        task.doneAt,
+        min(task.name).as('name'),
+        count().as('count')
+      ])
+      .groupBySet([['doneAt'], []])
+      .run((q) => {
+        expectExpr<[{ name: string, doneAt: Date, count: number }]>(q);
+      })
+    ;
+  });
+
+  it('group cube', () =>
+  {
+    from(Task)
+      .select(({ task }, { min, count }) => [
+        task.doneAt,
+        min(task.name).as('name'),
+        count().as('count')
+      ])
+      .groupByCube([['doneAt'], []])
+      .run((q) => {
+        expectExpr<[{ name: string, doneAt: Date, count: number }]>(q);
+      })
+    ;
+  });
+
   it('field shorthand', () => {
     expectExpr<number>(Task$.id.min());
     expectExpr<number>(Task$.id.max());

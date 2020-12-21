@@ -133,7 +133,7 @@ const results = from(Task)
 - `SELECT` any number of expressions.
 - `DISTINCT` on all values or specific expressions.
 - `WHERE` any number of conditions.
-- `GROUP BY` any number of expressions.
+- `GROUP BY` any number of expressions or grouping sets (include rollup & cube).
 - `HAVING` met some group condition.
 - `ORDER BY` any number of expressions, direction, nulls first or last?
 - `LIMIT` to a certain number of results.
@@ -321,9 +321,7 @@ You can pass expressions directly to many functions, but you can also use a "pro
 
 
 ### SQL Features TODO
-- rollup?
 - lock rules per table?
-- grouping sets?
 - row constructor (ie tuple) takes comma delimited list of values, or source.* (use JoinTuples)
 - row comparisons (row op row, row IS [NOT] NULL)
    - op: =, !=, <>, <, <=, >, >=, IS DISTINCT FROM, IS NOT DISTINCT FROM

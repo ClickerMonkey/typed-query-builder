@@ -44,8 +44,8 @@ export interface ExprFactory<T extends Sources, S extends Selects, W extends Nam
   countIf(condition: ExprScalar<boolean>): ExprAggregate<T, S, W, 'countIf'>;
   sum(value: ExprScalar<number>): ExprAggregate<T, S, W, 'sum'>;
   avg(value: ExprScalar<number>): ExprAggregate<T, S, W, 'avg'>;
-  min(value: ExprScalar<number>): ExprAggregate<T, S, W, 'min'>;
-  max(value: ExprScalar<number>): ExprAggregate<T, S, W, 'max'>;
+  min<V>(value: ExprScalar<V>): ExprAggregate<T, S, W, 'min', AggregateFunctions, V>;
+  max<V>(value: ExprScalar<V>): ExprAggregate<T, S, W, 'max', AggregateFunctions, V>;
   rowNumber(): ExprAggregate<T, S, W, 'rowNumber'>;
   rank(): ExprAggregate<T, S, W, 'rank'>;
   denseRank(): ExprAggregate<T, S, W, 'denseRank'>;
@@ -194,10 +194,10 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
     avg(value: ExprScalar<number>): ExprAggregate<T, S, W, 'avg'> {
       return exprs.aggregate('avg', value);
     },
-    min(value: ExprScalar<number>): ExprAggregate<T, S, W, 'min'> {
+    min<V>(value: ExprScalar<V>): ExprAggregate<T, S, W, 'min', AggregateFunctions, V> {
       return exprs.aggregate('min', value);
     },
-    max(value: ExprScalar<number>): ExprAggregate<T, S, W, 'max'> {
+    max<V>(value: ExprScalar<V>): ExprAggregate<T, S, W, 'max', AggregateFunctions, V> {
       return exprs.aggregate('max', value);
     },
     rowNumber(): ExprAggregate<T, S, W, 'rowNumber'> {

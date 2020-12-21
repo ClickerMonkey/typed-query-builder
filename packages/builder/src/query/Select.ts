@@ -1,3 +1,4 @@
+import { GroupingSetType } from 'types/Query';
 import { 
   QueryWindow, SelectsExprs, QuerySelectScalarProvider, QuerySelectScalarInput, SourceKind, isArray, isFunction, isString, 
   SourcesFieldsFactory, JoinType, Selects, Sources, Name, OrderDirection, MergeObjects, LockType, SelectWithKey, Simplify, 
@@ -5,7 +6,7 @@ import {
   SelectGivenSelects, MaybeSources, MaybeSelects, AggregateFunctions, Tuple, SourceCompatible, ExprAggregate, ExprProvider, 
   ExprFactory, Expr, ExprType, QuerySelectExistential, QuerySelectFirst, QuerySelectFirstValue, QuerySelectList, Source, 
   SourceJoin, OrderBy, Select, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions, QueryCriteria, ExprKind, 
-  NamedSource, SourceRecursive, ExprInput, ExprScalar, fns 
+  NamedSource, SourceRecursive, ExprInput, ExprScalar, fns, QueryGroup
 } from '../internal';
 
 
@@ -22,7 +23,6 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
   public _distinct: boolean;
   public _distinctOn: ExprScalar<any>[];
   public _criteria: QueryCriteria<T, S, W>;
-  public _windows: { [K in W]: QueryWindow<K, T, S, W> };
 
   public constructor(extend?: QuerySelect<T, S, W>) {
     super();
@@ -31,7 +31,6 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     this._lock = extend?._lock || 'none';
     this._distinct = extend?._distinct || false;
     this._distinctOn = extend?._distinctOn?.slice() || [];
-    this._windows = { ...(extend?._windows || {}) } as any;
   }
 
   public getKind(): ExprKind {
@@ -97,15 +96,13 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
   }
 
   public window<WA extends Name>(name: WA, defined: (window: QueryWindow<WA, T, S, W>, sources: SourcesFieldsFactory<T>, exprs: ExprFactory<T, S, W>, fns: FunctionProxy<Functions>, selects: SelectsExprs<S>) => QueryWindow<WA, T, S, W>): QuerySelect<T, S, WA | W> {
-    const { exprs, sourcesFields, selectsExpr } = this._criteria;
-
-    this._windows[name as string] = defined(new QueryWindow(exprs, name), sourcesFields, exprs, fns, selectsExpr);
+    this._criteria.addWindow(name, defined);
 
     return this as any;
   }
 
   public clearWindows(): QuerySelect<T, S, never> {
-    this._windows = {} as any;
+    this._criteria.clearWindows();
 
     return this as any;
   }
@@ -178,18 +175,32 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     return this;
   }
 
-  public groupBy(...values: QuerySelectScalarInput<T, S, W, any>): this {
-    const exprs = this._criteria.exprs.parse(values);
+  public groupBy<K extends SelectsKey<S>>(...values: K[] | [K[]]): this {
+    const exprs = isArray(values[0]) ? values[0] : values as K[];
 
-    for (const expr of exprs) {
-      this._criteria.groupBy.push(expr);
-    }
+    return this.group('BY', [exprs]);
+  }
+
+  public groupBySet<K extends SelectsKey<S>>(values: K[][]): this {
+    return this.group('GROUPING SET', values);
+  }
+
+  public groupByRollup<K extends SelectsKey<S>>(values: K[][]): this {
+    return this.group('ROLLUP', values);
+  }
+
+  public groupByCube<K extends SelectsKey<S>>(values: K[][]): this {
+    return this.group('ROLLUP', values);
+  }
+
+  public group<K extends SelectsKey<S>>(type: GroupingSetType, values: K[][]): this {
+    this._criteria.group.push(new QueryGroup<K>(type, values));
 
     return this;
   }
 
-  public clearGroupBy(): this {
-    this._criteria.groupBy = [];
+  public clearGroup(): this {
+    this._criteria.group = [];
 
     return this;
   }
