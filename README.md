@@ -152,6 +152,7 @@ You can resolve a `SELECT` down to a list of objects or tuples, a first row, a s
 - `INTO` a table.
 - `VALUES` any number of sources.
 - `RETURNING` any number of expressions (by default, the number of affected rows).
+- `ON DUPLICATE KEY SET` any number of fields when the record exists.
 
 ### `UPDATE`
 > A source is a table, a subquery, values (list of objects/tuples), or insert/update/delete expressions with a returning clause.
