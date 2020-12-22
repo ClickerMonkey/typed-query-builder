@@ -2,6 +2,8 @@
 
 The most advanced TypeScript query builder available! It can generate SQL, be translated to and from JSON, or **run the query on local data**.
 
+This project is a WIP.
+
 [Examples](#examples) | [FAQ](#faq) | [Todo](#sql-features-todo)
 
 ### Features
@@ -29,9 +31,10 @@ Queries built should read like SQL. **Too often** do ORMs or query builders vent
 [Examples](#examples)
 
 ## SQL Features
-- All common math operations & conditions.
-- All common functions.
-- Aggregate functions, including filter and order logic.
+- All common math operations & conditions. [v](#common-math-operations)
+- All common functions. [v](#common-functions)
+- Aggregate functions, including filter and order logic. [v](#aggregate-functions)
+- Window functions, including filter and order logic. [v](#window-aggregate-functions)
 - `with` expressions.
 - `recursive` with expressions.
 - `window` expressions.
@@ -39,6 +42,29 @@ Queries built should read like SQL. **Too often** do ORMs or query builders vent
 - `grouping` & `having`.
 - `ordering`.
 - Using the results of a select/insert/update/delete as a source to select/join/insert against.
+
+### Common Math Operations
+- **Operations Binary**: '%' | '*' | '+' | '/' | '-' | '^' | 'BITAND' | 'BITXOR' | 'BITOR' | 'BITNOT' | 'BITLEFT' | 'BITRIGHT'
+- **Operations Unary**: '-' | 'BITNOT'
+- **Predicates Binary**: '>' | '>=' | '<' | '<=' | '=' | '!=' | '<>' | '<=>' | 'LIKE' | 'ILIKE' | 'NOT LIKE' | 'NOT ILIKE'
+- **Predicates Unary**: 'IS NULL' | 'IS NOT NULL' | 'IS TRUE' | 'IS FALSE';
+- **Predicates List**: '>' | '>=' | '<' | '<=' | '=' | '!=' | '<>' ... 'ANY' | 'ALL'
+- **Predicates Row**: '=' | '!=' | '<>' | '<' | '<=' | '>' | '>=' | 'IS DISTINCT FROM' | 'IS NOT DISTINCT FROM'
+
+### Common Functions
+- **Math**: abs, ceil, floor, exp, ln, mod, power, sqrt, cbrt, degrees, radians, div, factorial, gcd, lcm, log10, log, pi, round, sign, truncate
+- **Random**: random
+- **Trigonometric**: aos, acosd, asin, asind, atan, atand, atan2, atan2d, cos, cosd, cot, cotd, sin, sind, tan, tand, sinh, cosh, tanh, asinh, acosh, atanh
+- **Operations**: coalesce, iif, greatest, least
+- **String**: lower, upper, trim, trimLeft, trimRight, concat, length, indexOf, substring, regexGet, regexReplace, char, join, format, left, right, padLeft, padRight, md5, repeat, replace, reverse, startsWith
+- **Date**: dateFormat, dateParse, timestampParse, dateAddDays, dateWithTime, daysBetween, dateSubDays, currentTime, currentTimestamp, currentDate, dateGet, dateTruncate, createDate, createTime, createTimestamp, timestampToSeconds, timestampFromSeconds, datesOverlap, timestampsOverlap
+- **Geometry**: pointAdd, pointSub, pointMultiply, pointDivide, pathJoin, geomLength, geomCenter, geomPoints, lineIntersection, boxIntersection, closestPointOn, distanceBetween, geomContains, geomContainsOrOn, geomOverlaps
+
+### Aggregate Functions
+- count, countIf, sum, avg, min, max, deviation, variance, array, string, bitAnd, bitOr, boolAnd, boolOr
+
+### Window Aggregate Functions
+- rowNumber, rank, denseRank, percentRank, culmulativeDistribution, ntile, lag, lead, firstValue, lastValue, nthValue
 
 ## Singular Interface
 Even if the underlying database doesn't support particular functionality, it will appear to and the builder will substitue an equivalent expression when possible. Using a singular interface for communicating with the database also allows built queries to be used on any number of supported databases.
@@ -120,8 +146,7 @@ const results = from(Task)
 ```
 
 ## SQL Implementations
-
-
+TODO
 
 ### `SELECT`
 > A source is a table, a subquery, values (list of objects/tuples), or insert/update/delete expressions with a returning clause.
@@ -177,6 +202,7 @@ You can resolve a `SELECT` down to a list of objects or tuples, a first row, a s
 
 ### Examples
 
+#### Define Tables
 ```ts
 import { query, from, insert, update, remove, table } from '@typed-query-builder/builder';
 
@@ -195,7 +221,10 @@ const Task = table({
     doneAt: 'finished_at', // optionally the real column name
   },
 });
+```
 
+#### Select
+```ts
 // SELECT * FROM task
 from(Task).select('*');
 
@@ -278,29 +307,43 @@ from(Task)
   .orderBy(({ task }) => task.doneAt, 'DESC')
   .limit(10)
 ;
+```
 
+#### Insert
+```ts
 // INSERT INTO task VALUES (id, name, done, doneAt, parentId) VALUES (DEFAULT, '...', DEFAULT, DEFAULT, DEFAULT)
 insert(Task).values({ name: 'Complete Documentation' });
 
 // INSERT INTO task (name) VALUES ('Task #1'), ('Task #2')
 insert(Task, ['name']).values([['Task #1'], ['Task #2']]);
 
+// TODO
+// - insert example with extensive WITH & RETURNING expressions
+// - insert with values from any source
+// - insert with on duplicate key set
+```
+
+#### Update
+```ts
 // UPDATE task SET name = 'New Name' WHERE id = 10
 update(Task).set('name', 'New Name').where(Task.fields.id.eq(10));
 update(Task).set(Task.fields.name, 'New Name').where(Task.fields.id.eq(10));
 update(Task).set({ name: 'New Name' }).where(Task.fields.id.eq(10));
 
+// TODO
+// - update with multi-set with subquery
+// - update with from
+// - update example with extensive WITH & RETURNING expressions
+```
+
+#### Delete
+```ts
 // DELETE FROM task WHERE id = 10 RETURNING name
 remove(Task).where(Task.fields.id.eq(10)).returning('name');
 
 // TODO examples:
-// - insert/update/delete example with extensive WITH & RETURNING expressions
-// - update with multi-set with subquery
-// - update with from
-// - select with subquery, values, insert/update/delete returning sources
-// - select with window
+// - delete example with extensive WITH & RETURNING expressions
 // - delete with using
-// - insert with values from any source
 ```
 
 ## FAQ
@@ -315,7 +358,6 @@ You can pass expressions directly to many functions, but you can also use a "pro
 
 When you use table aliasing, you need to use the provider function.
 
-#### 2). 
 
 
 
