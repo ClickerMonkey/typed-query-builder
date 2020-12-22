@@ -1,12 +1,12 @@
-import { SelectsKey } from 'types/Select';
 import { 
   Name, createExprFactory, SourceKind, SourceKindPair, Selects, SelectsExprs, Sources, SourcesFieldsFactory, ExprFactory, 
-  OrderBy, Select, NamedSource, ExprScalar, QueryWindow, fns, FunctionProxy, Functions, QueryGroup
+  OrderBy, Select, NamedSource, ExprScalar, QueryWindow, fns, FunctionProxy, Functions, QueryGroup, Expr, Traversable,
+  Traverser, SelectsKey
 } from '../internal';
 
 
 
-export class QueryCriteria<T extends Sources, S extends Selects, W extends Name>
+export class QueryCriteria<T extends Sources, S extends Selects, W extends Name> implements Traversable<Expr<unknown>>
 {
 
   public exprs: ExprFactory<T, S, W>;
@@ -18,7 +18,6 @@ export class QueryCriteria<T extends Sources, S extends Selects, W extends Name>
   public group: QueryGroup<SelectsKey<S>>[];
   public having?: ExprScalar<boolean>;
   public windows: { [K in W]: QueryWindow<K, T, S, W> };
-  public groupingSets: SelectsKey<S>[][];
   public orderBy: OrderBy[];
   public limit?: number;
   public offset?: number;
@@ -32,7 +31,6 @@ export class QueryCriteria<T extends Sources, S extends Selects, W extends Name>
     this.selectsExpr = base ? { ...base.selectsExpr } : {} as any;
     this.where = base ? base.where.slice() : [];
     this.group = base ? base.group.slice() : [];
-    this.groupingSets = [];
     this.having = base?.having;
     this.orderBy = base ? base.orderBy.slice() : [];
     this.limit = base?.limit;
@@ -80,6 +78,48 @@ export class QueryCriteria<T extends Sources, S extends Selects, W extends Name>
 
   public extend(): QueryCriteria<T, S, W> {
     return new QueryCriteria(this);
+  }
+
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
+    const { sources, selectsExpr, where, having, windows, orderBy } = this;
+    
+    traverse.step('source', () => {
+      for (let i = 0; i < sources.length; i++) { 
+        traverse.step(i, sources[i].source);
+      }
+    });
+
+    traverse.step('select', () => {
+      for (const alias in selectsExpr) {
+        traverse.step(alias, selectsExpr[alias] as any, (replaceWith) => selectsExpr[alias] = replaceWith as any);
+      }
+    });
+
+    if (where.length > 0) {
+      traverse.step('where', () => {
+        for (let i = 0; i < where.length; i++) {
+          traverse.step(i, where[i], (replaceWith) => where[i] = replaceWith as any);
+        }
+      });
+    }
+    
+    if (having) {
+      traverse.step('having', having, (replaceWith) => this.having = replaceWith as any, () => this.having = undefined);
+    }
+
+    traverse.step('window', () => {
+      for (const windowName in windows) {
+        traverse.step(windowName, windows[windowName]);
+      }
+    });
+
+    traverse.step('order', () => {
+      for (let i = 0; i < orderBy.length; i++) {
+        traverse.step(i, orderBy[i].value, (replaceWith) => orderBy[i].value = replaceWith as any);
+      }
+    });
+
+    return traverse.getResult();
   }
 
 }

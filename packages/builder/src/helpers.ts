@@ -1,7 +1,7 @@
 import { 
-  QuerySelect, QueryInsert, Name, Selects, SelectsFromTypeAndColumns, Sources, Simplify, SelectsKey, MergeObjects, Tuple, 
+  QuerySelect, StatementInsert, Name, Selects, SelectsFromTypeAndColumns, Sources, Simplify, SelectsKey, MergeObjects, Tuple, 
   DataTypeInputMap, DataTypeInputMapSelects, NamedSource, SourceTableInput, Source, SourceTable, SourceValues, ExprProvider, 
-  QueryUpdate, QueryDelete 
+  StatementUpdate, StatementDelete
 } from './internal';
 
 
@@ -40,22 +40,22 @@ export function insert<
   T extends Selects = [], 
   C extends SelectsKey<T> = never,
   R extends Selects = []
->(): QueryInsert<W, I, T, C, R> 
+>(): StatementInsert<W, I, T, C, R> 
 export function insert<
   W extends Sources = {}, 
   I extends Name = never,
   T extends Selects = [], 
   C extends SelectsKey<T> = never,
   R extends Selects = []
->(target: SourceTable<I, T, any>): QueryInsert<MergeObjects<W, Record<I, T>>, I, T, C, R> 
+>(target: SourceTable<I, T, any>): StatementInsert<MergeObjects<W, Record<I, T>>, I, T, C, R> 
 export function insert<
   W extends Sources = {}, 
   I extends Name = never,
   T extends Selects = [], 
   C extends SelectsKey<T> = never,
   R extends Selects = []
->(target?: SourceTable<I, T, any>): QueryInsert<W, I, T, C, R> {
-  const query = new QueryInsert<W, I, T, C, R>();
+>(target?: SourceTable<I, T, any>): StatementInsert<W, I, T, C, R> {
+  const query = new StatementInsert<W, I, T, C, R>();
 
   if (target) {
     query.into(target);
@@ -69,20 +69,20 @@ export function update<
   F extends Name = never,
   S extends Selects = [], 
   R extends Selects = []
->(): QueryUpdate<T, F, S, R>
+>(): StatementUpdate<T, F, S, R>
 export function update<
   T extends Sources = {}, 
   F extends Name = never,
   S extends Selects = [], 
   R extends Selects = []
->(target: SourceTable<F, S, any>): QueryUpdate<MergeObjects<T, Record<F, S>>, F, S, R>
+>(target: SourceTable<F, S, any>): StatementUpdate<MergeObjects<T, Record<F, S>>, F, S, R>
 export function update<
   T extends Sources = {}, 
   F extends Name = never,
   S extends Selects = [], 
   R extends Selects = []
->(target?: SourceTable<F, S, any>): QueryUpdate<T, F, S, R> {
-  const query = new QueryUpdate<T, F, S, R>();
+>(target?: SourceTable<F, S, any>): StatementUpdate<T, F, S, R> {
+  const query = new StatementUpdate<T, F, S, R>();
 
   if (target) {
     query.update(target);
@@ -96,20 +96,20 @@ export function remove<
   F extends Name = never,
   S extends Selects = [], 
   R extends Selects = []
->(): QueryDelete<T, F, S, R>
+>(): StatementDelete<T, F, S, R>
 export function remove<
   T extends Sources = {}, 
   F extends Name = never,
   S extends Selects = [], 
   R extends Selects = []
->(target: SourceTable<F, S, any>): QueryDelete<MergeObjects<T, Record<F, S>>, F, S, R>
+>(target: SourceTable<F, S, any>): StatementDelete<MergeObjects<T, Record<F, S>>, F, S, R>
 export function remove<
   T extends Sources = {}, 
   F extends Name = never,
   S extends Selects = [], 
   R extends Selects = []
->(target?: SourceTable<F, S, any>): QueryDelete<T, F, S, R> {
-  const query = new QueryDelete<T, F, S, R>();
+>(target?: SourceTable<F, S, any>): StatementDelete<T, F, S, R> {
+  const query = new StatementDelete<T, F, S, R>();
 
   if (target) {
     query.from(target);

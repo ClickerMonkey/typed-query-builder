@@ -1,14 +1,14 @@
-import { ExprKind, ExprScalar, Traverser, Expr, ConditionBinaryListPass, ConditionBinaryListType, isArray } from '../internal';
+import { ExprKind, ExprScalar, Traverser, Expr, PredicateBinaryListPass, PredicateBinaryListType, isArray } from '../internal';
 
 
-export class ExprConditionBinaryList<T> extends ExprScalar<boolean> 
+export class ExprPredicateBinaryList<T> extends ExprScalar<boolean> 
 {
   
-  public static readonly id = ExprKind.CONDITION_BINARY_LIST;
+  public static readonly id = ExprKind.PREDICATE_BINARY_LIST;
 
   public constructor(
-    public type: ConditionBinaryListType,
-    public pass: ConditionBinaryListPass,
+    public type: PredicateBinaryListType,
+    public pass: PredicateBinaryListPass,
     public value: ExprScalar<T>,
     public test: ExprScalar<T[]> | ExprScalar<T>[]
   ) {
@@ -16,7 +16,7 @@ export class ExprConditionBinaryList<T> extends ExprScalar<boolean>
   }
 
   public getKind(): ExprKind {
-    return ExprKind.CONDITION_BINARY_LIST;
+    return ExprKind.PREDICATE_BINARY_LIST;
   }
 
   public traverse<R>(traverse: Traverser<Expr<any>, R>): R {

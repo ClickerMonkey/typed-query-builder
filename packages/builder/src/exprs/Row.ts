@@ -1,4 +1,4 @@
-import { ExprKind, Traverser, Expr } from '../internal';
+import { isArray, ExprInputTuple, ExprPredicateRow, SelectsFromValues, ExprScalar, PredicateRowType, ExprKind, Traverser, Expr, toExpr } from '../internal';
 
 
 export class ExprRow<V extends any[]> extends Expr<V>
@@ -14,6 +14,10 @@ export class ExprRow<V extends any[]> extends Expr<V>
 
   public getKind(): ExprKind {
     return ExprKind.ROW;
+  }
+
+  public is(type: PredicateRowType, row: Expr<V> | Expr<SelectsFromValues<V>> | ExprInputTuple<V>): ExprScalar<boolean> {
+    return new ExprPredicateRow<V>(type, this, isArray(row) ? row.map( toExpr ) : row as any);
   }
 
   public traverse<R>(traverse: Traverser<Expr<any>, R>): R {

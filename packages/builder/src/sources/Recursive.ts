@@ -1,4 +1,4 @@
-import { Name, Selects, NamedSourceBase, Source } from '../internal';
+import { Name, Selects, NamedSourceBase, Source, Traverser, Expr } from '../internal';
 
 
 export class SourceRecursive<N extends Name, S extends Selects> extends NamedSourceBase<N, S> 
@@ -11,6 +11,13 @@ export class SourceRecursive<N extends Name, S extends Selects> extends NamedSou
     public all: boolean = false
   ) {
     super( name, initial );
+  }
+
+  public traverse<R>(traverse: Traverser<Expr<unknown>, R>): R {
+    traverse.step('initial', this.source);
+    traverse.step('recursive', this.source);
+
+    return traverse.getResult();
   }
 
 }

@@ -1,7 +1,7 @@
 import { Name, Selects, Sources, Expr, QueryCriteria, ExprKind } from '../internal';
 
 
-export class QuerySelectList<T extends Sources, S extends Selects, W extends Name, R> extends Expr<R[]> 
+export class QueryList<T extends Sources, S extends Selects, W extends Name, R> extends Expr<R[]> 
 {
   
   public static readonly id = ExprKind.QUERY_LIST;

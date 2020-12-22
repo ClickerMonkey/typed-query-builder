@@ -1,22 +1,13 @@
 import {
-  FunctionArgumentInputs, FunctionArgumentValues, FunctionProxy, FunctionResult, Functions, ExprKind, Traverser,
-  Expr, ExprScalar
+  FunctionArgumentValues, FunctionResult, Functions, ExprKind, Traverser, Expr, ExprScalar
 } from '../internal';
 
 
 export class ExprFunction<F extends keyof Funcs, Funcs = Functions> extends ExprScalar<FunctionResult<F, Funcs>> 
 {
   
-  public static createProxy<Funcs>(): FunctionProxy<Funcs> {
-    return new Proxy({}, {
-      get: <K extends keyof Funcs>(target: {}, func: K, reciever: any) => {
-        return (...args: FunctionArgumentInputs<K, Funcs>): ExprScalar<FunctionResult<K, Funcs>> => {
-          return new ExprFunction(func, (args as any).map( ExprScalar.parse ));
-        };
-      },
-    }) as FunctionProxy<Funcs>;
-  }
-    
+  
+  
   public static readonly id = ExprKind.FUNCTION;
 
   public constructor(
@@ -29,6 +20,10 @@ export class ExprFunction<F extends keyof Funcs, Funcs = Functions> extends Expr
   public getKind(): ExprKind {
     return ExprKind.FUNCTION;
   }
+  
+  public isSimple(): boolean {
+    return true;
+  }
 
   public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
     return traverse.enter(this, () => {
@@ -39,11 +34,5 @@ export class ExprFunction<F extends keyof Funcs, Funcs = Functions> extends Expr
       });
     });
   }
-  
-  public isSimple(): boolean {
-    return true;
-  }
 
 }
-
-export const fns = ExprFunction.createProxy<Functions>();

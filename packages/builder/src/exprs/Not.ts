@@ -7,7 +7,7 @@ export class ExprNot extends ExprScalar<boolean>
   public static readonly id = ExprKind.NOT;
 
   public constructor(
-    public value: ExprScalar<boolean>
+    public predicate: ExprScalar<boolean>
   ) {
     super();
   }
@@ -18,7 +18,7 @@ export class ExprNot extends ExprScalar<boolean>
 
   public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
     return traverse.enter(this, () => {
-      traverse.step('value', this.value, (replace) => this.value = replace as any);
+      traverse.step('predicate', this.predicate, (replace) => this.predicate = replace as any);
     });
   }
   

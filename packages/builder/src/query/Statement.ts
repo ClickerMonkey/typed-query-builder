@@ -1,27 +1,27 @@
 import { 
   createExprFactory, SourceKindPair, SourceKind, isArray, isString, Cast, Name, Selects, Sources, ArrayToTuple, 
   SourcesFieldsFactory, SelectsKey, SelectsWithKey, SelectsNormalize, TupleAppend, JoinedInner, Tuple, ExprFactory, 
-  ExprProvider, NamedSource, Source, SourceRecursive, SourceTable, Select 
+  ExprProvider, NamedSource, Source, SourceRecursive, SourceTable, Select, Traverser, Expr 
 } from '../internal';
 
 
-export type QueryModifyReturning<
+export type StatementReturning<
   T extends Selects = [],
   C extends SelectsKey<T> = never
 > = SelectsWithKey<T, C>;
 
-export type QueryModifyReturningColumns<
+export type StatementReturningColumns<
   R extends Selects = [],
   T extends Selects = [],
   C extends SelectsKey<T> = never
-> = TupleAppend<R, Cast<QueryModifyReturning<T, C>, Selects>>;
+> = TupleAppend<R, Cast<StatementReturning<T, C>, Selects>>;
 
-export type QueryModifyReturningExpressions<
+export type StatementReturningExpressions<
   R extends Selects = [],
   E extends Tuple<Select<any, any>> = [any]
 > = TupleAppend<R, SelectsNormalize<ArrayToTuple<E>>>;
 
-export abstract class QueryModify<
+export abstract class Statement<
   T extends Sources = {}, 
   N extends Name = never,
   S extends Selects = [],
@@ -51,7 +51,7 @@ export abstract class QueryModify<
 
   protected abstract getMainSource(): SourceTable<N, S, any>;
 
-  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, never, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, never, Source<WS>>, all?: boolean): QueryModify<JoinedInner<T, WN, WS>, N, S, R> 
+  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, never, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, never, Source<WS>>, all?: boolean): Statement<JoinedInner<T, WN, WS>, N, S, R> 
   {
     const source = this._exprs.provide(sourceProvider as any);
 
@@ -79,9 +79,9 @@ export abstract class QueryModify<
     this.addSource(source, kind);
   }
 
-  public returning(output: '*'): QueryModify<T, N, S, S>
-  public returning<RC extends SelectsKey<S>>(output: RC[]): QueryModify<T, N, S, QueryModifyReturningColumns<R, S, RC>>
-  public returning<RS extends Tuple<Select<any, any>>>(output: ExprProvider<T, [], never, RS>): QueryModify<T, N, S, QueryModifyReturningExpressions<R, RS>>
+  public returning(output: '*'): Statement<T, N, S, S>
+  public returning<RC extends SelectsKey<S>>(output: RC[]): Statement<T, N, S, StatementReturningColumns<R, S, RC>>
+  public returning<RS extends Tuple<Select<any, any>>>(output: ExprProvider<T, [], never, RS>): Statement<T, N, S, StatementReturningExpressions<R, RS>>
   public returning<RS extends Selects>(output: RS | '*' | Array<keyof S>): never
   {
     const main = this.getMainSource();
@@ -109,11 +109,31 @@ export abstract class QueryModify<
     return this as never;
   }
 
-  public clearReturning(): QueryModify<T, N, S, []> 
+  public clearReturning(): Statement<T, N, S, []> 
   {
     this._returning = [] as any;
 
     return this as any;
+  }
+
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
+    const { _sources, _returning } = this;
+
+    traverse.step('source', () => {
+      for (let i = 0; i < _sources.length; i++) {
+        traverse.step(i, _sources[i].source, (replaceWith) => _sources[i] = replaceWith as any);
+      }
+    });
+
+    if (_returning.length > 0) {
+      traverse.step('returning', () => {
+        for (let i = 0; i < _returning.length; i++) {
+          traverse.step(i, _returning[i].getExpr(), (replaceWith) => _returning[i] = replaceWith as any);
+        }
+      });
+    }
+    
+    return traverse.getResult();
   }
 
 }

@@ -114,7 +114,7 @@ describe('Select', () => {
       ])
       .groupBy('doneAt')
       .run((q) => {
-        expectExpr<[{ name: string, doneAt: Date, count: number }]>(q);
+        expectExpr<[{ doneAt: Date, name: string, count: number }]>(q);
       })
     ;
   });
@@ -129,7 +129,9 @@ describe('Select', () => {
       ])
       .groupByRollup([['doneAt'], []])
       .run((q) => {
-        expectExpr<[{ name: string, doneAt: Date, count: number }]>(q);
+        expectExprType<[
+          Select<"doneAt", Date>, Select<"name", string>, Select<"count", number>
+        ][]>(q);
       })
     ;
   });
@@ -162,6 +164,37 @@ describe('Select', () => {
         expectExpr<[{ name: string, doneAt: Date, count: number }]>(q);
       })
     ;
+  });
+
+  it('row compare row to row', () => {
+    from(Task)
+      .select('*')
+      .where(({ task }, { row }) => [
+        row(task.id, task.name).is('=', [1, 'Hello'])
+      ])
+  });
+
+  it('row compare row to subquery', () => {
+    from(Task)
+      .select('*')
+      .where(({ task }, { row }, { lower }) => [
+        row(task.all(), lower(task.name)).is('=', 
+          from(Task)
+            .select(Task.all())
+            .select(({ task }, _, { lower }) => [
+              lower(task.name).as('lower')
+            ])
+            .first()
+        )
+      ])
+  });
+
+  it('row compare row to subquery', () => {
+    from(Task)
+      .select('*')
+      .where(({ task }, { row }) => [
+        row(task.id, task.name).is('=', from(Task).select(({ task }) => [task.id, task.name]).first())
+      ])
   });
 
   it('field shorthand', () => {

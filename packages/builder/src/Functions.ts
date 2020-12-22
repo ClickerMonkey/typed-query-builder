@@ -1,8 +1,22 @@
 import { 
   DataTypeBox, DataTypeCircle, DataTypeLine, DataTypePath, DataTypePoint, DataTypePolygon, DataTypeSegment, ExprScalar, 
-  ExprInput 
+  ExprInput, ExprFunction, toExpr
 } from './internal';
 
+
+export function createFns<Funcs>(): FunctionProxy<Funcs> 
+{
+  return new Proxy({}, {
+    get: <K extends keyof Funcs>(target: {}, func: K, reciever: any) => {
+      return (...args: FunctionArgumentInputs<K, Funcs>): ExprScalar<FunctionResult<K, Funcs>> => {
+        return new ExprFunction<K, Funcs>(func, (args as any).map( toExpr )) as any;
+      };
+
+    },
+  }) as FunctionProxy<Funcs>;
+}
+
+export const fns = createFns<Functions>();
 
 export type FunctionArguments<F extends keyof Funcs, Funcs = Functions> = 
   Funcs[F] extends (...args: infer A) => any
@@ -23,6 +37,10 @@ export type FunctionResult<F extends keyof Funcs, Funcs = Functions> =
   Funcs[F] extends (...args: any[]) => infer R
     ? R
     : never;
+
+export type FunctionProxy<Funcs> = {
+  [K in keyof Funcs]: (...args: FunctionArgumentInputs<K, Funcs>) => ExprScalar<FunctionResult<K, Funcs>>;
+};
 
 export type DateField = 'century' | 'day' | 'decade' | 'dayOfWeek' | 'dayOfYear' | 'epoch' | 'hour' | 'isoDayOfWeek' | 'isoDayOfYear' | 'micro' | 'millennium' | 'milli' | 'minute' | 'month' | 'quarter' | 'second' | 'week' | 'year' | 'timezoneOffset';
 
@@ -78,6 +96,9 @@ export interface Functions
   atanh(x: number): number;
   // Operations
   coalesce<T extends any[]>(...values: T): T[number];
+  iif<T, F>(condition: boolean, trueValue: T, falseValue: F): T | F;
+  greatest<T>(...values: T[]): T;
+  least<T>(...values: T[]): T;
   // String
   lower(x: string): string;
   upper(x: string): string;
@@ -123,70 +144,99 @@ export interface Functions
   datesOverlap(astart: Date, aend: Date, bstart: Date, bend: Date): boolean;
   timestampsOverlap(astart: Date, aend: Date, bstart: Date, bend: Date): boolean;
   // Geometry
-  pointAdd<G extends DataTypePoint | DataTypeBox | DataTypePath | DataTypeCircle>(geom: G, amount: DataTypePoint): G;
-  pointSub<G extends DataTypePoint | DataTypeBox | DataTypePath | DataTypeCircle>(geom: G, amount: DataTypePoint): G;
-  pointMultiply<G extends DataTypePoint | DataTypeBox | DataTypePath | DataTypeCircle>(geom: G, amount: DataTypePoint): G;
-  pointDivide<G extends DataTypePoint | DataTypeBox | DataTypePath | DataTypeCircle>(geom: G, amount: DataTypePoint): G;
+  pointAdd(geom: DataTypePoint, amount: DataTypePoint): DataTypePoint;
+  pointAdd(geom: DataTypeBox, amount: DataTypePoint): DataTypeBox;
+  pointAdd(geom: DataTypePath, amount: DataTypePoint): DataTypePath;
+  pointAdd(geom: DataTypeCircle, amount: DataTypePoint): DataTypeCircle;
+  pointSub(geom: DataTypePoint, amount: DataTypePoint): DataTypePoint;
+  pointSub(geom: DataTypeBox, amount: DataTypePoint): DataTypeBox;
+  pointSub(geom: DataTypePath, amount: DataTypePoint): DataTypePath;
+  pointSub(geom: DataTypeCircle, amount: DataTypePoint): DataTypeCircle;
+  pointMultiply(geom: DataTypePoint, amount: DataTypePoint): DataTypePoint;
+  pointMultiply(geom: DataTypeBox, amount: DataTypePoint): DataTypeBox;
+  pointMultiply(geom: DataTypePath, amount: DataTypePoint): DataTypePath;
+  pointMultiply(geom: DataTypeCircle, amount: DataTypePoint): DataTypeCircle;
+  pointDivide(geom: DataTypePoint, amount: DataTypePoint): DataTypePoint;
+  pointDivide(geom: DataTypeBox, amount: DataTypePoint): DataTypeBox;
+  pointDivide(geom: DataTypePath, amount: DataTypePoint): DataTypePath;
+  pointDivide(geom: DataTypeCircle, amount: DataTypePoint): DataTypeCircle;
   pathJoin(a: DataTypePath, b: DataTypePath): DataTypePath;
   geomLength(geom: DataTypeSegment | DataTypePath): number;
   geomCenter(geom: DataTypeBox | DataTypeSegment | DataTypePath | DataTypePolygon | DataTypeCircle): DataTypePoint;
   geomPoints(geom: DataTypePath | DataTypePolygon): number;
   lineIntersection(a: DataTypeLine | DataTypeSegment, b: DataTypeLine | DataTypeSegment): DataTypePoint | null;
   boxIntersection(a: DataTypeBox, b: DataTypeBox): DataTypeBox;
-  closestPointOn<T extends 
-    [DataTypePolygon, DataTypeBox] | 
-    [DataTypePoint, DataTypeSegment] | 
-    [DataTypePoint, DataTypeLine] |
-    [DataTypeSegment, DataTypeBox] | 
-    [DataTypeSegment, DataTypeSegment] |
-    [DataTypeSegment, DataTypeLine] |
-    [DataTypeLine, DataTypeBox] |
-    [DataTypeLine, DataTypeSegment]
-  >(a: T[0], b: T[1]): DataTypePoint;
-  distanceBetween<T extends 
-    [DataTypePoint, DataTypeLine | DataTypeSegment | DataTypePoint | DataTypePath | DataTypeBox | DataTypeCircle | DataTypeBox | DataTypePolygon] | 
-    [DataTypeBox, DataTypeLine] | 
-    [DataTypeBox, DataTypeSegment] | 
-    [DataTypeSegment, DataTypeLine] | 
-    [DataTypePolygon, DataTypeCircle]
-  >(a: T[0], b: T[1]): number;
-  geomContains<T extends 
-    [DataTypeBox, DataTypePoint] | 
-    [DataTypeBox, DataTypeBox] | 
-    [DataTypePath, DataTypePoint] | 
-    [DataTypePolygon, DataTypePoint] | 
-    [DataTypePolygon, DataTypePolygon] | 
-    [DataTypeCircle, DataTypePoint] | 
-    [DataTypeCircle, DataTypeCircle]
-  >(a: T[0], b: T[1]): boolean;
-  geomContainsOrOn<T extends 
-    [DataTypePoint, DataTypeBox] | 
-    [DataTypePoint, DataTypeSegment] |
-    [DataTypePoint, DataTypeLine] | 
-    [DataTypePoint, DataTypePath] | 
-    [DataTypePoint, DataTypePolygon] | 
-    [DataTypePoint, DataTypeCircle] | 
-    [DataTypeBox, DataTypeBox] | 
-    [DataTypeSegment, DataTypeBox] | 
-    [DataTypeSegment, DataTypeLine] | 
-    [DataTypePolygon, DataTypePolygon] |
-    [DataTypeCircle, DataTypeCircle]
-  >(a: T[0], b: T[1]): boolean;
-  geomOverlaps<T extends 
-    [DataTypePoint, DataTypeBox] | 
-    [DataTypePoint, DataTypeSegment] |
-    [DataTypePoint, DataTypeLine] | 
-    [DataTypePoint, DataTypePath] | 
-    [DataTypePoint, DataTypePolygon] | 
-    [DataTypePoint, DataTypeCircle] | 
-    [DataTypeBox, DataTypeBox] | 
-    [DataTypeSegment, DataTypeBox] | 
-    [DataTypeSegment, DataTypeLine] | 
-    [DataTypePolygon, DataTypePolygon] |
-    [DataTypeCircle, DataTypeCircle]
-  >(a: T[0], b: T[1]): boolean;
+  closestPointOn(a: DataTypePolygon, b: DataTypeBox): DataTypePoint;
+  closestPointOn(a: DataTypePoint, b: DataTypeSegment): DataTypePoint;
+  closestPointOn(a: DataTypePoint, b: DataTypeLine): DataTypePoint;
+  closestPointOn(a: DataTypeSegment, b: DataTypeBox): DataTypePoint;
+  closestPointOn(a: DataTypeSegment, b: DataTypeSegment): DataTypePoint;
+  closestPointOn(a: DataTypeSegment, b: DataTypeLine): DataTypePoint;
+  closestPointOn(a: DataTypeLine, b: DataTypeBox): DataTypePoint;
+  closestPointOn(a: DataTypeLine, b: DataTypeSegment): DataTypePoint;
+  distanceBetween(a: DataTypePoint, b: DataTypeLine | DataTypeSegment | DataTypePoint | DataTypePath | DataTypeBox | DataTypeCircle | DataTypeBox | DataTypePolygon): number;
+  distanceBetween(a: DataTypeBox, b: DataTypeLine): number;
+  distanceBetween(a: DataTypeBox, b: DataTypeSegment): number;
+  distanceBetween(a: DataTypeSegment, b: DataTypeLine): number;
+  distanceBetween(a: DataTypePolygon, b: DataTypeCircle): number;
+  geomContains(a: DataTypeBox, b: DataTypePoint): boolean;
+  geomContains(a: DataTypeBox, b: DataTypeBox): boolean;
+  geomContains(a: DataTypePath, b: DataTypePoint): boolean;
+  geomContains(a: DataTypePolygon, b: DataTypePoint): boolean;
+  geomContains(a: DataTypePolygon, b: DataTypePolygon): boolean;
+  geomContains(a: DataTypeCircle, b: DataTypePoint): boolean;
+  geomContains(a: DataTypeCircle, b: DataTypeCircle): boolean;
+  geomContainsOrOn(a: DataTypePoint, b: DataTypeBox): boolean;
+  geomContainsOrOn(a: DataTypePoint, b: DataTypeSegment): boolean;
+  geomContainsOrOn(a: DataTypePoint, b: DataTypeLine): boolean;
+  geomContainsOrOn(a: DataTypePoint, b: DataTypePath): boolean;
+  geomContainsOrOn(a: DataTypePoint, b: DataTypePolygon): boolean;
+  geomContainsOrOn(a: DataTypePoint, b: DataTypeCircle): boolean;
+  geomContainsOrOn(a: DataTypeBox, b: DataTypeBox): boolean;
+  geomContainsOrOn(a: DataTypeSegment, b: DataTypeBox): boolean;
+  geomContainsOrOn(a: DataTypeSegment, b: DataTypeLine): boolean;
+  geomContainsOrOn(a: DataTypePolygon, b: DataTypePolygon): boolean;
+  geomContainsOrOn(a: DataTypeCircle, b: DataTypeCircle): boolean;
+  geomOverlaps(a: DataTypePoint, b: DataTypeBox): boolean;
+  geomOverlaps(a: DataTypePoint, b: DataTypeSegment): boolean;
+  geomOverlaps(a: DataTypePoint, b: DataTypeLine): boolean;
+  geomOverlaps(a: DataTypePoint, b: DataTypePath): boolean;
+  geomOverlaps(a: DataTypePoint, b: DataTypePolygon): boolean;
+  geomOverlaps(a: DataTypePoint, b: DataTypeCircle): boolean;
+  geomOverlaps(a: DataTypeBox, b: DataTypeBox): boolean;
+  geomOverlaps(a: DataTypeSegment, b: DataTypeBox): boolean;
+  geomOverlaps(a: DataTypeSegment, b: DataTypeLine): boolean;
+  geomOverlaps(a: DataTypePolygon, b: DataTypePolygon): boolean;
+  geomOverlaps(a: DataTypeCircle, b: DataTypeCircle): boolean;
 }
 
-export type FunctionProxy<Funcs> = {
-  [K in keyof Funcs]: (...args: FunctionArgumentInputs<K, Funcs>) => ExprScalar<FunctionResult<K, Funcs>>;
-};
+export interface AggregateFunctions
+{
+  // Normal
+  count(value?: any): number;
+  countIf(condition: boolean): number;
+  sum(value: number): number;
+  avg(value: number): number;
+  min<T>(value: T): T;
+  max<T>(value: T): T;
+  deviation(values: number): number;
+  variance(values: number): number;
+  array<T>(value: T): T[];
+  string(value: string, delimiter: string): string;
+  bitAnd(value: number): number;
+  bitOr(value: number): number;
+  boolAnd(value: boolean): boolean;
+  boolOr(value: boolean): boolean;
+  // Window
+  rowNumber(): number;
+  rank(): number;
+  denseRank(): number;
+  percentRank(): number;
+  culmulativeDistribution(): number;
+  ntile(buckets: number): number;
+  lag<T>(value: T, offset?: number, defaultValue?: T): T;
+  lead<T>(value: T, offset?: number, defaultValue?: T): T;
+  firstValue<T>(value: T): T;
+  lastValue<T>(value: T): T;
+  nthValue<T>(value: T, n: number): T;
+}

@@ -1,13 +1,13 @@
-import { ExprKind, ExprScalar, Traverser, Expr, ConditionBinaryType } from '../internal';
+import { ExprKind, ExprScalar, Traverser, Expr, PredicateBinaryType } from '../internal';
 
 
-export class ExprConditionBinary<T> extends ExprScalar<boolean> 
+export class ExprPredicateBinary<T> extends ExprScalar<boolean> 
 {
   
-  public static readonly id = ExprKind.CONDITION_BINARY;
+  public static readonly id = ExprKind.PREDICATE_BINARY;
 
   public constructor(
-    public type: ConditionBinaryType,
+    public type: PredicateBinaryType,
     public value: ExprScalar<T>,
     public test: ExprScalar<T>
   ) {
@@ -15,7 +15,7 @@ export class ExprConditionBinary<T> extends ExprScalar<boolean>
   }
 
   public getKind(): ExprKind {
-    return ExprKind.CONDITION_BINARY;
+    return ExprKind.PREDICATE_BINARY;
   }
 
   public traverse<R>(traverse: Traverser<Expr<any>, R>): R {

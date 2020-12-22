@@ -1,8 +1,11 @@
-import { ExprFactory, isName, Name, QueryWindow, Sources, Selects, FunctionResult, ExprKind, FunctionArgumentValues, OrderBy, Traverser, Expr, ExprScalar, AggregateFunctions, OrderDirection } from '../internal';
+import { 
+  ExprFactory, isName, Name, QueryWindow, Sources, Selects, FunctionResult, ExprKind, FunctionArgumentValues, OrderBy, 
+  Traverser, Expr, ExprScalar, AggregateFunctions, OrderDirection
+} from '../internal';
 
 
 
-export class ExprAggregate<T extends Sources, S extends Selects, W extends Name, A extends keyof Aggs, Aggs = AggregateFunctions, R = FunctionResult<A, Aggs>> extends ExprScalar<R> 
+export class ExprAggregate<T extends Sources, S extends Selects, W extends Name, A extends keyof Aggs, Aggs = AggregateFunctions, R = FunctionResult<A, Aggs>> extends ExprScalar<R>
 {
 
   public static readonly id = ExprKind.AGGREGATE;
@@ -66,6 +69,9 @@ export class ExprAggregate<T extends Sources, S extends Selects, W extends Name,
       });
       if (this._filter) {
         traverse.step('filter', this._filter, (replace) => this._filter = replace as any, () => this._filter = undefined);
+      }
+      if (this._overWindowDefinition) {
+        traverse.step('window', this._overWindowDefinition);
       }
     });
   }

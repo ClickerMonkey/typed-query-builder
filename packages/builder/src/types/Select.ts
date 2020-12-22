@@ -102,6 +102,10 @@ export type SelectsFromKeys<S extends Selects, K extends Tuple<SelectsKey<S>>> =
     [I in keyof K]: SelectWithKey<S, K[I]>
 };
 
+export type SelectsFromValues<V extends any[]> = {
+    [I in keyof V]: Select<any, V[I]>
+};
+
 export type SelectWithKey<S extends Selects, K> = {
   [P in keyof S]: S[P] extends Select<infer N, infer V> 
     ? N extends K

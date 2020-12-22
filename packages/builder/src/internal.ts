@@ -10,24 +10,23 @@ export * from './fns';
 
 export * from './DataTypes';
 export * from './Functions';
-export * from './Kind';
-export * from './Order';
+export * from './exprs/Kind';
+export * from './query/Order';
 export * from './Traverser';
 
 export * from './exprs/Expr';
-export * from './exprs/Scalar';
 export * from './exprs/Aggregate';
 export * from './exprs/Between';
 export * from './exprs/Case';
 export * from './exprs/Cast';
-export * from './exprs/ConditionBinary';
-export * from './exprs/ConditionBinaryList'
-export * from './exprs/ConditionUnary';
-export * from './exprs/Conditions';
+export * from './exprs/PredicateBinary';
+export * from './exprs/PredicateBinaryList'
+export * from './exprs/PredicateRow';
+export * from './exprs/PredicateUnary';
+export * from './exprs/Predicates';
 export * from './exprs/Constant';
 export * from './exprs/Default';
 export * from './exprs/Exists';
-export * from './exprs/Factory';
 export * from './exprs/Field';
 export * from './exprs/Function';
 export * from './exprs/In';
@@ -38,6 +37,10 @@ export * from './exprs/OperationUnary';
 export * from './exprs/Param';
 export * from './exprs/Raw';
 export * from './exprs/Row';
+export * from './exprs/Scalar';
+export * from './exprs/Factory';
+
+export * from './Parse';
 
 export * from './select/Select';
 export * from './select/Expr';
@@ -55,7 +58,9 @@ export * from './sources/Unspecified';
 export * from './sources/Values';
 
 export * from './query/Criteria';
-export * from './query/Modify';
+export * from './query/Statement';
+export * from './query/StatementSet';
+export * from './query/Lock';
 export * from './query/Window';
 export * from './query/Group';
 export * from './query/Delete';

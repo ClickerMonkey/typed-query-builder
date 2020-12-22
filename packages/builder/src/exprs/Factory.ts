@@ -1,11 +1,11 @@
 import {
   DataTypeInputs, DataTypeInputType, isArray, isFunction, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions,
-  AggregateFunctions, SourcesFieldsFactory, ConditionBinaryListType, ConditionBinaryType, ConditionUnaryType, TuplesJoin, 
+  AggregateFunctions, SourcesFieldsFactory, PredicateBinaryListType, PredicateBinaryType, PredicateUnaryType, TuplesJoin, 
   OperationBinaryType, OperationUnaryType, Selects, SelectsExprs, Sources, QuerySelect, ExprAggregate, ExprBetween, Name,
-  ExprCase, ExprCast, ExprConditionBinary, ExprConditions, ExprConditionUnary, ExprConstant, ExprExists, ExprFunction, fns,
+  ExprCase, ExprCast, ExprPredicateBinary, ExprPredicates, ExprPredicateUnary, ExprConstant, ExprExists, ExprFunction, fns,
   ExprIn, ExprNot, ExprOperationBinary, ExprOperationUnary, ExprParam, Expr, ExprTypeMap, ExprField, ExprRaw, ExprRow,
-  ExprDefault, ExprConditionBinaryList, ExprScalar, ExprInput, Select, SourceUnspecified, QuerySelectScalarInput, ExprNull,
-  QuerySelectScalar, isString
+  ExprDefault, ExprPredicateBinaryList, ExprScalar, ExprInput, Select, SourceUnspecified, QuerySelectScalarInput, ExprNull,
+  QuerySelectScalar, isString, Cast, toExpr
 } from '../internal';
 
 
@@ -21,7 +21,7 @@ export interface ExprFactory<T extends Sources, S extends Selects, W extends Nam
   defaults<V>(): Expr<V>;
   nulls<V>(): Expr<V>;
   param<V>(param: string): ExprScalar<V>;
-  row<E extends ExprInput<any | any[]>[]>(...elements: E): Expr<ExprTypeMap<TuplesJoin<E>>>;
+  row<E extends ExprInput<any | any[]>[]>(...elements: E): ExprRow<Cast<ExprTypeMap<TuplesJoin<E>>, any[]>>;
   inspect<R>(): ExprCase<boolean, R>;
   inspect<R, V>(value: ExprInput<V>): ExprCase<V, R>;
   inspect<R>(value?: ExprInput<any>): ExprCase<any, R>;
@@ -58,11 +58,11 @@ export interface ExprFactory<T extends Sources, S extends Selects, W extends Nam
   op(first: ExprInput<number>, op: OperationUnaryType): ExprScalar<number>;
   op(first: ExprInput<number>, op: OperationBinaryType, second: ExprInput<number>): ExprScalar<number>;
   op(first: ExprInput<number>, op: OperationBinaryType | OperationUnaryType, second?: ExprInput<number>): ExprScalar<number>;
-  is<V>(value: ExprInput<V>, op: ConditionBinaryType, test: ExprInput<V>): ExprScalar<boolean>;
-  is<V>(op: ConditionUnaryType, value: ExprInput<V>): ExprScalar<boolean>;
+  is<V>(value: ExprInput<V>, op: PredicateBinaryType, test: ExprInput<V>): ExprScalar<boolean>;
+  is<V>(op: PredicateUnaryType, value: ExprInput<V>): ExprScalar<boolean>;
   is(a1: any, a2: any, a3?: any): ExprScalar<boolean>;
-  any<V>(value: ExprInput<V>, op: ConditionBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): ExprScalar<boolean>;
-  all<V>(value: ExprInput<V>, op: ConditionBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): ExprScalar<boolean>;
+  any<V>(value: ExprInput<V>, op: PredicateBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): ExprScalar<boolean>;
+  all<V>(value: ExprInput<V>, op: PredicateBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): ExprScalar<boolean>;
   isNull<V>(value: ExprInput<V>): ExprScalar<boolean>;
   isNotNull<V>(value: ExprInput<V>): ExprScalar<boolean>;
   isTrue(value: ExprInput<boolean>): ExprScalar<boolean>;
@@ -121,12 +121,12 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
       return new ExprParam<V>(param);
     },
 
-    row<E extends ExprInput<any | any[]>[]>(...elements: E): Expr<ExprTypeMap<TuplesJoin<E>>> {
-      return new ExprRow(elements.map( ExprScalar.parse )) as any;
+    row<E extends ExprInput<any | any[]>[]>(...elements: E): ExprRow<Cast<ExprTypeMap<TuplesJoin<E>>, any[]>> {
+      return new ExprRow(elements.map( toExpr ));
     },
 
     inspect<R>(value?: ExprInput<any>): ExprCase<any, R> {
-      return new ExprCase(value === undefined ? new ExprConstant(true) : ExprScalar.parse(value)); // tslint:disable-line
+      return new ExprCase(value === undefined ? new ExprConstant(true) : toExpr(value));
     },
 
     constant<V>(value: V): ExprScalar<V> {
@@ -134,7 +134,7 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
     },
 
     func<F extends keyof Funcs, Funcs = Functions>(func: F, ...args: FunctionArgumentInputs<F, Funcs>): ExprScalar<FunctionResult<F, Funcs>> {
-      return new ExprFunction(func, (args as any).map( ExprScalar.parse ));
+      return new ExprFunction<F, Funcs>(func, (args as any).map( toExpr ));
     },
 
     cast<I extends DataTypeInputs>(type: I, value: ExprInput<any>): ExprScalar<DataTypeInputType<I>> {
@@ -146,7 +146,7 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
     },
 
     not(value: ExprInput<boolean>): ExprScalar<boolean> {
-      return new ExprNot(ExprScalar.parse(value));
+      return new ExprNot(toExpr(value));
     },
     exists(query: Expr<[Select<any, 1 | null>]> | Expr<1 | null>): ExprScalar<boolean> {
       return new ExprExists(query, false);
@@ -155,11 +155,11 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
       return new ExprExists(query, true);
     },
     between<V>(value: ExprInput<V>, low: ExprInput<V>, high: ExprInput<V>): ExprScalar<boolean> {
-      return new ExprBetween(ExprScalar.parse(value), ExprScalar.parse(low), ExprScalar.parse(high));
+      return new ExprBetween(toExpr(value), toExpr(low), toExpr(high));
     },
 
     and(...conditions: any[]): Expr<boolean> {
-      return new ExprConditions('AND', 
+      return new ExprPredicates('AND', 
         isArray(conditions[0])
           ? conditions[0]
           : isFunction(conditions[0])
@@ -169,7 +169,7 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
     },
 
     or(...conditions: any[]): ExprScalar<boolean> {
-      return new ExprConditions('OR', 
+      return new ExprPredicates('OR', 
         isArray(conditions[0])
           ? conditions[0]
           : isFunction(conditions[0])
@@ -179,7 +179,7 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
     },
 
     aggregate<A extends keyof Aggs, Aggs = AggregateFunctions, V = FunctionResult<A, Aggs>>(type: A, ...args: FunctionArgumentInputs<A, Aggs>): ExprAggregate<T, S, W, A, Aggs, V> {
-      return new ExprAggregate<T, S, W, A, Aggs, V>(exprs as ExprFactory<T, S, W>, type, (args as any).map( ExprScalar.parse ));
+      return new ExprAggregate<T, S, W, A, Aggs, V>(exprs as ExprFactory<T, S, W>, type, (args as any).map( toExpr ));
     },
 
     count(value?: ExprScalar<any>): ExprAggregate<T, S, W, 'count'> {
@@ -230,66 +230,66 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
 
     op(first: ExprInput<number>, op: OperationBinaryType | OperationUnaryType, second?: ExprInput<number>): ExprScalar<number> {
       return second === undefined
-        ? new ExprOperationUnary(op as OperationUnaryType, ExprScalar.parse(first))
-        : new ExprOperationBinary(op, ExprScalar.parse(first), ExprScalar.parse(second));
+        ? new ExprOperationUnary(op as OperationUnaryType, toExpr(first))
+        : new ExprOperationBinary(op, toExpr(first), toExpr(second));
     },
 
     is(a1: any, a2: any, a3?: any): ExprScalar<boolean> {
       if (a3 === undefined) {
-        return new ExprConditionUnary(a1, ExprScalar.parse(a2));
+        return new ExprPredicateUnary(a1, toExpr(a2));
       } else {
-        return new ExprConditionBinary(a2, ExprScalar.parse(a1), ExprScalar.parse(a3));
+        return new ExprPredicateBinary(a2, toExpr(a1), toExpr(a3));
       }
     },
 
-    any<V>(value: ExprInput<V>, op: ConditionBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): ExprScalar<boolean> {
-      return new ExprConditionBinaryList(op, 'ANY', 
-        ExprScalar.parse( value ),
+    any<V>(value: ExprInput<V>, op: PredicateBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): ExprScalar<boolean> {
+      return new ExprPredicateBinaryList(op, 'ANY', 
+      toExpr( value ),
         isArray(values) 
-          ? (values as any[]).map( ExprScalar.parse ) 
-          : ExprScalar.parse( values )
+          ? (values as any[]).map( toExpr ) 
+          : toExpr( values )
       );
     },
 
-    all<V>(value: ExprInput<V>, op: ConditionBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): ExprScalar<boolean> {
-      return new ExprConditionBinaryList(op, 'ALL', 
-        ExprScalar.parse( value ),
+    all<V>(value: ExprInput<V>, op: PredicateBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): ExprScalar<boolean> {
+      return new ExprPredicateBinaryList(op, 'ALL', 
+        toExpr( value ),
         isArray(values) 
-          ? (values as any[]).map( ExprScalar.parse ) 
-          : ExprScalar.parse( values )
+          ? (values as any[]).map( toExpr ) 
+          : toExpr( values )
       );
     },
 
     isNull<V>(value: ExprInput<V>): ExprScalar<boolean> {
-      return new ExprConditionUnary('NULL', ExprScalar.parse(value));
+      return new ExprPredicateUnary('NULL', toExpr(value));
     },
     isNotNull<V>(value: ExprInput<V>): ExprScalar<boolean> {
-      return new ExprConditionUnary('NOT NULL', ExprScalar.parse(value));
+      return new ExprPredicateUnary('NOT NULL', toExpr(value));
     },
     isTrue(value: ExprInput<boolean>): ExprScalar<boolean> {
-      return new ExprConditionUnary('TRUE', ExprScalar.parse(value));
+      return new ExprPredicateUnary('TRUE', toExpr(value));
     },
     isFalse(value: ExprInput<boolean>): ExprScalar<boolean> {
-      return new ExprConditionUnary('FALSE', ExprScalar.parse(value));
+      return new ExprPredicateUnary('FALSE', toExpr(value));
     },
 
     in<V>(value: ExprInput<V>, ...values: any[]): ExprScalar<boolean> {
-      return new ExprIn(ExprScalar.parse(value), 
+      return new ExprIn(toExpr(value), 
         values.length !== 1 
-        ? values.map( ExprScalar.parse )
+        ? values.map( toExpr )
         : isArray(values[0])
-          ? values[0].map( ExprScalar.parse )
-          : ExprScalar.parse( values[0] )
+          ? values[0].map( toExpr )
+          : toExpr( values[0] )
       );
     },
 
     notIn<V>(value: ExprInput<V>, ...values: any[]): ExprScalar<boolean> {
-      return new ExprIn(ExprScalar.parse(value), 
+      return new ExprIn(toExpr(value), 
         values.length !== 1 
-        ? values.map( ExprScalar.parse )
+        ? values.map( toExpr )
         : isArray(values[0])
-          ? values[0].map( ExprScalar.parse )
-          : ExprScalar.parse( values[0] ), 
+          ? values[0].map( toExpr )
+          : toExpr( values[0] ), 
         true
       );
     },

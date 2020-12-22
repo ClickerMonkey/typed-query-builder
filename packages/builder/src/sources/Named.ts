@@ -1,7 +1,7 @@
-import { Name, Selects, SourceFieldsFactory, SourceFieldsFromSelects, Source } from "../internal";
+import { Name, Selects, SourceFieldsFactory, SourceFieldsFromSelects, Source, Traversable, Expr } from "../internal";
 
 
-export interface NamedSource<N extends Name, S extends Selects>
+export interface NamedSource<N extends Name, S extends Selects> extends Traversable<Expr<unknown>>
 {
     getName(): N;
     getSource(): Source<S>;

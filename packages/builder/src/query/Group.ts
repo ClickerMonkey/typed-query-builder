@@ -6,7 +6,7 @@ export class QueryGroup<S extends Name>
 
   public constructor(
     public type: GroupingSetType,
-    public expressioins: S[][],
+    public expressions: S[][],
   ) {
 
   }

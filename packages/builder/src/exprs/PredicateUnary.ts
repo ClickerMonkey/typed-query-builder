@@ -1,20 +1,20 @@
-import { ExprKind, ExprScalar, Traverser, Expr, ConditionUnaryType } from '../internal';
+import { ExprKind, ExprScalar, Traverser, Expr, PredicateUnaryType } from '../internal';
 
 
-export class ExprConditionUnary extends ExprScalar<boolean> 
+export class ExprPredicateUnary extends ExprScalar<boolean> 
 {
   
-  public static readonly id = ExprKind.CONDITION_UNARY;
+  public static readonly id = ExprKind.PREDICATE_UNARY;
 
   public constructor(
-    public type: ConditionUnaryType,
+    public type: PredicateUnaryType,
     public value: ExprScalar<any>
   ) {
     super();
   }
 
   public getKind(): ExprKind {
-    return ExprKind.CONDITION_UNARY;
+    return ExprKind.PREDICATE_UNARY;
   }
 
   public traverse<R>(traverse: Traverser<Expr<any>, R>): R {

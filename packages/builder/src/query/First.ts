@@ -1,7 +1,10 @@
-import { Name, Expr, ExprKind, Selects, Sources, QueryCriteria } from '../internal';
+import { 
+  isArray, ExprInputTuple, ExprScalar, SelectsNameless, SelectsValues, PredicateRowType, Name, Expr, ExprKind, Selects, 
+  Sources, QueryCriteria, ExprPredicateRow, toExpr 
+} from '../internal';
 
 
-export class QuerySelectFirst<T extends Sources, S extends Selects, W extends Name> extends Expr<S>
+export class QueryFirst<T extends Sources, S extends Selects, W extends Name> extends Expr<S>
 {
   
   public static readonly id = ExprKind.QUERY_FIRST;
@@ -14,6 +17,10 @@ export class QuerySelectFirst<T extends Sources, S extends Selects, W extends Na
 
   public getKind(): ExprKind {
     return ExprKind.QUERY_FIRST;
+  }
+
+  public is(type: PredicateRowType, row: Expr<SelectsValues<S>> | Expr<SelectsNameless<S>> | ExprInputTuple<SelectsValues<S>>): ExprScalar<boolean> {
+    return new ExprPredicateRow<SelectsValues<S>>(type, this as any, isArray(row) ? row.map( toExpr ) : row as any);
   }
 
 }

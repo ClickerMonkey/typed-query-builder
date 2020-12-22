@@ -1,4 +1,4 @@
-import { Expr, Select, Selects, SelectsFromObject, SelectsValues, ObjectFromSelects } from '../internal';
+import { ExprInput, ExprScalar, Expr, Select, Selects, SelectsFromObject, SelectsValues, ObjectFromSelects } from '../internal';
 
 
 export type ExprValueToExpr<T> = 
@@ -43,3 +43,15 @@ export type ExprValueTuples<V> =
       ? SelectsValues<V>
       : V
 ;
+
+export type ExprTuple<T> = {
+  [I in keyof T]: Expr<T[I]>
+};
+
+export type ExprScalarTuple<T> = {
+  [I in keyof T]: ExprScalar<T[I]>
+};
+
+export type ExprInputTuple<T> = {
+  [I in keyof T]: ExprInput<T[I]>
+};

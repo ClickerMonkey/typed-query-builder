@@ -1,7 +1,7 @@
 import {  
-  OperationUnaryType, OperationBinaryType, ConditionBinaryType, ConditionUnaryType, ConditionBinaryListType, DataTypeInputs, 
-  DataTypeInputType, Select, SelectExpr, ExprCast, ExprCase, ExprConditionBinaryList, ExprConstant, ExprOperationUnary,
-  ExprOperationBinary, ExprConditionUnary, ExprConditionBinary, ExprBetween, ExprIn, ExprConditions, Expr, isArray
+  OperationUnaryType, OperationBinaryType, PredicateBinaryType, PredicateUnaryType, PredicateBinaryListType, DataTypeInputs, 
+  DataTypeInputType, Select, SelectExpr, ExprCast, ExprCase, ExprPredicateBinaryList, ExprOperationUnary,
+  ExprOperationBinary, ExprPredicateUnary, ExprPredicateBinary, ExprBetween, ExprIn, ExprPredicates, Expr, isArray, toExpr
 } from '../internal';
 
 
@@ -9,12 +9,6 @@ export type ExprInput<T> = ExprScalar<T> | T;
 
 export abstract class ExprScalar<T> extends Expr<T>
 {
-
-  public static parse<T>(input: ExprInput<T>): ExprScalar<T> {
-      return input instanceof ExprScalar 
-      ? input
-      : new ExprConstant(input); // tslint:disable-line
-  }
   
   public as<A extends string>(alias: A): Select<A, T> {
     return new SelectExpr<A, T>(alias, this);
@@ -25,7 +19,7 @@ export abstract class ExprScalar<T> extends Expr<T>
   }
 
   public when<O>(value: ExprInput<T>, result: ExprInput<O>): ExprCase<T, O> {
-    const valueResult: [ExprScalar<T>, ExprScalar<O>] = [ExprScalar.parse(value), ExprScalar.parse(result)];
+    const valueResult: [ExprScalar<T>, ExprScalar<O>] = [toExpr(value), toExpr(result)];
 
     if (this instanceof ExprCase) {
       this.cases.push(valueResult);
@@ -41,7 +35,7 @@ export abstract class ExprScalar<T> extends Expr<T>
   public op(op: OperationBinaryType | OperationUnaryType, second?: ExprInput<number>): ExprScalar<number> {
     return second === undefined
       ? new ExprOperationUnary(op as OperationUnaryType, this as any)
-      : new ExprOperationBinary(op, this as any, ExprScalar.parse(second));
+      : new ExprOperationBinary(op, this as any, toExpr(second));
   }
 
   public add(second: T extends number ? ExprInput<T> : never): ExprScalar<number> {
@@ -60,31 +54,31 @@ export abstract class ExprScalar<T> extends Expr<T>
     return this.op('%' as any, second as any);
   }
 
-  public is(op: ConditionBinaryType, test: ExprInput<T>): ExprScalar<boolean>
-  public is(valueCheck: ConditionUnaryType): ExprScalar<boolean>
+  public is(op: PredicateBinaryType, test: ExprInput<T>): ExprScalar<boolean>
+  public is(valueCheck: PredicateUnaryType): ExprScalar<boolean>
   public is(a1: any, a2?: any): ExprScalar<boolean> {
     if (a2 === undefined) {
-      return new ExprConditionUnary(a1, this);
+      return new ExprPredicateUnary(a1, this);
     } else {
-      return new ExprConditionBinary(a1, this, ExprScalar.parse(a2));
+      return new ExprPredicateBinary(a1, this, toExpr(a2));
     }
   }
 
-  public any(op: ConditionBinaryListType, values: ExprInput<T>[] | ExprInput<T[]>): ExprScalar<boolean> {
-    return new ExprConditionBinaryList(op, 'ANY', 
+  public any(op: PredicateBinaryListType, values: ExprInput<T>[] | ExprInput<T[]>): ExprScalar<boolean> {
+    return new ExprPredicateBinaryList(op, 'ANY', 
       this,
       isArray(values) 
-        ? (values as any[]).map( ExprScalar.parse ) 
-        : ExprScalar.parse( values )
+        ? (values as any[]).map( toExpr ) 
+        : toExpr( values )
     );
   }
 
-  public all(op: ConditionBinaryListType, values: ExprInput<T>[] | ExprInput<T[]>): ExprScalar<boolean> {
-    return new ExprConditionBinaryList(op, 'ALL', 
+  public all(op: PredicateBinaryListType, values: ExprInput<T>[] | ExprInput<T[]>): ExprScalar<boolean> {
+    return new ExprPredicateBinaryList(op, 'ALL', 
       this,
       isArray(values) 
-      ? (values as any[]).map( ExprScalar.parse ) 
-        : ExprScalar.parse( values )
+      ? (values as any[]).map( toExpr ) 
+        : toExpr( values )
     );
   }
 
@@ -114,30 +108,30 @@ export abstract class ExprScalar<T> extends Expr<T>
   }
 
   public between(low: ExprInput<T>, high: ExprInput<T>): ExprScalar<boolean> {
-    return new ExprBetween(this, ExprScalar.parse(low), ExprScalar.parse(high));
+    return new ExprBetween(this, toExpr(low), toExpr(high));
   }
 
   public isNull(): ExprScalar<boolean> {
-    return new ExprConditionUnary('NULL', this);
+    return new ExprPredicateUnary('NULL', this);
   }
   public isNotNull(): ExprScalar<boolean> {
-    return new ExprConditionUnary('NOT NULL', this);
+    return new ExprPredicateUnary('NOT NULL', this);
   }
   public isTrue(): ExprScalar<boolean> {
-    return new ExprConditionUnary('TRUE', this);
+    return new ExprPredicateUnary('TRUE', this);
   }
   public isFalse(): ExprScalar<boolean> {
-    return new ExprConditionUnary('FALSE', this);
+    return new ExprPredicateUnary('FALSE', this);
   }
 
   public in(values: ExprInput<T[]> | ExprInput<T>[]): ExprScalar<boolean>
   public in(...values: ExprInput<T>[]): ExprScalar<boolean> 
   public in(...values: any[]): ExprScalar<boolean> {
     return new ExprIn(this, values.length !== 1 
-      ? values.map( ExprScalar.parse )
+      ? values.map( toExpr )
       : isArray(values[0])
-        ? values[0].map( ExprScalar.parse )
-        : ExprScalar.parse( values[0] )
+        ? values[0].map( toExpr )
+        : toExpr( values[0] )
     );
   }
 
@@ -145,10 +139,10 @@ export abstract class ExprScalar<T> extends Expr<T>
   public notIn(...values: ExprInput<T>[]): ExprScalar<boolean> 
   public notIn(...values: any[]): ExprScalar<boolean> {
     return new ExprIn(this, values.length !== 1 
-      ? values.map( ExprScalar.parse )
+      ? values.map( toExpr )
       : isArray(values[0])
-        ? values[0].map( ExprScalar.parse )
-        : ExprScalar.parse( values[0] ), 
+        ? values[0].map( toExpr )
+        : toExpr( values[0] ), 
       true
     );
   }
@@ -156,7 +150,7 @@ export abstract class ExprScalar<T> extends Expr<T>
   public and(conditions: T extends boolean ? ExprScalar<boolean>[] : never): ExprScalar<boolean>
   public and(...conditions: T extends boolean ? ExprScalar<boolean>[] : never): ExprScalar<boolean>
   public and(...conditions: any[]): ExprScalar<boolean> {
-    return new ExprConditions('AND', [this as any, 
+    return new ExprPredicates('AND', [this as any, 
       ...(isArray(conditions[0])
         ? conditions[0]
         : conditions)
@@ -166,7 +160,7 @@ export abstract class ExprScalar<T> extends Expr<T>
   public or(conditions: T extends boolean ? ExprScalar<boolean>[] : never): ExprScalar<boolean>
   public or(...conditions: T extends boolean ? ExprScalar<boolean>[] : never): ExprScalar<boolean>
   public or(...conditions: any[]): ExprScalar<boolean> {
-    return new ExprConditions('OR', [this as any,
+    return new ExprPredicates('OR', [this as any,
       ...(isArray(conditions[0])
         ? conditions[0]
         : conditions)

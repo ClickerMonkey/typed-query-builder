@@ -312,23 +312,13 @@ You can pass expressions directly to many functions, but you can also use a "pro
 - `fns`: An object containing all the common functions available
 - `selects`: An object containing all the previously defined selections.
 
+When you use table aliasing, you need to use the provider function.
+
+#### 2). 
 
 
 
 
-
-
-
-
-### SQL Features TODO
-- lock rules per table?
-- row constructor (ie tuple) takes comma delimited list of values, or source.* (use JoinTuples)
-- row comparisons (row op row, row IS [NOT] NULL)
-   - op: =, !=, <>, <, <=, >, >=, IS DISTINCT FROM, IS NOT DISTINCT FROM
-- INSERT ON DUPLICATE KEY UPDATE [x = y]
-- INSERT priority
-- stored procedures support?
-- Insert or update|replace
 
 ### Refined TODO
 - for SQL transformers...

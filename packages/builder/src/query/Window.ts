@@ -1,10 +1,10 @@
 import { 
   ExprFactory, WindowFrameMode, ExprScalar, OrderBy, WindowFrameExclusion, QuerySelectScalarProvider, OrderDirection, Name, 
-  Sources, Selects, QuerySelectScalarInput 
+  Sources, Selects, QuerySelectScalarInput, Expr, Traversable, Traverser
 } from '../internal';
 
 
-export class QueryWindow<N extends Name, T extends Sources, S extends Selects, W extends Name>
+export class QueryWindow<N extends Name, T extends Sources, S extends Selects, W extends Name> implements Traversable<Expr<unknown>>
 {
 
   public static readonly DEFAULT_MODE = 'RANGE';
@@ -150,6 +150,26 @@ export class QueryWindow<N extends Name, T extends Sources, S extends Selects, W
       this._endUnbounded,
       this._exclusion
     );
+  }
+
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
+    traverse.step('window', () => {
+      const { _partitionBy, _orderBy } = this;
+      
+      traverse.step('partition', () => {
+        for (let i = 0; i < _partitionBy.length; i++) {
+          traverse.step(i, _partitionBy[i], (replaceWith) => _partitionBy[i] = replaceWith as any);
+        }
+      });
+      
+      traverse.step('order', () => {
+        for (let i = 0; i < _orderBy.length; i++) {
+          traverse.step(i, _orderBy[i].value, (replaceWith) => _orderBy[i].value = replaceWith as any);
+        }
+      });
+    });
+    
+    return traverse.getResult();
   }
 
 }

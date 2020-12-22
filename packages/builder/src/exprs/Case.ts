@@ -1,4 +1,4 @@
-import { ExprKind, ExprScalar, Traverser, Expr, ExprInput } from '../internal';
+import { ExprKind, ExprScalar, Traverser, Expr, ExprInput, toExpr } from '../internal';
 
 
 export class ExprCase<I, O> extends ExprScalar<O> 
@@ -18,6 +18,12 @@ export class ExprCase<I, O> extends ExprScalar<O>
     return ExprKind.CASE;
   }
 
+  public else(result: ExprInput<O>): this {
+    this.otherwise = toExpr(result);
+
+    return this;
+  }
+
   public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
     return traverse.enter(this, () => {
       traverse.step('value', this.value, (replace) => this.value = replace as any);
@@ -33,12 +39,6 @@ export class ExprCase<I, O> extends ExprScalar<O>
         traverse.step('otherwise', this.otherwise, (replace) => this.otherwise = replace as any, () => this.otherwise = undefined);
       }
     });
-  }
-
-  public else(result: ExprInput<O>): this {
-    this.otherwise = ExprScalar.parse(result);
-
-    return this;
   }
 
 }

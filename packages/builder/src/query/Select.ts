@@ -1,12 +1,11 @@
-import { GroupingSetType } from 'types/Query';
 import { 
   QueryWindow, SelectsExprs, QuerySelectScalarProvider, QuerySelectScalarInput, SourceKind, isArray, isFunction, isString, 
-  SourcesFieldsFactory, JoinType, Selects, Sources, Name, OrderDirection, MergeObjects, LockType, SelectWithKey, Simplify, 
+  SourcesFieldsFactory, JoinType, Selects, Sources, Name, OrderDirection, MergeObjects, Lock, SelectWithKey, Simplify, 
   SelectValueWithKey, SelectsKey, SelectsKeyWithType, JoinedInner, JoinedRight, JoinedLeft, JoinedFull, SelectAllSelects, 
   SelectGivenSelects, MaybeSources, MaybeSelects, AggregateFunctions, Tuple, SourceCompatible, ExprAggregate, ExprProvider, 
-  ExprFactory, Expr, ExprType, QuerySelectExistential, QuerySelectFirst, QuerySelectFirstValue, QuerySelectList, Source, 
+  ExprFactory, Expr, ExprType, QueryExistential, QueryFirst, QueryFirstValue, QueryList, Source, SourceTable,
   SourceJoin, OrderBy, Select, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions, QueryCriteria, ExprKind, 
-  NamedSource, SourceRecursive, ExprInput, ExprScalar, fns, QueryGroup
+  NamedSource, SourceRecursive, ExprInput, ExprScalar, fns, QueryGroup, toExpr, GroupingSetType, LockRowLock, LockStrength
 } from '../internal';
 
 
@@ -19,7 +18,7 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     return new QuerySelect<T, S, W>();
   }
 
-  public _lock: LockType;
+  public _locks: Lock[];
   public _distinct: boolean;
   public _distinctOn: ExprScalar<any>[];
   public _criteria: QueryCriteria<T, S, W>;
@@ -28,7 +27,7 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     super();
 
     this._criteria = new QueryCriteria(extend?._criteria);
-    this._lock = extend?._lock || 'none';
+    this._locks = extend ? extend._locks.slice() : [];
     this._distinct = extend?._distinct || false;
     this._distinctOn = extend?._distinctOn?.slice() || [];
   }
@@ -75,7 +74,7 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
   public join<JN extends Name, JT extends Selects>(type: 'RIGHT', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W>
   public join<JN extends Name, JT extends Selects>(type: 'FULL', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W>
   public join<JN extends Name, JT extends Selects>(type: JoinType, source: NamedSource<JN, JT>, on: any): never  {
-    const onExpr = ExprScalar.parse(this._criteria.exprs.provide(on as any));
+    const onExpr = toExpr(this._criteria.exprs.provide(on as any));
 
     this._criteria.addSource(new SourceJoin(source as any, type, onExpr), SourceKind.JOIN);
 
@@ -239,8 +238,18 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     return this;    
   }
 
-  public lock(type: LockType): this {
-    this._lock = type;
+  public lock(strength: LockStrength, sources: Array<keyof T> = [], rowLock?: LockRowLock): this {
+    const chosen = this._criteria.sources
+      .map( (pair) => pair.source )
+      .filter( (source) => source instanceof SourceTable )
+      .filter( (source) => sources.indexOf( source.getName() ) !== -1 ) as SourceTable<any, any, any>[]
+    ;
+
+    if (chosen.length !== sources.length) {
+      throw new Error('You can only lock table sources.');
+    }
+
+    this._locks.push(new Lock(strength, chosen, rowLock));
 
     return this;
   }
@@ -254,7 +263,7 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
   }
 
   public aggregate<A extends keyof Aggs, V extends SelectsKey<S>, Aggs = AggregateFunctions, R = FunctionResult<A, Aggs>>(type: A, values: V | ExprProvider<T, S, W, FunctionArgumentInputs<A, Aggs>>, distinct?: boolean, filter?: ExprProvider<T, S, W, ExprScalar<boolean>>, orderBy?: OrderBy[]): ExprScalar<R> {
-    return new QuerySelectFirstValue<T, S, W, R>(
+    return new QueryFirstValue<T, S, W, R>(
       this._criteria.extend(), 
       new ExprAggregate<T, S, W, A, Aggs, R>(
         this._criteria.exprs,
@@ -308,17 +317,17 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
   }
 
   public first(): Expr<S> {
-    return new QuerySelectFirst<T, S, W>(this._criteria.extend());
+    return new QueryFirst<T, S, W>(this._criteria.extend());
   }
 
   public exists(): ExprScalar<1 | null> {
-    return new QuerySelectExistential<T, S, W>(this._criteria.extend());
+    return new QueryExistential<T, S, W>(this._criteria.extend());
   }
 
-  public list<V extends SelectsKey<S>>(select: V): QuerySelectList<T, S, W, SelectWithKey<S, V>>
-  public list<E>(value: ExprProvider<T, S, W, Expr<E>>): QuerySelectList<T, S, W, ExprType<E>>
+  public list<V extends SelectsKey<S>>(select: V): QueryList<T, S, W, SelectWithKey<S, V>>
+  public list<E>(value: ExprProvider<T, S, W, Expr<E>>): QueryList<T, S, W, ExprType<E>>
   public list<V extends SelectsKey<S>, E>(value: V | ExprProvider<T, S, W, Expr<E>>): Expr<any> {
-    return new QuerySelectList(this._criteria.extend(), isString(value) 
+    return new QueryList(this._criteria.extend(), isString(value) 
       ? this._criteria.selectsExpr[value as any]
       : this._criteria.exprs.provide(value)
     );
@@ -327,12 +336,12 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
   public value<V extends SelectsKey<S>, E = never>(select: V, defaultValue?: ExprProvider<T, S, W, ExprInput<E>>): ExprScalar<SelectValueWithKey<S, V> | E>
   public value<E>(value: ExprProvider<T, S, W, ExprScalar<E>>, defaultValue?: ExprProvider<T, S, W, ExprInput<E>>): ExprScalar<E>
   public value<V extends SelectsKey<S>, E>(value: V | ExprProvider<T, S, W, ExprScalar<E>>, defaultValue?: ExprProvider<T, S, W, ExprInput<E>>): ExprScalar<any> {
-    return new QuerySelectFirstValue<T, S, W, E>(this._criteria.extend(), 
+    return new QueryFirstValue<T, S, W, E>(this._criteria.extend(), 
       isString(value)
         ? this._criteria.selectsExpr[value as any]
         : this._criteria.exprs.provide(value),
       defaultValue
-        ? ExprScalar.parse(this._criteria.exprs.provide(defaultValue))
+        ? toExpr(this._criteria.exprs.provide(defaultValue))
         : undefined
     );
   }

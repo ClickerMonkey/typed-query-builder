@@ -1,32 +1,23 @@
 import { 
   SelectsFromKeys, SourceKind, isArray, isString, Name, Selects, Sources, SelectsKey, SelectsTupleEquivalent, 
   ObjectExprFromSelects, Tuple, JoinedInner, SelectValueWithKey, ExprField, ExprInput, ExprProvider, ExprScalar, NamedSource, 
-  Source, SourceTable, ExprKind, Select, QueryModify, QueryModifyReturningColumns, QueryModifyReturningExpressions 
+  Source, SourceTable, ExprKind, Select, Statement, StatementReturningColumns, StatementReturningExpressions, toExpr,
+  StatementSet
 } from '../internal';
 
 
-export class QueryUpdateSet<S extends Selects>
-{
-  public constructor(
-    public set: S,
-    public value: SelectsTupleEquivalent<S>
-  ) {
-    
-  }
-}
-
-export class QueryUpdate<
+export class StatementUpdate<
   T extends Sources = {}, 
   N extends Name = never,
   S extends Selects = [],
   R extends Selects = []
-> extends QueryModify<T, N, S, R>
+> extends Statement<T, N, S, R>
 {
 
-  public static readonly id = ExprKind.QUERY_UPDATE;
+  public static readonly id = ExprKind.STATEMENT_UPDATE;
 
   public _target: SourceTable<N, S, any>;
-  public _sets: QueryUpdateSet<any>[];
+  public _sets: StatementSet<any>[];
   public _where: ExprScalar<boolean>[];
 
   public constructor() 
@@ -40,7 +31,7 @@ export class QueryUpdate<
 
   public getKind(): ExprKind 
   {
-    return ExprKind.QUERY_UPDATE;
+    return ExprKind.STATEMENT_UPDATE;
   }
   
   protected getMainSource(): SourceTable<N, S, any> 
@@ -48,12 +39,12 @@ export class QueryUpdate<
     return this._target;
   }
 
-  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, never, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, never, Source<WS>>, all?: boolean): QueryUpdate<JoinedInner<T, WN, WS>, N, S, R> 
+  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, never, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, never, Source<WS>>, all?: boolean): StatementUpdate<JoinedInner<T, WN, WS>, N, S, R> 
   {
     return super.with(sourceProvider, recursive, all) as any;
   }
 
-  public update<FN extends Name, FS extends Selects>(target: SourceTable<FN, FS, any>, only: boolean = false): QueryUpdate<JoinedInner<T, FN, FS>, FN, FS, []> 
+  public update<FN extends Name, FS extends Selects>(target: SourceTable<FN, FS, any>, only: boolean = false): StatementUpdate<JoinedInner<T, FN, FS>, FN, FS, []> 
   {
     (this as any)._target = target;
     
@@ -71,11 +62,11 @@ export class QueryUpdate<
   {
     if (a0 instanceof ExprField) 
     {
-      this._sets.push(new QueryUpdateSet([a0], this._exprs.provide(a1)));
+      this._sets.push(new StatementSet([a0], this._exprs.provide(a1)));
     }
     else if (isString(a0))
     {
-      this._sets.push(new QueryUpdateSet([this._target.fields[a0]], this._exprs.provide(a1)));
+      this._sets.push(new StatementSet([this._target.fields[a0]], this._exprs.provide(a1)));
     }
     else if (a1 === undefined) 
     {
@@ -83,7 +74,7 @@ export class QueryUpdate<
 
       for (const field in multiple) 
       { 
-        this._sets.push(new QueryUpdateSet([this._target.fields[field]], ExprScalar.parse(multiple[field])));
+        this._sets.push(new StatementSet([this._target.fields[field]], toExpr(multiple[field])));
       }
     }
     else if (isArray(a0))
@@ -96,18 +87,18 @@ export class QueryUpdate<
 
       if (isArray(values)) {
         for (let i = 0; i < values.length; i++) {
-          values[i] = ExprScalar.parse(values[i]);
+          values[i] = toExpr(values[i]);
         }
       }
 
-      this._sets.push(new QueryUpdateSet(selects, values));
+      this._sets.push(new StatementSet(selects, values));
     }
 
     return this;
   }
 
-  public from<FN extends keyof T>(source: FN): QueryUpdate<T, N, S, R>
-  public from<FN extends Name, FS extends Selects>(source: ExprProvider<T, S, never, NamedSource<FN, FS>>): QueryUpdate<JoinedInner<T, FN, FS>, N, S, R>
+  public from<FN extends keyof T>(source: FN): StatementUpdate<T, N, S, R>
+  public from<FN extends Name, FS extends Selects>(source: ExprProvider<T, S, never, NamedSource<FN, FS>>): StatementUpdate<JoinedInner<T, FN, FS>, N, S, R>
   public from<FN extends Name, FS extends Selects>(source: keyof T | ExprProvider<T, S, never, NamedSource<FN, FS>>): never 
   {    
     if (!isString(source)) 
@@ -137,15 +128,15 @@ export class QueryUpdate<
     return this;
   }
 
-  public returning(output: '*'): QueryUpdate<T, N, S, S>
-  public returning<RC extends SelectsKey<S>>(output: RC[]): QueryUpdate<T, N, S, QueryModifyReturningColumns<R, S, RC>>
-  public returning<RS extends Tuple<Select<any, any>>>(output: ExprProvider<T, [], never, RS>): QueryUpdate<T, N, S, QueryModifyReturningExpressions<R, RS>>
+  public returning(output: '*'): StatementUpdate<T, N, S, S>
+  public returning<RC extends SelectsKey<S>>(output: RC[]): StatementUpdate<T, N, S, StatementReturningColumns<R, S, RC>>
+  public returning<RS extends Tuple<Select<any, any>>>(output: ExprProvider<T, [], never, RS>): StatementUpdate<T, N, S, StatementReturningExpressions<R, RS>>
   public returning<RS extends Tuple<Select<any, any>>>(output: RS | '*' | Array<keyof S>): never
   {
     return super.returning(output as any) as never;
   }
 
-  public clearReturning(): QueryUpdate<T, N, S, []> 
+  public clearReturning(): StatementUpdate<T, N, S, []> 
   {
     return super.clearReturning() as any;
   }

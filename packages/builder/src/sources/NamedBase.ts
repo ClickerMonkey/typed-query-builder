@@ -1,3 +1,5 @@
+import { Expr } from 'exprs/Expr';
+import { Traverser } from 'Traverser';
 import { Name, Selects, SourceFieldsFromSelects, SourceFieldsFactory, NamedSource, Source, ExprField } from '../internal';
 
 
@@ -25,6 +27,10 @@ export class NamedSourceBase<N extends Name, S extends Selects> implements Named
 
   public getFieldsFactory(): SourceFieldsFactory<S> {
     return ExprField.createFieldsFactory(this.source.getSelects(), this.getFields());
+  }
+
+  public traverse<R>(traverse: Traverser<Expr<unknown>, R>): R {
+    return this.source.traverse(traverse);
   }
 
 }

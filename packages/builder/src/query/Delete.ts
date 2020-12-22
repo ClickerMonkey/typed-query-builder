@@ -1,19 +1,19 @@
 import { 
   SourceKind, isArray, isString, Name, Selects, Sources, MergeObjects, SelectsKey, Simplify, JoinedInner, Tuple, ExprProvider, 
-  ExprScalar, NamedSource, Source, SourceTable, ExprKind, QueryModify, QueryModifyReturningColumns, 
-  QueryModifyReturningExpressions, Select 
+  ExprScalar, NamedSource, Source, SourceTable, ExprKind, Statement, StatementReturningColumns, 
+  StatementReturningExpressions, Select, Traverser, Expr
 } from '../internal';
 
 
-export class QueryDelete<
+export class StatementDelete<
   T extends Sources = {}, 
   N extends Name = never,
   S extends Selects = [],
   R extends Selects = []
-> extends QueryModify<T, N, S, R>
+> extends Statement<T, N, S, R>
 {
 
-  public static readonly id = ExprKind.QUERY_DELETE;
+  public static readonly id = ExprKind.STATEMENT_DELETE;
 
   public _from: SourceTable<N, S, any>;
   public _where: ExprScalar<boolean>[];
@@ -28,7 +28,7 @@ export class QueryDelete<
 
   public getKind(): ExprKind 
   {
-    return ExprKind.QUERY_DELETE;
+    return ExprKind.STATEMENT_DELETE;
   }
 
   protected getMainSource(): SourceTable<N, S, any> 
@@ -36,12 +36,12 @@ export class QueryDelete<
     return this._from;
   }
 
-  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, never, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, never, Source<WS>>, all?: boolean): QueryDelete<JoinedInner<T, WN, WS>, N, S, R> 
+  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, never, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, never, Source<WS>>, all?: boolean): StatementDelete<JoinedInner<T, WN, WS>, N, S, R> 
   {
     return super.with(sourceProvider, recursive, all) as any;
   }
 
-  public from<FN extends Name, FS extends Selects>(from: SourceTable<FN, FS, any>): QueryDelete<T, FN, FS, []> 
+  public from<FN extends Name, FS extends Selects>(from: SourceTable<FN, FS, any>): StatementDelete<T, FN, FS, []> 
   {
     (this as any)._from = from;
     
@@ -50,8 +50,8 @@ export class QueryDelete<
     return this as never;
   }
 
-  public using<FN extends keyof T>(source: FN): QueryDelete<T, N, S, R>
-  public using<FN extends Name, FS extends Selects>(source: ExprProvider<T, S, never, NamedSource<FN, FS>>): QueryDelete<Simplify<MergeObjects<T, Record<FN, FS>>>, N, S, R>
+  public using<FN extends keyof T>(source: FN): StatementDelete<T, N, S, R>
+  public using<FN extends Name, FS extends Selects>(source: ExprProvider<T, S, never, NamedSource<FN, FS>>): StatementDelete<Simplify<MergeObjects<T, Record<FN, FS>>>, N, S, R>
   public using<FN extends Name, FS extends Selects>(source: keyof T | ExprProvider<T, S, never, NamedSource<FN, FS>>): never 
   {
     if (!isString(source)) 
@@ -81,17 +81,33 @@ export class QueryDelete<
     return this;
   }
 
-  public returning(output: '*'): QueryDelete<T, N, S, S>
-  public returning<RC extends SelectsKey<S>>(output: RC[]): QueryDelete<T, N, S, QueryModifyReturningColumns<R, S, RC>>
-  public returning<RS extends Tuple<Select<any, any>>>(output: ExprProvider<T, [], never, RS>): QueryDelete<T, N, S, QueryModifyReturningExpressions<R, RS>>
+  public returning(output: '*'): StatementDelete<T, N, S, S>
+  public returning<RC extends SelectsKey<S>>(output: RC[]): StatementDelete<T, N, S, StatementReturningColumns<R, S, RC>>
+  public returning<RS extends Tuple<Select<any, any>>>(output: ExprProvider<T, [], never, RS>): StatementDelete<T, N, S, StatementReturningExpressions<R, RS>>
   public returning<RS extends Tuple<Select<any, any>>>(output: RS | '*' | Array<keyof S>): never 
   {
     return super.returning(output as any) as never;
   }
 
-  public clearReturning(): QueryDelete<T, N, S, []> 
+  public clearReturning(): StatementDelete<T, N, S, []> 
   {
     return super.clearReturning() as any;
+  }
+  
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
+    return traverse.enter(this, () => {
+      const { _where } = this;
+
+      if (_where.length > 0) {
+        traverse.step('where', () => {
+          for (let i = 0; i < _where.length; i++) { 
+            traverse.step(i, _where[i], (replaceWith) => _where[i] = replaceWith as any);
+          }
+        });
+      }
+
+      super.traverse(traverse);
+    });
   }
 
 }
