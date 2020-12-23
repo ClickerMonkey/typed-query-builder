@@ -1,6 +1,4 @@
-import { Expr } from 'exprs/Expr';
-import { Traverser } from 'Traverser';
-import { Name, Selects, SourceFieldsFromSelects, SourceFieldsFactory, NamedSource, Source, ExprField } from '../internal';
+import { Expr, Traverser, Name, Selects, SourceFieldsFromSelects, SourceFieldsFactory, NamedSource, Source, ExprField } from '../internal';
 
 
 export class NamedSourceBase<N extends Name, S extends Selects> implements NamedSource<N, S>

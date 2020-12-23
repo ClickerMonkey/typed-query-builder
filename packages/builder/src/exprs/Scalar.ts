@@ -7,6 +7,9 @@ import {
 
 export type ExprInput<T> = ExprScalar<T> | T;
 
+export type ExprInputType<I> = I extends ExprInput<infer T> ? T : never;
+
+
 export abstract class ExprScalar<T> extends Expr<T>
 {
   
@@ -15,7 +18,8 @@ export abstract class ExprScalar<T> extends Expr<T>
   }
 
   public cast<I extends DataTypeInputs>(type: I): ExprScalar<DataTypeInputType<I>> {
-    return new ExprCast(type, this);
+    // @ts-ignore
+    return new ExprCast(type, this); 
   }
 
   public when<O>(value: ExprInput<T>, result: ExprInput<O>): ExprCase<T, O> {

@@ -1,4 +1,4 @@
-import { Name, ObjectKeys } from './internal';
+import { Tuple, Name, ObjectKeys } from './internal';
 
 
 
@@ -28,6 +28,11 @@ export function isBoolean(x: any): x is boolean
 }
 
 export function isArray<T = any>(x: any): x is T[] 
+{
+  return Array.isArray(x);
+}
+
+export function isTuple<T = any>(x: any): x is Tuple<T>
 {
   return Array.isArray(x);
 }

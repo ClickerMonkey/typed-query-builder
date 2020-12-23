@@ -215,7 +215,7 @@ const Task = table({
     name: ['VARCHAR', 64],
     done: 'BOOLEAN',
     doneAt: 'TIMESTAMP',
-    parentId?: 'INT', // nullable
+    parentId: ['NULL', 'INT'], // nullable
   },
   fieldColumns: {
     doneAt: 'finished_at', // optionally the real column name
@@ -358,7 +358,12 @@ You can pass expressions directly to many functions, but you can also use a "pro
 
 When you use table aliasing, you need to use the provider function.
 
+#### 2). I am getting a "Type instantiation is excessively deep and possibly infinite." error.
 
+At the moment, occasionally TypeScript chokes on some of the types defined in this library. The workaround for the moment is
+to add `// @ts-ignore` before the problematic line to ignore the error. If you notice the error consistently occurs on a specific
+thing please file a bug report. A temporary work-around is to pull that functionality out into its own function so you only have
+to ignore it in one place.
 
 
 

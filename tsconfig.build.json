@@ -27,8 +27,9 @@
     "noUnusedLocals": true,
     "downlevelIteration": true,
     "composite": true,
-    "outDir": "./dist",
-    "rootDir": ".",
+    "noEmitOnError": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
   "compileOnSave": false,
   "buildOnSave": false,

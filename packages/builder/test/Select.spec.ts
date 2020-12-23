@@ -109,12 +109,15 @@ describe('Select', () => {
     from(Task)
       .select(({ task }, { min, count }) => [
         task.doneAt,
+        // @ts-ignore
         min(task.name).as('name'),
         count().as('count')
       ])
       .groupBy('doneAt')
       .run((q) => {
-        expectExpr<[{ doneAt: Date, name: string, count: number }]>(q);
+        expectExprType<[
+          Select<"doneAt", Date>, Select<"name", string>, Select<"count", number>
+        ][]>(q);
       })
     ;
   });
@@ -146,7 +149,9 @@ describe('Select', () => {
       ])
       .groupBySet([['doneAt'], []])
       .run((q) => {
-        expectExpr<[{ name: string, doneAt: Date, count: number }]>(q);
+        expectExprType<[
+          Select<"doneAt", Date>, Select<"name", string>, Select<"count", number>
+        ][]>(q);
       })
     ;
   });
@@ -161,7 +166,9 @@ describe('Select', () => {
       ])
       .groupByCube([['doneAt'], []])
       .run((q) => {
-        expectExpr<[{ name: string, doneAt: Date, count: number }]>(q);
+        expectExprType<[
+          Select<"doneAt", Date>, Select<"name", string>, Select<"count", number>
+        ][]>(q);
       })
     ;
   });

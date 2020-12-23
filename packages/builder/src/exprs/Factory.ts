@@ -5,7 +5,7 @@ import {
   ExprCase, ExprCast, ExprPredicateBinary, ExprPredicates, ExprPredicateUnary, ExprConstant, ExprExists, ExprFunction, fns,
   ExprIn, ExprNot, ExprOperationBinary, ExprOperationUnary, ExprParam, Expr, ExprTypeMap, ExprField, ExprRaw, ExprRow,
   ExprDefault, ExprPredicateBinaryList, ExprScalar, ExprInput, Select, SourceUnspecified, QuerySelectScalarInput, ExprNull,
-  QuerySelectScalar, isString, Cast, toExpr
+  QuerySelectScalar, isString, Cast, toExpr, ExprInputType
 } from '../internal';
 
 
@@ -25,7 +25,7 @@ export interface ExprFactory<T extends Sources, S extends Selects, W extends Nam
   inspect<R>(): ExprCase<boolean, R>;
   inspect<R, V>(value: ExprInput<V>): ExprCase<V, R>;
   inspect<R>(value?: ExprInput<any>): ExprCase<any, R>;
-  constant<V>(value: V): ExprScalar<V>;
+  constant<V>(value: V, dataType?: DataTypeInputs): ExprScalar<V>;
   func<F extends keyof Funcs, Funcs = Functions>(func: F, ...args: FunctionArgumentInputs<F, Funcs>): ExprScalar<FunctionResult<F, Funcs>>;
   cast<I extends DataTypeInputs>(type: I, value: ExprInput<any>): ExprScalar<DataTypeInputType<I>>;
   query(): QuerySelect<{}, [], never>;
@@ -44,14 +44,14 @@ export interface ExprFactory<T extends Sources, S extends Selects, W extends Nam
   countIf(condition: ExprScalar<boolean>): ExprAggregate<T, S, W, 'countIf'>;
   sum(value: ExprScalar<number>): ExprAggregate<T, S, W, 'sum'>;
   avg(value: ExprScalar<number>): ExprAggregate<T, S, W, 'avg'>;
-  min<V>(value: ExprScalar<V>): ExprAggregate<T, S, W, 'min', AggregateFunctions, V>;
-  max<V>(value: ExprScalar<V>): ExprAggregate<T, S, W, 'max', AggregateFunctions, V>;
+  min<V>(value: ExprScalar<V>): ExprAggregate<T, S, W, 'min', AggregateFunctions, ExprInputType<V>>;
+  max<V>(value: ExprScalar<V>): ExprAggregate<T, S, W, 'max', AggregateFunctions, ExprInputType<V>>;
   rowNumber(): ExprAggregate<T, S, W, 'rowNumber'>;
   rank(): ExprAggregate<T, S, W, 'rank'>;
   denseRank(): ExprAggregate<T, S, W, 'denseRank'>;
   percentRank(): ExprAggregate<T, S, W, 'percentRank'>;
-  lag<V>(value: ExprInput<V>, offset?: number, defaultValue?: ExprInput<V>): ExprAggregate<T, S, W, 'lag', AggregateFunctions, V> ;
-  lead<V>(value: ExprInput<V>, offset?: number, defaultValue?: ExprInput<V>): ExprAggregate<T, S, W, 'lead', AggregateFunctions, V>;
+  lag<V>(value: ExprInput<V>, offset?: number, defaultValue?: ExprInput<V>): ExprAggregate<T, S, W, 'lag', AggregateFunctions, ExprInputType<V>>;
+  lead<V>(value: ExprInput<V>, offset?: number, defaultValue?: ExprInput<V>): ExprAggregate<T, S, W, 'lead', AggregateFunctions, ExprInputType<V>>;
   firstValue<V>(value: ExprInput<V>): ExprAggregate<T, S, W, 'firstValue', AggregateFunctions, V>;
   lastValue<V>(value: ExprInput<V>): ExprAggregate<T, S, W, 'lastValue', AggregateFunctions, V>;
   nthValue<V>(value: ExprInput<V>, n: number): ExprAggregate<T, S, W, 'nthValue', AggregateFunctions, V>;
@@ -129,8 +129,8 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
       return new ExprCase(value === undefined ? new ExprConstant(true) : toExpr(value));
     },
 
-    constant<V>(value: V): ExprScalar<V> {
-      return new ExprConstant(value);
+    constant<V>(value: V, dataType?: DataTypeInputs): ExprScalar<V> {
+      return new ExprConstant(value, dataType);
     },
 
     func<F extends keyof Funcs, Funcs = Functions>(func: F, ...args: FunctionArgumentInputs<F, Funcs>): ExprScalar<FunctionResult<F, Funcs>> {

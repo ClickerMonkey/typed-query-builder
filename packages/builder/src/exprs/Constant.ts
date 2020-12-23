@@ -1,4 +1,4 @@
-import { ExprKind, ExprScalar } from '../internal';
+import { DataTypeInputs, ExprKind, ExprScalar } from '../internal';
 
 
 export class ExprConstant<T> extends ExprScalar<T> 
@@ -7,7 +7,8 @@ export class ExprConstant<T> extends ExprScalar<T>
   public static readonly id = ExprKind.CONSTANT;
 
   public constructor(
-    public value: T
+    public value: T,
+    public dataType?: DataTypeInputs
   ) {
     super();
   }

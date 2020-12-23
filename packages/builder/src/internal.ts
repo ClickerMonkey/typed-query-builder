@@ -15,6 +15,8 @@ export * from './query/Order';
 export * from './Traverser';
 
 export * from './exprs/Expr';
+export * from './exprs/Scalar';
+export * from './exprs/Factory';
 export * from './exprs/Aggregate';
 export * from './exprs/Between';
 export * from './exprs/Case';
@@ -37,8 +39,6 @@ export * from './exprs/OperationUnary';
 export * from './exprs/Param';
 export * from './exprs/Raw';
 export * from './exprs/Row';
-export * from './exprs/Scalar';
-export * from './exprs/Factory';
 
 export * from './Parse';
 

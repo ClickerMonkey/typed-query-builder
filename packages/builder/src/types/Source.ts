@@ -1,4 +1,7 @@
-import { ExprField, NamedSource, Source, Name, Cast, MergeObjects, Simplify, UnionToIntersection, ObjectFromSelects, Selects, SelectsOptional, SelectsKey, SelectsWithKey, SelectsMap, SelectsNameless } from '../internal';
+import { 
+  ExprField, NamedSource, Source, Name, Cast, MergeObjects, Simplify, UnionToIntersection, ObjectFromSelects, Selects, 
+  SelectsOptional, SelectsKey, SelectsWithKey, SelectsMap, SelectsNameless 
+} from '../internal';
 
 
 export type Sources = { [source: string]: Selects };

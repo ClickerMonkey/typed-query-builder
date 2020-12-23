@@ -2,12 +2,9 @@
   "extends": "./tsconfig.build.json",
 
   "compilerOptions": {
-    "baseUrl": ".",
+    "baseUrl": "./packages",
     "paths": {
-      "@typed-query-builder/*": ["packages/*/src"]
+      "@typed-query-builder/*": ["*/src"]
     },
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "types": ["jest", "node"],
   }
 }

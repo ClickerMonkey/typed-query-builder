@@ -1,4 +1,6 @@
-import { isArray, ExprInputTuple, ExprPredicateRow, SelectsFromValues, ExprScalar, PredicateRowType, ExprKind, Traverser, Expr, toExpr } from '../internal';
+import { 
+  isArray, ExprInputTuple, ExprPredicateRow, SelectsFromValues, ExprScalar, PredicateRowType, ExprKind, Traverser, Expr, toExpr 
+} from '../internal';
 
 
 export class ExprRow<V extends any[]> extends Expr<V>

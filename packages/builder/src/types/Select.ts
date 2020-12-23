@@ -1,4 +1,7 @@
-import { Expr, ExprScalar, ExprProvider, ExprInput, Select, Cast, Simplify, UndefinedToOptional, UnionToIntersection, UnionToTuple, Name, Sources, TupleAppend, TupleFlatten, Tuple, TupleFilter } from '../internal';
+import { 
+  Expr, ExprScalar, ExprProvider, ExprInput, Select, Cast, Simplify, UndefinedToOptional, UnionToIntersection, 
+  UnionToTuple, Name, Sources, TupleAppend, TupleFlatten, Tuple, TupleFilter 
+} from '../internal';
 
 
 export type Selects = [...(Select<Name, any>)[]];
