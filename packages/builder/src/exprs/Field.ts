@@ -1,6 +1,6 @@
 import {
   Name, SourceFieldsFunctions, Selects, SourceFieldsFromSelects, SourceFieldsFactory, Select, SelectAliased, ExprScalar,
-  ExprKind, NamedSource, query, Expr, isArray
+  ExprKind, NamedSource, query, Expr, TextModifyType, modifyText
 } from '../internal';
 
 
@@ -20,19 +20,42 @@ export class ExprField<F extends Name, T> extends ExprScalar<T> implements Selec
 
   public static createFieldsFactory<S extends Selects>(selects: S, fields: SourceFieldsFromSelects<S>): SourceFieldsFactory<S> 
   {
-    const fns: SourceFieldsFunctions<S> = {
-      all: () => selects,
-      only: (...onlyInput: any[]) => {
-        const only = isArray(onlyInput[0]) ? onlyInput[0] : onlyInput;
+    const mapSelects = (selects: Selects, prefix: string = '', modify: TextModifyType = 'NONE'): any =>
+    {
+      if (!prefix && modify === 'NONE') 
+      {
+        return selects;
+      } 
+      else 
+      {
+        return selects.map( (s) => new SelectAliased(prefix + modifyText(String(s.alias), modify), s) );
+      }
+    }
 
-        return only.map( (field) => fields[field] ) as any;
+    const fns: SourceFieldsFunctions<S> = 
+    {
+      all: (prefix: string = '', modify: TextModifyType = 'NONE') => 
+      {
+        return mapSelects(selects, prefix, modify)
       },
-      exclude: (...excludeInput: any[]) => {
-        const exclude = isArray(excludeInput[0]) ? excludeInput[0] : excludeInput;
+      only: (onlyInput?: string[], prefix: string = '', modify: TextModifyType = 'NONE') => 
+      {
+        const only = onlyInput
+          ? onlyInput.map( (field) => fields[field as any] )
+          : [];
 
-        return selects.filter( s => exclude.indexOf(s.alias) === -1 ) as any;
+        return mapSelects(only, prefix, modify);
       },
-      mapped: (map) => {
+      exclude: (excludeInput?: string[], prefix: string = '', modify: TextModifyType = 'NONE') => 
+      {
+        const exclude = excludeInput
+          ? selects.filter( s => excludeInput.indexOf(s.alias as any) === -1 )
+          : selects;
+
+        return mapSelects(exclude, prefix, modify);
+      },
+      mapped: (map) => 
+      {
         const out = [];
 
         for (const prop in map)

@@ -1,4 +1,4 @@
-import { Tuple, Name, ObjectKeys } from './internal';
+import { TextModifyType, Tuple, Name, ObjectKeys, TextModify } from './internal';
 
 
 
@@ -59,3 +59,15 @@ export function keys<T>(object: T): ObjectKeys<T>
   return Object.keys(object) as ObjectKeys<T>;
 }
 
+export function modifyText<S extends string, T extends TextModifyType>(text: S, type: T): TextModify<S, T>
+{
+  return type === 'CAPITAL'
+    ? text.substring(0, 1).toUpperCase() + text.substring(1)
+    : type === 'UNCAPITAL'
+      ? text.substring(0, 1).toLowerCase() + text.substring(1)
+      : type === 'LOWER'
+        ? text.toLowerCase()
+        : type === 'UPPER'
+          ? text.toUpperCase()
+          : text as any;
+}

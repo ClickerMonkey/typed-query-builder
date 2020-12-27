@@ -2,7 +2,7 @@ import {
   SourceKind, Cast, Name, Selects, Sources, SelectsKeys, SelectsKey, SelectsWithKey, SelectsValuesExprs, ExprField,
   SelectsRecordExprs, JoinedInner, Tuple, Expr, ExprInput, ExprProvider, NamedSource, Source, SourceTable, SelectValueWithKey,
   ExprKind, Statement, StatementReturningColumns, StatementReturningExpressions, Select, toExpr, StatementSet, 
-  ObjectExprFromSelects, isString, isArray, SelectsTupleEquivalent, SelectsFromKeys, InsertPriority
+  ObjectExprFromSelects, isString, isArray, SelectsTupleEquivalent, SelectsFromKeys, InsertPriority, ExprParam
 } from '../internal';
 
 
@@ -105,6 +105,13 @@ export class StatementInsert<
   public values(values: ExprProvider<T, [], never, StatementInsertValuesInput<S, C>>): this 
   {
     this._values.push(toExpr(this._exprs.provide(values as any)));
+
+    return this;
+  }
+
+  public valuesFromParams(): this
+  {
+    this._values.push(this._columns.map((column) => new ExprParam(column as string)) as any);
 
     return this;
   }

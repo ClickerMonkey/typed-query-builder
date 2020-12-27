@@ -1,4 +1,8 @@
-import { DataTypeInputMap, DataTypeInputMapSelects, isArray, TupleAppend, Name, Selects, MergeObjects, SourceFieldsFromSelects, SourceFieldsFunctions, SourceFieldsFactory, SelectsKey, SelectsWithKey, SelectsMap, Source, NamedSource, ExprKind, ExprField, SelectAliased } from '../internal';
+import { 
+  DataTypeInputMap, DataTypeInputMapSelects, TupleAppend, Name, Selects, MergeObjects, SourceFieldsFromSelects, 
+  SourceFieldsFunctions, SourceFieldsFactory, SelectsKey, SelectsWithKey, SelectsMap, Source, NamedSource, ExprKind, 
+  ExprField, SelectAliased, SelectsWithKeyPrefixed, TextModifyType, modifyText
+} from '../internal';
 
 
 export interface SourceTableInput<N extends Name, F extends DataTypeInputMap>
@@ -82,27 +86,48 @@ export class SourceTable<N extends Name, S extends Selects, F extends DataTypeIn
     } as any) as any;
   }
 
-  public all(): S {
-    return this.selects;
+  public all(): S 
+  public all<P extends string>(prefix: P): SelectsWithKeyPrefixed<S, any, P>
+  public all<P extends string, T extends TextModifyType>(prefix: P, modify: T): SelectsWithKeyPrefixed<S, any, P, T> 
+  public all(prefix: string = '', modify: TextModifyType = 'NONE'): never {
+    return this.mapSelects(this.selects, prefix, modify) as never;
   }
   
   public only(): []
   public only<C extends SelectsKey<S>>(only: C[]): SelectsWithKey<S, unknown extends C ? never : C>
-  public only<C extends SelectsKey<S> = never>(...onlyInput: C[]): SelectsWithKey<S, C>
-  public only(...onlyInput: any[]): never {
-    const only = (isArray(onlyInput[0]) ? onlyInput[0] : onlyInput);
+  public only<C extends SelectsKey<S>, P extends string>(only: C[], prefix: P): SelectsWithKeyPrefixed<S, unknown extends C ? never : C, P>
+  public only<C extends SelectsKey<S>, P extends string, T extends TextModifyType>(only: C[], prefix: P, modify: T): SelectsWithKeyPrefixed<S, unknown extends C ? never : C, P, T>
+  public only(onlyInput?: string[], prefix: string = '', modify: TextModifyType = 'NONE'): never {
+    const only = onlyInput
+      ? onlyInput.map( (field) => this.fieldMap[field as any] )
+      : [];
 
-    return only.map( (field) => this.fieldMap[field as any] ) as never;
+    return this.mapSelects(only, prefix, modify) as never;
   }
 
   public exclude(): S
   public exclude(exclude: []): S
   public exclude<C extends SelectsKey<S>>(exclude: C[]): SelectsWithKey<S, unknown extends C ? SelectsKey<S> : Exclude<SelectsKey<S>, C>>
-  public exclude<C extends SelectsKey<S> = never>(...excludeInput: C[]): SelectsWithKey<S, Exclude<SelectsKey<S>, C>> 
-  public exclude(...excludeInput: any[]): never {
-    const exclude = (isArray(excludeInput[0]) ? excludeInput[0] : excludeInput);
+  public exclude<C extends SelectsKey<S>, P extends string>(exclude: C[], prefix: P): SelectsWithKeyPrefixed<S, unknown extends C ? SelectsKey<S> : Exclude<SelectsKey<S>, C>, P>;
+  public exclude<C extends SelectsKey<S>, P extends string, T extends TextModifyType>(exclude: C[], prefix: P, modify: T): SelectsWithKeyPrefixed<S, unknown extends C ? SelectsKey<S> : Exclude<SelectsKey<S>, C>, P, T>;
+  public exclude(excludeInput?: string[], prefix: string = '', modify: TextModifyType = 'NONE'): never {
+    const exclude = excludeInput
+      ? this.selects.filter( s => excludeInput.indexOf(s.alias as any) === -1 )
+      : this.selects;
 
-    return this.selects.filter( s => exclude.indexOf(s.alias as any) === -1 ) as never;
+    return this.mapSelects(exclude, prefix, modify) as never;
+  }
+
+  protected mapSelects(selects: Selects, prefix: string = '', modify: TextModifyType = 'NONE'): Selects 
+  {
+    if (!prefix && modify === 'NONE') 
+    {
+      return selects;
+    } 
+    else 
+    {
+      return selects.map( (s) => new SelectAliased(prefix + modifyText(String(s.alias), modify), s) );
+    }
   }
 
   public mapped<K extends SelectsKey<S>, M extends Record<string, K>>(map: M): SelectsMap<S, K, M> {

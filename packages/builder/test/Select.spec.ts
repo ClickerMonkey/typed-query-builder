@@ -400,4 +400,29 @@ describe('Select', () => {
     expectExprType<[Select<'value', number>, Select<'message', string>][]>(q);
   });
 
+  it('nested json', () => {
+
+    from(Task)
+      .select(Task.all())
+      .select(({ task }) => [
+        from(Task.as('children'))
+          .select(({ children }) => children.all())
+          .where(({ children }) => children.parentId.eq(task.id))
+          .json()
+          .as('children')
+      ])
+      .run((q) => {
+        expectExpr<{ 
+          id: number, 
+          name: string, 
+          done: boolean, 
+          doneAt: Date, 
+          parentId: number,
+          children: { id: number, name: string, done: boolean, doneAt: Date, parentId: number }[]
+        }[]>(q);
+      })
+    ;
+
+  });
+
 });

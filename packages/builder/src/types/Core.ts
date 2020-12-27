@@ -94,3 +94,17 @@ export type PartialChildren<T> = {
 export type NoDistribute<T> = 
   [T] extends [T] ? T : never
 ;
+
+export type TextModify<N extends string, T extends TextModifyType> =
+  T extends 'CAPITAL'
+    ? Capitalize<N>
+    : T extends 'UNCAPITAL'
+      ? Uncapitalize<N>
+      : T extends 'LOWER'
+        ? Lowercase<N>
+        : T extends 'UPPER'
+          ? Uppercase<N>
+          : N
+;
+
+export type TextModifyType = 'CAPITAL' | 'UNCAPITAL' | 'LOWER' | 'UPPER' | 'NONE';

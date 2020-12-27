@@ -2,6 +2,9 @@
 .idea
 .DS_Store
 node_modules/
+typings/
+dist/
+tsconfig.build.tsbuildinfo
 
 coverage
 lib

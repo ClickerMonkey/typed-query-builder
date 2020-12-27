@@ -1,6 +1,6 @@
 import { 
   ExprField, NamedSource, Source, Name, Cast, MergeObjects, Simplify, UnionToIntersection, ObjectFromSelects, Selects, 
-  SelectsOptional, SelectsKey, SelectsWithKey, SelectsMap, SelectsNameless 
+  SelectsOptional, SelectsKey, SelectsWithKey, SelectsMap, SelectsNameless, SelectsWithKeyPrefixed, TextModifyType,
 } from '../internal';
 
 
@@ -38,16 +38,20 @@ export type SourcesFieldsFactory<S extends Sources> = {
 export interface SourceFieldsFunctions<S extends Selects>
 {
   all(): S;
+  all<P extends string>(prefix: P): SelectsWithKeyPrefixed<S, any, P>;
+  all<P extends string, T extends TextModifyType>(prefix: P, modify: T): SelectsWithKeyPrefixed<S, any, P, T>;
 
   only(): [];
   only<C extends SelectsKey<S>>(only: C[]): SelectsWithKey<S, unknown extends C ? never : C>;
-  only<C extends SelectsKey<S> = never>(...only: C[]): SelectsWithKey<S, C>;
+  only<C extends SelectsKey<S>, P extends string>(only: C[], prefix: P): SelectsWithKeyPrefixed<S, unknown extends C ? never : C, P>;
+  only<C extends SelectsKey<S>, P extends string, T extends TextModifyType>(only: C[], prefix: P, modify: T): SelectsWithKeyPrefixed<S, unknown extends C ? never : C, P, T>;
 
   exclude<C extends SelectsKey<S>>(): S
   exclude<C extends SelectsKey<S>>(exclude: []): S
   exclude<C extends SelectsKey<S>>(exclude: C[]): SelectsWithKey<S, unknown extends C ? SelectsKey<S> : Exclude<SelectsKey<S>, C>>;
-  exclude<C extends SelectsKey<S> = never>(...exclude: C[]): SelectsWithKey<S, Exclude<SelectsKey<S>, C>>;
-
+  exclude<C extends SelectsKey<S>, P extends string>(exclude: C[], prefix: P): SelectsWithKeyPrefixed<S, unknown extends C ? SelectsKey<S> : Exclude<SelectsKey<S>, C>, P>;
+  exclude<C extends SelectsKey<S>, P extends string, T extends TextModifyType>(exclude: C[], prefix: P, modify: T): SelectsWithKeyPrefixed<S, unknown extends C ? SelectsKey<S> : Exclude<SelectsKey<S>, C>, P, T>;
+  
   mapped<K extends SelectsKey<S>, M extends Record<string, K>>(map: M): SelectsMap<S, K, M>;
 }
 

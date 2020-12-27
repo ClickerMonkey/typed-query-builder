@@ -32,4 +32,9 @@ export abstract class Expr<T> implements Traversable<Expr<unknown>>
     return runner(this);
   }
 
+  public prepare<O>(runner: (expr: this) => (params: Record<string, any>) => O): ((params: Record<string, any>) => O)
+  {
+    return runner(this);
+  }
+
 }

@@ -72,6 +72,7 @@ export * from './query/List';
 export * from './query/Select';
 export * from './query/Set';
 export * from './query/Update';
+export * from './query/Json';
 
 export * from './Transformer';
 

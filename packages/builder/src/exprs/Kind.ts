@@ -22,6 +22,7 @@ export const enum ExprKind {
     PARAM                   = 'param',
     RAW                     = 'raw',
     ROW                     = 'row',
+    JSON                    = 'json',
     JOIN                    = 'join',
     VALUES                  = 'values',
     TABLE                   = 'table',

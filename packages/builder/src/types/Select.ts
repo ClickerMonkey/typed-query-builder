@@ -1,6 +1,6 @@
 import { 
   Expr, ExprScalar, ExprProvider, ExprInput, Select, Cast, Simplify, UndefinedToOptional, UnionToIntersection, 
-  UnionToTuple, Name, Sources, TupleAppend, TupleFlatten, Tuple, TupleFilter 
+  UnionToTuple, Name, Sources, TupleAppend, TupleFlatten, Tuple, TupleFilter, TextModify, TextModifyType
 } from '../internal';
 
 
@@ -132,6 +132,16 @@ export type SelectsWithKey<S extends Selects, K> =
     [P in keyof S]: S[P] extends Select<infer E, any> 
       ? E extends K
         ? S[P]
+        : never
+      : never
+  }>
+;
+
+export type SelectsWithKeyPrefixed<S extends Selects, K, Prefix extends string, Modify extends TextModifyType = 'NONE'> = 
+  TupleFilter<{
+    [P in keyof S]: S[P] extends Select<infer E, infer V> 
+      ? E extends K & string
+        ? Select<`${Prefix}${TextModify<E, Modify>}`, V>
         : never
       : never
   }>

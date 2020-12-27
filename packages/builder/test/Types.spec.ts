@@ -1,4 +1,4 @@
-import { Expr, Select, ExprValueObjects, ExprValueTuples, TupleFlatten, ExprValueToExpr, MergeObjects, UndefinedKeys, SelectWithKey, UnionToIntersection, UnionToTuple, ArrayToTuple, TupleAppend, ObjectKeys, SelectsKeys, SelectsValues, SelectsNameless, ObjectFromSelects, SelectsExprs, TuplesJoin, ExprField, SelectsFromObject, values, SelectsWithKey, Source, NamedSource } from '../src';
+import { Expr, Select, ExprValueObjects, ExprValueTuples, TupleFlatten, ExprValueToExpr, MergeObjects, UndefinedKeys, SelectWithKey, UnionToIntersection, UnionToTuple, ArrayToTuple, TupleAppend, ObjectKeys, SelectsKeys, SelectsValues, SelectsNameless, ObjectFromSelects, SelectsExprs, TuplesJoin, ExprField, SelectsFromObject, values, SelectsWithKey, Source, NamedSource, TextModify } from '../src';
 import { expectType, expectTypeMatch } from './helper';
 
 
@@ -165,17 +165,22 @@ describe('Types', () => {
         expectType<Select<'newId', number>>(fields.id.as('newId'));
 
         expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number>]>(fields.all());
+        expectType<[Select<"user.id", number>, Select<"user.name", string>, Select<"user.age", number>]>(fields.all('user.'));
+        expectType<[Select<"userId", number>, Select<"userName", string>, Select<"userAge", number>]>(fields.all('user', 'CAPITAL'));
 
         expectType<[]>(fields.only());
         expectType<[]>(fields.only([]));
-        expectType<[Select<"id", number>, Select<"age", number>]>(fields.only('age', 'id'));
         expectType<[Select<"id", number>, Select<"age", number>]>(fields.only(['age', 'id']));
+        expectType<[Select<"id", number>, Select<"age", number>]>(fields.only(['age', 'id']));
+        expectType<[Select<"user.id", number>, Select<"user.age", number>]>(fields.only(['age', 'id'], 'user.'));
+        expectType<[Select<"userId", number>, Select<"userAge", number>]>(fields.only(['age', 'id'], 'user', 'CAPITAL'));
+        expectType<[Select<"userID", number>, Select<"userAGE", number>]>(fields.only(['age', 'id'], 'user', 'UPPER'));
 
         expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number>]>(fields.exclude());
         expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number>]>(fields.exclude([]));
-        expectType<[Select<"id", number>]>(fields.exclude('age', 'name'));
         expectType<[Select<"id", number>]>(fields.exclude(['age', 'name']));
-        expectType<[Select<"id", number>, Select<"name", string>]>(fields.exclude('age'));
+        expectType<[Select<"id", number>]>(fields.exclude(['age', 'name']));
+        expectType<[Select<"id", number>, Select<"name", string>]>(fields.exclude(['age']));
         expectType<[Select<"id", number>, Select<"name", string>]>(fields.exclude(['age']));
 
         expectType<[]>(fields.mapped({}));
@@ -205,14 +210,14 @@ describe('Types', () => {
 
         expectType<[]>(fields.only());
         expectType<[]>(fields.only([]));
-        expectType<[Select<"id", number>, Select<"age", number | undefined>]>(fields.only('age', 'id'));
+        expectType<[Select<"id", number>, Select<"age", number | undefined>]>(fields.only(['age', 'id']));
         expectType<[Select<"id", number>, Select<"age", number | undefined>]>(fields.only(['age', 'id']));
 
         expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number | undefined>]>(fields.exclude());
         expectType<[Select<"id", number>, Select<"name", string>, Select<"age", number | undefined>]>(fields.exclude([]));
-        expectType<[Select<"id", number>]>(fields.exclude('age', 'name'));
         expectType<[Select<"id", number>]>(fields.exclude(['age', 'name']));
-        expectType<[Select<"id", number>, Select<"name", string>]>(fields.exclude('age'));
+        expectType<[Select<"id", number>]>(fields.exclude(['age', 'name']));
+        expectType<[Select<"id", number>, Select<"name", string>]>(fields.exclude(['age']));
         expectType<[Select<"id", number>, Select<"name", string>]>(fields.exclude(['age']));
 
         expectType<[]>(fields.mapped({}));
@@ -246,6 +251,14 @@ describe('Types', () => {
         expectTypeMatch<Expr<[Select<'x', number>, Select<'y', string>][]>, ExprValueToExpr<{ x: number, y: string }[]>>(true);
         expectTypeMatch<Expr<[Select<any, number>, Select<any, string>]> | Expr<[number, string]>, ExprValueToExpr<[number, string]>>(true);
         expectTypeMatch<Expr<[Select<any, number>, Select<any, string>][]> | Expr<[number, string][]>, ExprValueToExpr<[number, string][]>>(true);
+    });
+
+    it('TextModify', () => {
+        expectTypeMatch<'HELLO', TextModify<'HELLO', 'NONE'>>(true);
+        expectTypeMatch<'Hello', TextModify<'hello', 'CAPITAL'>>(true);
+        expectTypeMatch<'hELLO', TextModify<'HELLO', 'UNCAPITAL'>>(true);
+        expectTypeMatch<'hello', TextModify<'HELLO', 'LOWER'>>(true);
+        expectTypeMatch<'HELLO', TextModify<'Hello', 'UPPER'>>(true);
     });
 
 });
