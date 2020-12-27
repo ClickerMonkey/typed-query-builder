@@ -1,4 +1,4 @@
-import { DataTypeInputs, Expr } from '@typed-query-builder/builder';
+import { DataTypeInputs, Expr, isNumber } from '@typed-query-builder/builder';
 import { Dialect } from './Dialect';
 import { DialectFeatures } from './Features';
 
@@ -59,6 +59,23 @@ export class DialectOutput
     {
       return this.dialect.getValueFormatted(value, dataType);
     }
+  }
+
+  public getParams(params: Record<string, any>): any[]
+  {
+    const copy = this.params.slice();
+
+    for (const param in params)
+    {
+      const i = this.paramIndices[param];
+
+      if (isNumber(i))
+      {
+        copy[i] = params[param];
+      }
+    }
+
+    return copy;
   }
 
   public wrap(e: Expr<any>): string

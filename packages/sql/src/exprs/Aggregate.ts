@@ -1,8 +1,7 @@
 import { isArray, ExprAggregate, AggregateFunctions } from '@typed-query-builder/builder';
 import { Dialect } from '../Dialect';
 import { DialectFeatures } from '../Features';
-import { getOrder } from './Order';
-import { getWindow } from './Window';
+import { getWindow } from '../helpers/Window';
 
 
 export function addAggregate(dialect: Dialect)
@@ -23,23 +22,17 @@ export function addAggregate(dialect: Dialect)
       let suffix =  '';
 
       if (_distinct) {
-        out.dialect.requireSupport(DialectFeatures.AGGREGATE_DISTINCT);
-
-        prefix = 'DISTINCT ';
+        prefix = out.dialect.getFeatureOutput(DialectFeatures.AGGREGATE_DISTINCT, expr, out) + ' ';
       }
 
       if (_order && _order.length > 0) {
-        out.dialect.requireSupport(DialectFeatures.AGGREGATE_ORDER);
-
-        suffix = ' ORDER BY ' + _order.map( (o) => getOrder(o, out) ).join(', ');
+        suffix = ' ' + out.dialect.getFeatureOutput(DialectFeatures.AGGREGATE_ORDER, _order, out);
       }
 
       let x = dialect.getFunctionString(_type, args, prefix, suffix);
 
       if (_filter) {
-        out.dialect.requireSupport(DialectFeatures.AGGREGATE_FILTER);
-
-        x += ` FILTER (WHERE ${transform(_filter, out)})`;
+        x += ' ' + out.dialect.getFeatureOutput(DialectFeatures.AGGREGATE_FILTER, _filter, out);
       }
 
       if (_overWindow) {

@@ -2,7 +2,7 @@ import {
   Transformer, Expr, isString, isFunction, DataTypeTypes, DataTypeInputs, OperationUnaryType, GroupingSetType, InsertPriority, 
   JoinType, LockRowLock, LockStrength, OperationBinaryType, OrderDirection, PredicateBinaryListPass, PredicateBinaryListType, 
   PredicateBinaryType, PredicateRowType, PredicatesType, PredicateUnaryType, SetOperation, WindowFrameExclusion, WindowFrameMode, 
-  mapRecord, isArray, isNumber 
+  mapRecord, isArray, isBoolean 
 } from '@typed-query-builder/builder';
 
 import { DialectFeatures, DialectFeaturesDescription } from './Features';
@@ -10,7 +10,7 @@ import { compileFormat } from './fns';
 import { DialectOutput, DialectOutputOptions } from './Output';
 
 
-export interface DialectTransformTransformer{
+export interface DialectTransformTransformer {
   <T>(value: Expr<T>, out: DialectOutput): string;
 }
 
@@ -25,6 +25,8 @@ export type DialectDataTypeFormatter = (type: DataTypeInputs) => string;
 export type DialectFunctionFormatter = (args: string[]) => string;
 
 export type DialectMap<T extends string, V = string> = Partial<Record<T, V>>;
+
+export type DialectFeatureFormatter = (value: any, transform: DialectTransformTransformer, out: DialectOutput) => string
 
 
 export class Dialect
@@ -66,6 +68,7 @@ export class Dialect
   public lockStrengthAlias: DialectMap<LockStrength>;
   public lockRowAlias: DialectMap<LockRowLock>;
   public functionsFormatter: DialectMap<string, DialectFunctionFormatter>;
+  public featureFormatter: Record<DialectFeatures, DialectFeatureFormatter>;
   public supports: number;
 
   public constructor()
@@ -100,6 +103,7 @@ export class Dialect
     this.lockRowAlias = {};
     this.functionsFormatter = {};
     this.valueFormatter = [];
+    this.featureFormatter = {};
     this.paramOffset = 1;
     this.paramPrefix = '$';
     this.paramSuffix = '';
@@ -131,6 +135,15 @@ export class Dialect
 
       return out;
     };
+  }
+
+  public getFeatureOutput(feature: DialectFeatures, value: any, out: DialectOutput): string
+  {
+    this.requireSupport(feature);
+
+    const formatter = this.featureFormatter[feature];
+
+    return formatter(value, this.transformer.transform, out);
   }
 
   public getFeaturesDescription(features: number): string[]
@@ -485,6 +498,11 @@ export class Dialect
   public static FormatString: DialectValueFormatter = (value, dialect) => 
   {
     return isString(value) ? dialect.quoteValue(value) : undefined;
+  };
+
+  public static FormatBoolean: DialectValueFormatter = (value, dialect) => 
+  {
+    return isBoolean(value) ? value ? dialect.trueIdentifier : dialect.falseIdentifier : undefined;
   };
 
   public static FormatDate: DialectValueFormatter = (value, dialect) => 

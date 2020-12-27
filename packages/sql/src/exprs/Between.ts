@@ -10,7 +10,15 @@ export function addBetween(dialect: Dialect)
     {
       const { value, high, low } = expr;
 
-      return `${out.wrap(value)} BETWEEN ${out.wrap(low)} AND ${out.wrap(high)}`;
+      let x = '';
+
+      x += out.wrap(value);
+      x += ' BETWEEN ';
+      x += out.wrap(low);
+      x += ' AND ';
+      x += out.wrap(high);
+
+      return x;
     }
   );
 }

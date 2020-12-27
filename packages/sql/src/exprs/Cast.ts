@@ -8,7 +8,17 @@ export function addCast(dialect: Dialect)
     ExprCast,
     (expr, transform, out) => 
     {
-      return `CAST(${out.wrap(expr.value)} AS ${out.dialect.getDataTypeString(expr.type)})`;
+      const { value, type } = expr;
+
+      let x = '';
+
+      x += 'CAST(';
+      x += out.wrap(value);
+      x += ' AS ';
+      x += out.dialect.getDataTypeString(type);
+      x += ')';
+
+      return x;
     }
   );
 }
