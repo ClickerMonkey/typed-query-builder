@@ -69,7 +69,9 @@ export class Dialect
   public lockRowAlias: DialectMap<LockRowLock>;
   public functionsFormatter: DialectMap<string, DialectFunctionFormatter>;
   public featureFormatter: Record<DialectFeatures, DialectFeatureFormatter>;
+  public selectExpression: (expr: string) => string;
   public supports: number;
+  public defaultOptions: DialectOutputOptions;
 
   public constructor()
   {
@@ -110,6 +112,8 @@ export class Dialect
     this.trueIdentifier = 'TRUE';
     this.falseIdentifier = 'FALSE';
     this.nullIdentifier = 'NULL';
+    this.defaultOptions = {};
+    this.selectExpression = (expr) => `SELECT (${expr}) AS ${this.quoteAlias('value')}`;
     this.supports = DialectFeatures.ALL;
   }
 
@@ -117,15 +121,25 @@ export class Dialect
   {
     return (e: Expr<any>): DialectOutput => 
     {
-      const out = new DialectOutput(this, options);
+      const derivedOptions = {
+        ...this.defaultOptions,
+        ...options,
+      };
+
+      const out = new DialectOutput(this, derivedOptions);
 
       try
       {
         out.query = this.transformer.transform(e, out);
+
+        if (!e.isStatement() && !derivedOptions.raw)
+        {
+          out.query = this.selectExpression(out.query);
+        }
       }
       catch (e)
       {
-        if (options.throwError)
+        if (derivedOptions.throwError)
         {
           throw e;
         }

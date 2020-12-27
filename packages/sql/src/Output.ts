@@ -7,6 +7,7 @@ export interface DialectOutputOptions
 {
   throwError?: boolean;
   constantsAsParams?: boolean;
+  raw?: boolean;
 }
 
 export class DialectOutput
