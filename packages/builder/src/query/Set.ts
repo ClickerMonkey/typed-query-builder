@@ -40,11 +40,18 @@ export class QuerySet<S extends Selects> extends Source<S>
     this._criteria.addSource(set as any, SourceKind.TARGET);
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.QUERY_SET_OPERATION;
   }
+  
+  public isStatement(): boolean 
+  {
+    return true;
+  }
 
-  public getSelects(): S {
+  public getSelects(): S 
+  {
     return this._first.getSelects();
   }
 

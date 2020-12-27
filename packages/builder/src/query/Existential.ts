@@ -12,8 +12,14 @@ export class QueryExistential<T extends Sources, S extends Selects, W extends Na
     super();
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.QUERY_EXISTENTIAL;
+  }
+
+  public isStatement(): boolean 
+  {
+    return true;
   }
 
 }

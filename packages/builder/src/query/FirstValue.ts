@@ -16,8 +16,14 @@ export class QueryFirstValue<T extends Sources, S extends Selects, W extends Nam
     this.criteria.clearSelects();
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.QUERY_FIRST_VALUE;
+  }
+
+  public isStatement(): boolean 
+  {
+    return true;
   }
   
 }

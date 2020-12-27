@@ -23,7 +23,8 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
   public _distinctOn: ExprScalar<any>[];
   public _criteria: QueryCriteria<T, S, W>;
 
-  public constructor(extend?: QuerySelect<T, S, W>) {
+  public constructor(extend?: QuerySelect<T, S, W>) 
+  {
     super();
 
     this._criteria = new QueryCriteria(extend?._criteria);
@@ -32,24 +33,34 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     this._distinctOn = extend?._distinctOn?.slice() || [];
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.QUERY_SELECT;
   }
 
-  public getSelects(): S {
+  public isStatement(): boolean 
+  {
+    return true;
+  }
+
+  public getSelects(): S 
+  {
     return this._criteria.selects;
   }
 
-  public extend(): QuerySelect<T, S, W> {
+  public extend(): QuerySelect<T, S, W> 
+  {
     return new QuerySelect( this );
   }
 
-  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, W, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, W, Source<WS>>, all?: boolean): QuerySelect<JoinedInner<T, WN, WS>, S, W> {
+  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, W, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, W, Source<WS>>, all?: boolean): QuerySelect<JoinedInner<T, WN, WS>, S, W> 
+  {
     const source = this._criteria.exprs.provide(sourceProvider);
 
     this._criteria.addSource(source as any, SourceKind.WITH);
 
-    if (recursive) {
+    if (recursive) 
+    {
       const recursiveSource = this._criteria.exprs.provide(recursive as any);
 
       this._criteria.replaceSource(new SourceRecursive(source.getName(), source.getSource(), recursiveSource, all) as any, SourceKind.WITH);
@@ -60,9 +71,10 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
 
   public from<FN extends keyof T>(source: FN, only?: boolean): QuerySelect<T, S, W>
   public from<FN extends Name, FS extends Selects>(source: ExprProvider<T, S, W, NamedSource<FN, FS>>, only?: boolean): QuerySelect<Simplify<MergeObjects<T, Record<FN, FS>>>, S, W> 
-  public from<FN extends Name, FS extends Selects>(source: keyof T | ExprProvider<T, S, W, NamedSource<FN, FS>>, only: boolean = false): never {
-    
-    if (!isString(source)) {
+  public from<FN extends Name, FS extends Selects>(source: keyof T | ExprProvider<T, S, W, NamedSource<FN, FS>>, only: boolean = false): never 
+  {  
+    if (!isString(source)) 
+    {
       this._criteria.addSource(this._criteria.exprs.provide(source) as any, only ? SourceKind.ONLY : SourceKind.FROM);
     }
 
@@ -73,7 +85,8 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
   public join<JN extends Name, JT extends Selects>(type: 'LEFT', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S, W>
   public join<JN extends Name, JT extends Selects>(type: 'RIGHT', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W>
   public join<JN extends Name, JT extends Selects>(type: 'FULL', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W>
-  public join<JN extends Name, JT extends Selects>(type: JoinType, source: NamedSource<JN, JT>, on: any): never  {
+  public join<JN extends Name, JT extends Selects>(type: JoinType, source: NamedSource<JN, JT>, on: any): never
+  {
     const onExpr = toExpr(this._criteria.exprs.provide(on as any));
 
     this._criteria.addSource(new SourceJoin(source as any, type, onExpr), SourceKind.JOIN);
@@ -81,39 +94,50 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     return this as never;
   }
 
-  public joinInner<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S, W> {
+  public joinInner<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S, W> 
+  {
     return this.join('INNER', source, on);
   }
-  public joinLeft<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S, W> {
+
+  public joinLeft<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S, W> 
+  {
     return this.join('LEFT', source, on);
   }
-  public joinRight<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W> {
+
+  public joinRight<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W> 
+  {
     return this.join('RIGHT', source, on);
   }
-  public joinOuter<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W> {
+
+  public joinOuter<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W> 
+  {
     return this.join('FULL', source, on);
   }
 
-  public window<WA extends Name>(name: WA, defined: (window: QueryWindow<WA, T, S, W>, sources: SourcesFieldsFactory<T>, exprs: ExprFactory<T, S, W>, fns: FunctionProxy<Functions>, selects: SelectsExprs<S>) => QueryWindow<WA, T, S, W>): QuerySelect<T, S, WA | W> {
+  public window<WA extends Name>(name: WA, defined: (window: QueryWindow<WA, T, S, W>, sources: SourcesFieldsFactory<T>, exprs: ExprFactory<T, S, W>, fns: FunctionProxy<Functions>, selects: SelectsExprs<S>) => QueryWindow<WA, T, S, W>): QuerySelect<T, S, WA | W> 
+  {
     this._criteria.addWindow(name, defined);
 
     return this as any;
   }
 
-  public clearWindows(): QuerySelect<T, S, never> {
+  public clearWindows(): QuerySelect<T, S, never> 
+  {
     this._criteria.clearWindows();
 
     return this as any;
   }
 
-  public distinct(): this {
+  public distinct(): this 
+  {
     this._distinct = true;
     this._distinctOn = [];
 
     return this;
   }
 
-  public distinctOn(...values: QuerySelectScalarInput<T, S, W, any>): this {
+  public distinctOn(...values: QuerySelectScalarInput<T, S, W, any>): this 
+  {
     const exprs = this._criteria.exprs.parse(values);
     
     for (const expr of exprs) {
@@ -126,7 +150,8 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
   public select(selects: '*'): QuerySelect<T, SelectAllSelects<T, S>, W>
   public select<FS extends Tuple<Select<any, any>>>(selects: ExprProvider<T, S, W, FS>): QuerySelect<T, SelectGivenSelects<S, FS>, W>
   public select<FS extends Tuple<Select<any, any>>>(...selects: FS): QuerySelect<T, SelectGivenSelects<S, FS>, W>
-  public select(...selectInput: any[]): never {
+  public select(...selectInput: any[]): never 
+  {
     const selects: Select<any, any>[] = isFunction(selectInput[0])
       ? this._criteria.exprs.provide(selectInput[0])
       : isArray(selectInput[0])
@@ -140,11 +165,14 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     return this as never;
   }
 
-  protected selectAll(): Selects {
+  protected selectAll(): Selects 
+  {
     const all: Selects = [];
 
-    for (const source of this._criteria.sources) {
-      if (source.kind !== SourceKind.WITH) {
+    for (const source of this._criteria.sources) 
+    {
+      if (source.kind !== SourceKind.WITH) 
+      {
         all.push(...source.source.getSource().getSelects());
       }
     }
@@ -152,29 +180,34 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     return all;
   }
 
-  public clearSelect(): QuerySelect<T, [], W> {
+  public clearSelect(): QuerySelect<T, [], W> 
+  {
     this._criteria.clearSelects();
     
     return this as any;
   }
 
-  public where(...values: QuerySelectScalarInput<T, S, W, boolean>): this {
+  public where(...values: QuerySelectScalarInput<T, S, W, boolean>): this 
+  {
     const exprs = this._criteria.exprs.parse(values);
 
-    for (const expr of exprs) {
+    for (const expr of exprs)
+    {
       this._criteria.where.push(expr);
     }
 
     return this;
   }
 
-  public clearWhere(): this {
+  public clearWhere(): this
+  {
     this._criteria.where = [];
 
     return this;
   }
 
-  public groupBy<K extends SelectsKey<S>>(...values: K[] | [K[]]): this {
+  public groupBy<K extends SelectsKey<S>>(...values: K[] | [K[]]): this
+  {
     const exprs = isArray(values[0]) ? values[0] : values as K[];
 
     return this.group('BY', [exprs]);

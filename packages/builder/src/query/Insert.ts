@@ -66,21 +66,25 @@ export class StatementInsert<
     this._ignoreDuplicate = false;
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.STATEMENT_INSERT;
   }
 
-  protected getMainSource(): SourceTable<N, S, any> {
+  protected getMainSource(): SourceTable<N, S, any> 
+  {
     return this._into;
   }
 
-  public ignoreDuplicate(ignore: boolean = true): this {
+  public ignoreDuplicate(ignore: boolean = true): this 
+  {
     this._ignoreDuplicate = ignore;
 
     return this;
   }
 
-  public priority(priority?: InsertPriority): this {
+  public priority(priority?: InsertPriority): this 
+  {
     this._priority = priority;
 
     return this;

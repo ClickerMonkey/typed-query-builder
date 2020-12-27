@@ -13,11 +13,18 @@ export class QueryList<T extends Sources, S extends Selects, W extends Name, R> 
     super();
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.QUERY_LIST;
   }
 
-  public json(): ExprScalar<R[]> {
+  public isStatement(): boolean 
+  {
+    return true;
+  }
+
+  public json(): ExprScalar<R[]> 
+  {
     return new QueryJson<S, R[]>(this);
   }
 

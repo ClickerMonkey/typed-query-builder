@@ -15,8 +15,14 @@ export class QueryFirst<T extends Sources, S extends Selects, W extends Name> ex
     super();
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.QUERY_FIRST;
+  }
+
+  public isStatement(): boolean 
+  {
+    return true;
   }
 
   public is(type: PredicateRowType, row: Expr<SelectsValues<S>> | Expr<SelectsNameless<S>> | ExprInputTuple<SelectsValues<S>>): ExprScalar<boolean> {

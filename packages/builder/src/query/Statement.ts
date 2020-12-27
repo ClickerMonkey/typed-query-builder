@@ -48,6 +48,11 @@ export abstract class Statement<
   {
     return this._returning;
   }
+  
+  public isStatement(): boolean 
+  {
+    return true;
+  }
 
   protected abstract getMainSource(): SourceTable<N, S, any>;
 
