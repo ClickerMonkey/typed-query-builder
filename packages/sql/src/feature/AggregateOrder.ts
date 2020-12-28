@@ -3,9 +3,10 @@ import { Dialect } from '../Dialect';
 import { getOrder } from '../helpers/Order';
 import { DialectFeatures } from '../Features';
 
-export function addAggregateOrder(dialect: Dialect)
+export function addAggregateOrderFeature(dialect: Dialect)
 {
-  dialect.featureFormatter[DialectFeatures.AGGREGATE_ORDER] = (_order: OrderBy[], transform, out) => {
+  dialect.featureFormatter[DialectFeatures.AGGREGATE_ORDER] = (_order: OrderBy[], transform, out) => 
+  {
     return 'ORDER BY ' + _order.map( (o) => getOrder(o, out) ).join(', ');
   };
 }

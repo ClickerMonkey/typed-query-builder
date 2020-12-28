@@ -374,7 +374,7 @@ describe('Select', () => {
         constant(1).as('value'),
         constant('hi').as('message'),
       ])
-      .union(
+      .unionAll(
         // TODO this is compatible
         from(Task)
           .select(({ task }, {}, { length }) => [

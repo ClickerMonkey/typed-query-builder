@@ -33,6 +33,20 @@ export type SelectsValuesExprs<T extends Selects> = {
   [K in keyof T]: T[K] extends Select<any, infer V> ? V | Expr<V> : never;
 };
 
+export type SelectExprInput<S extends Select<any, any>> = 
+  S extends Select<any, infer V>
+    ? V | Expr<V>
+    : never;
+
+export type SelectExprRecord<S extends Select<any, any>> = 
+  S extends Select<infer N, infer V>
+    ? Record<N, V | Expr<V>>
+    : {};
+
+export type SelectsColumnsExprs<S extends Selects, C extends Tuple<SelectsKey<S>>> = {
+  [I in keyof C]: SelectExprInput<SelectWithKey<S, C[I]>>;
+};
+
 export type SelectsNormalize<T extends Selects> = 
   Cast<{
     [K in keyof T]: T[K] extends Select<infer N, infer V> ? Select<N, V> : T[K];
@@ -45,9 +59,9 @@ export type SelectsRecord<T extends Selects> =
   }[number]>>
 ;
 
-export type SelectsRecordExprs<T extends Selects> = 
+export type SelectsRecordExprs<S extends Selects, C extends Tuple<SelectsKey<S>>> = 
   Simplify<UnionToIntersection<{
-    [K in keyof T]: T[K] extends Select<infer N, infer V> ? Record<N, V | Expr<V>> : {};
+    [I in keyof C]: SelectExprRecord<SelectWithKey<S, C[I]>>;
   }[number]>>
 ;
 

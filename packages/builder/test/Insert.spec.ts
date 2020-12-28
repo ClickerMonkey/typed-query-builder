@@ -1,4 +1,4 @@
-import { table, insert, query } from '../src/';
+import { table, insert, query, from } from '../src/';
 import { expectExpr, expectExprType } from './helper';
 
 
@@ -203,6 +203,26 @@ describe('Select', () => {
 
     expectExpr<[string][]>(q);
     expectExpr<{ lower: string }[]>(q);
+  });
+
+  it('insert query', () => {
+    insert()
+      .into(Task, ['name'])
+      .values(
+        from(Task)
+          .select(({ task }, _ , { upper }) => [
+            upper(task.name).as('upper')
+          ])
+          .where(({ task }) => [
+            task.done
+          ])
+          .limit(3)
+          .generic()
+      )
+      .run(i => {
+        i._columns
+      })
+    ;
   });
 
   it('insert with multiple returning expression with rest', () => {

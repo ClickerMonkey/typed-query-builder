@@ -2,9 +2,10 @@ import { Selects, SourceRecursive } from '@typed-query-builder/builder';
 import { Dialect } from '../Dialect';
 import { DialectFeatures } from '../Features';
 
-export function addWithRecursive(dialect: Dialect)
+export function addWithRecursiveFeature(dialect: Dialect)
 {
-  dialect.featureFormatter[DialectFeatures.WITH_RECURSIVE] = (value: SourceRecursive<any, any>, transform, out) => {
+  dialect.featureFormatter[DialectFeatures.WITH_RECURSIVE] = (value: SourceRecursive<any, any>, transform, out) => 
+  {
     let x = '';
 
     x += 'WITH RECURSIVE ';

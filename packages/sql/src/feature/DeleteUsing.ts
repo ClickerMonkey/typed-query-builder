@@ -4,9 +4,10 @@ import { DialectFeatures } from '../Features';
 import { getNamedSource } from '../helpers/NamedSource';
 
 
-export function addDeleteUsing(dialect: Dialect)
+export function addDeleteUsingFeature(dialect: Dialect)
 {
-  dialect.featureFormatter[DialectFeatures.DELETE_USING] = (value: NamedSource<any, any>, transform, out) => {
+  dialect.featureFormatter[DialectFeatures.DELETE_USING] = (value: NamedSource<any, any>, transform, out) => 
+  {
     let x = '';
 
     x += 'USING ';

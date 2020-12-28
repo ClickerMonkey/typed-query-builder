@@ -4,9 +4,10 @@ import { DialectFeatures } from '../Features';
 import { getSelects } from '../helpers/Selects';
 
 
-export function addDeleteReturning(dialect: Dialect)
+export function addInsertReturningFeature(dialect: Dialect)
 {
-  dialect.featureFormatter[DialectFeatures.DELETE_RETURNING] = (value: Selects, transform, out) => {
+  dialect.featureFormatter[DialectFeatures.INSERT_RETURNING] = (value: Selects, transform, out) => 
+  {
     let x = '';
 
     x += 'RETURNING ';

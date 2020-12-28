@@ -1,35 +1,37 @@
 import { 
-  SourceKind, Cast, Name, Selects, Sources, SelectsKeys, SelectsKey, SelectsWithKey, SelectsValuesExprs, ExprField,
+  SourceKind, Cast, Name, Selects, Sources, SelectsKeys, SelectsKey, SelectsColumnsExprs, ExprField, ExprParam,
   SelectsRecordExprs, JoinedInner, Tuple, Expr, ExprInput, ExprProvider, NamedSource, Source, SourceTable, SelectValueWithKey,
-  ExprKind, Statement, StatementReturningColumns, StatementReturningExpressions, Select, toExpr, StatementSet, 
-  ObjectExprFromSelects, isString, isArray, SelectsTupleEquivalent, SelectsFromKeys, InsertPriority, ExprParam
+  ExprKind, Statement, StatementReturningColumns, StatementReturningExpressions, Select, toExpr, StatementSet, SelectsNameless,
+  ObjectExprFromSelects, isString, isArray, SelectsTupleEquivalent, SelectsFromKeys, InsertPriority, ExprScalar, 
+  QuerySelectScalarInput, SourceCompatible
 } from '../internal';
 
 
 export type StatementInsertValuesTuple<
   T extends Selects = never, 
-  C extends SelectsKey<T> = never,
-> = SelectsValuesExprs<Cast<SelectsWithKey<T, C>, Selects>>
+  C extends Tuple<SelectsKey<T>> = never,
+> = SelectsColumnsExprs<T, C>;
 
 export type StatementInsertValuesObject<
   T extends Selects = never, 
-  C extends SelectsKey<T> = never,
-> = SelectsRecordExprs<Cast<SelectsWithKey<T, C>, Selects>>;
+  C extends Tuple<SelectsKey<T>> = never,
+> = SelectsRecordExprs<T, C>;
 
 export type StatementInsertValuesInput<
   T extends Selects = never, 
-  C extends SelectsKey<T> = never,
+  C extends Tuple<SelectsKey<T>> = never,
 > = ExprInput<
   StatementInsertValuesObject<T, C> |
   StatementInsertValuesObject<T, C>[] |
   StatementInsertValuesTuple<T, C> |
   StatementInsertValuesTuple<T, C>[]
->;
+> | SourceCompatible<SelectsFromKeys<T, C>>;
 
-export type QueryInsertValuesResolved<
+export type StatementInsertValuesResolved<
   T extends Selects = never, 
-  C extends SelectsKey<T> = never,
+  C extends Tuple<SelectsKey<T>> = never,
 > = Expr<
+  SelectsNameless<SelectsFromKeys<T, C>> | 
   StatementInsertValuesObject<T, C> |
   StatementInsertValuesObject<T, C>[] |
   StatementInsertValuesTuple<T, C> |
@@ -41,7 +43,7 @@ export class StatementInsert<
   T extends Sources = {}, 
   N extends Name = never,
   S extends Selects = [], 
-  C extends SelectsKey<S> = never,
+  C extends Tuple<SelectsKey<S>> = never,
   R extends Selects = []
 > extends Statement<T, N, S, R>
 {
@@ -49,9 +51,10 @@ export class StatementInsert<
   public static readonly id = ExprKind.STATEMENT_INSERT;
 
   public _into: SourceTable<N, S, any>;
-  public _columns: C[];
-  public _values: QueryInsertValuesResolved<S, C>[];
+  public _columns: C;
+  public _values: StatementInsertValuesResolved<S, C>[];
   public _sets: StatementSet<any>[];
+  public _setsWhere: ExprScalar<boolean>[];
   public _ignoreDuplicate: boolean;
   public _priority?: InsertPriority;
   
@@ -63,6 +66,7 @@ export class StatementInsert<
     this._columns = [] as any;
     this._values = [];
     this._sets = [];
+    this._setsWhere = [];
     this._ignoreDuplicate = false;
   }
 
@@ -90,12 +94,13 @@ export class StatementInsert<
     return this;
   }
 
-  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, never, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, never, Source<WS>>, all?: boolean): StatementInsert<JoinedInner<T, WN, WS>, N, S, C, R> {
+  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, never, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, never, Source<WS>>, all?: boolean): StatementInsert<JoinedInner<T, WN, WS>, N, S, C, R> 
+  {
     return super.with(sourceProvider, recursive, all) as any;
   }
 
-  public into<IN extends Name, IT extends Selects>(into: SourceTable<IN, IT, any>): StatementInsert<JoinedInner<T, IN, IT>, IN, IT, SelectsKey<IT>, []>
-  public into<IN extends Name, IT extends Selects, IC extends SelectsKey<IT>>(into: SourceTable<IN, IT, any>, columns: IC[]): StatementInsert<JoinedInner<T, IN, IT>, IN, Cast<SelectsWithKey<IT, IC>, Selects>, Cast<IC, SelectsKeys<Cast<SelectsWithKey<IT, IC>, Selects>>>, []>
+  public into<IN extends Name, IT extends Selects>(into: SourceTable<IN, IT, any>): StatementInsert<JoinedInner<T, IN, IT>, IN, IT, Cast<SelectsKeys<IT>, Tuple<SelectsKey<IT>>>, []>
+  public into<IN extends Name, IT extends Selects, IC extends Tuple<SelectsKey<IT>>>(into: SourceTable<IN, IT, any>, columns: IC): StatementInsert<JoinedInner<T, IN, IT>, IN, SelectsFromKeys<IT, IC>, IC, []>
   public into<IN extends Name, IT extends Selects, IC extends SelectsKey<IT>>(into: SourceTable<IN, IT, any>, columns?: IC[]): never
   {
     (this as any)._into = into;
@@ -167,6 +172,18 @@ export class StatementInsert<
       }
 
       this._sets.push(new StatementSet(selects, values));
+    }
+
+    return this;
+  }
+
+  public setOnDuplicateWhere(...values: QuerySelectScalarInput<T, S, never, boolean>): this 
+  {
+    const exprs = this._exprs.parse(values);
+
+    for (const expr of exprs)
+    {
+      this._setsWhere.push(expr);
     }
 
     return this;

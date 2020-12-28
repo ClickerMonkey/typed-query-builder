@@ -7,7 +7,7 @@ export class QueryExistential<T extends Sources, S extends Selects, W extends Na
   public static readonly id = ExprKind.QUERY_EXISTENTIAL;
 
   public constructor(
-    public _criteria: QueryCriteria<T, S, W>
+    public criteria: QueryCriteria<T, S, W>
   ) {
     super();
   }

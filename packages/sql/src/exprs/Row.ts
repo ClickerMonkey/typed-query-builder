@@ -1,5 +1,6 @@
 import { ExprRow } from '@typed-query-builder/builder';
 import { Dialect } from '../Dialect';
+import { DialectFeatures } from '../Features';
 
 
 export function addRow(dialect: Dialect)
@@ -8,6 +9,8 @@ export function addRow(dialect: Dialect)
     ExprRow,
     (expr, transform, out) => 
     {
+      out.dialect.requireSupport(DialectFeatures.ROW_CONSTRUCTOR);
+
       let x = '';
 
       x += '(';

@@ -21,7 +21,7 @@ export const enum DialectFeatures
   DELETE_RETURNING        = (1 << 17),
   INSERT_PRIORITY         = (1 << 18),
   INSERT_IGNORE_DUPLICATE = (1 << 19),
-  INSERT_INTO_MULTIPLE    = (1 << 20),
+  JSON                    = (1 << 20),
   INSERT_SET_ON_DUPLICATE = (1 << 21),
   INSERT_RETURNING        = (1 << 22),
   UPDATE_MULTISET         = (1 << 23),
@@ -58,7 +58,7 @@ export const DialectFeaturesDescription =
   'DELETE RETURNING clause',
   'INSERT priority',
   'INSERT ignore duplicate',
-  'INSERT into multiple',
+  'JSON expressions',
   'INSERT on duplicate key set clause',
   'INSERT RETURNING clause',
   'UPDATE multi-set',
@@ -66,5 +66,6 @@ export const DialectFeaturesDescription =
   'UPDATE RETURNING',
   'DEFAULT expression',
   'ARRAY data types',
-  'UNSIGNED numeric types'
-];
+  'UNSIGNED numeric types',
+  'named parameters',
+]; 
