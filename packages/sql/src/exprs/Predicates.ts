@@ -1,5 +1,6 @@
 import { ExprPredicates } from '@typed-query-builder/builder';
 import { Dialect } from '../Dialect';
+import { getPredicates } from '../helpers/Predicates';
 
 
 export function addPredicates(dialect: Dialect)
@@ -10,11 +11,7 @@ export function addPredicates(dialect: Dialect)
     {
       const { predicates, type } = expr;
 
-      return predicates.map( e => 
-        e instanceof ExprPredicates && e.type !== type
-          ? '(' + transform(e, out) + ')'
-          : transform(e, out)
-      ).join(` ${type} `); 
+      return getPredicates(predicates, type, transform, out);
     }
   );
 }
