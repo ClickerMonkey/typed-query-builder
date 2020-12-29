@@ -9,7 +9,13 @@
         "clean": "lerna run clean",
         "build": "lerna run build",
         "pub": "lerna publish",
-        "test": "lerna run test"
+        "test": "lerna run test",
+        "builder": "yarn workspace @typed-query-builder/builder",
+        "runtime": "yarn workspace @typed-query-builder/run",
+        "sql": "yarn workspace @typed-query-builder/sql",
+        "mssql": "yarn workspace @typed-query-builder/mssql",
+        "pgsql": "yarn workspace @typed-query-builder/pgsql",
+        "mysql": "yarn workspace @typed-query-builder/mysql"
     },
     "devDependencies": {
         "@types/jest": "25.2.1",

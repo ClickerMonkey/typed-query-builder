@@ -27,6 +27,11 @@ export abstract class Expr<T> implements Traversable<Expr<unknown>>
     return false;
   }
 
+  public isPredicate(): boolean 
+  {
+    return false;
+  }
+
   public getInferredType(): T
   {
     throw new Error('getInferredType should not be called.');

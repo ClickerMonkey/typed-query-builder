@@ -23,7 +23,7 @@ export class Transformer<T extends TransformFactory<any, E>, E extends any[] = [
     {
       const transformer = this.transformers.get(value.getKind());
       if (!transformer) {
-        throw new Error(`Missing transformer for ${value}`);
+        throw new Error(`Missing transformer for ${value.getKind()}`);
       }
       
       return transformer(value, this.transform, ...extra);

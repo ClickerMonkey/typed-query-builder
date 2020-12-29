@@ -4,6 +4,8 @@ import { keys, Selects, SelectsKeys, ObjectFromSelects, Tuple, SelectsFromTypeAn
 export class SourceValues<S extends Selects> extends Source<S> 
 {
 
+  public static readonly id = ExprKind.VALUES;
+
   public static create<T extends Record<string, any>, C extends Tuple<keyof T>>(constants: T[], columns?: C): Source<SelectsFromTypeAndColumns<T, C>>
   {
     return new SourceValues<SelectsFromTypeAndColumns<T, C>>(constants as any, columns || SourceValues.calculateColumns(constants) as any);
@@ -37,11 +39,18 @@ export class SourceValues<S extends Selects> extends Source<S>
     })) as any as S;
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.VALUES;
   }
 
-  public getSelects(): S {
+  public hasAnonymousSelects(): boolean
+  {
+    return true;
+  }
+
+  public getSelects(): S 
+  {
     return this.selects;
   }
 

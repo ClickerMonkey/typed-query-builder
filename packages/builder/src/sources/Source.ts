@@ -1,10 +1,22 @@
-import { QueryJson, ExprScalar, ObjectFromSelects, Selects, Name, SourceCompatible, Expr, QuerySet, NamedSource, NamedSourceBase } from "../internal";
+import { 
+  QueryJson, ExprScalar, ObjectFromSelects, Selects, Name, Expr, QuerySet, NamedSourceBase, NamedSource, SourceCompatible 
+} from "../internal";
 
 
 export abstract class Source<S extends Selects> extends Expr<S[]>
 {
    
   public abstract getSelects(): S;
+
+  public getName(): Name | false
+  {
+    return false;
+  }
+
+  public hasAnonymousSelects(): boolean
+  {
+    return false;
+  }
 
   public as<N extends Name>(name: N): NamedSource<N, S>
   {
@@ -41,7 +53,8 @@ export abstract class Source<S extends Selects> extends Expr<S[]>
     return QuerySet.create('EXCEPT', this, query, true);
   }
 
-  public json(): ExprScalar<ObjectFromSelects<S>[]> {
+  public json(): ExprScalar<ObjectFromSelects<S>[]> 
+  {
     return new QueryJson<S, ObjectFromSelects<S>[]>(this);
   }
 

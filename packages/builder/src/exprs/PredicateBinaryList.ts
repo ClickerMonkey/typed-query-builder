@@ -15,8 +15,14 @@ export class ExprPredicateBinaryList<T> extends ExprScalar<boolean>
     super();
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.PREDICATE_BINARY_LIST;
+  }
+
+  public isPredicate(): boolean 
+  {
+    return true;
   }
 
   public traverse<R>(traverse: Traverser<Expr<any>, R>): R {

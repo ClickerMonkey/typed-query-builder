@@ -1,6 +1,6 @@
 
 
-export const enum SourceKind
+export enum SourceKind
 {
   WITH    = 'with',
   FROM    = 'from',

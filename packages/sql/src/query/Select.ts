@@ -24,7 +24,7 @@ export function addSelect(dialect: Dialect)
 
       x += 'SELECT ';
 
-      if (_distinctOn)
+      if (_distinctOn.length > 0)
       {
         x += out.dialect.getFeatureOutput(DialectFeatures.SELECT_DISTINCT_ON, _distinctOn, out);
         x += ' ';

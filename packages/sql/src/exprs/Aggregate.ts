@@ -14,7 +14,8 @@ export function addAggregate(dialect: Dialect)
 
       let args = ['*'];
 
-      if (isArray(_values) && _values.length > 0) {
+      if (isArray(_values) && _values.length > 0) 
+      {
         args = _values.map( v => out.wrap(v) );
       }
 

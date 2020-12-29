@@ -44,8 +44,8 @@ export interface ExprFactory<T extends Sources, S extends Selects, W extends Nam
   countIf(condition: ExprScalar<boolean>): ExprAggregate<T, S, W, 'countIf'>;
   sum(value: ExprScalar<number>): ExprAggregate<T, S, W, 'sum'>;
   avg(value: ExprScalar<number>): ExprAggregate<T, S, W, 'avg'>;
-  min<V>(value: ExprScalar<V>): ExprAggregate<T, S, W, 'min', AggregateFunctions, ExprInputType<V>>;
-  max<V>(value: ExprScalar<V>): ExprAggregate<T, S, W, 'max', AggregateFunctions, ExprInputType<V>>;
+  min<V>(value: Expr<V>): ExprAggregate<T, S, W, 'min', AggregateFunctions, ExprInputType<V>>;
+  max<V>(value: Expr<V>): ExprAggregate<T, S, W, 'max', AggregateFunctions, ExprInputType<V>>;
   rowNumber(): ExprAggregate<T, S, W, 'rowNumber'>;
   rank(): ExprAggregate<T, S, W, 'rank'>;
   denseRank(): ExprAggregate<T, S, W, 'denseRank'>;
@@ -91,10 +91,12 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
         : input as QuerySelectScalar<S, R> | QuerySelectScalar<S, R>[];
 
       const array = isArray(resolved)
-        ? resolved
+        ? isArray(resolved[0])
+          ? resolved[0]
+          : resolved
         : [ resolved ];
 
-      return array.map((item) => 
+      return array.filter( v => v !== undefined ).map((item) => 
         isString(item)
           ? selects[item as string]
           : item
@@ -126,6 +128,7 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
     },
 
     inspect<R>(value?: ExprInput<any>): ExprCase<any, R> {
+      // @ts-ignore
       return new ExprCase(value === undefined ? new ExprConstant(true) : toExpr(value));
     },
 
@@ -179,7 +182,7 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
     },
 
     aggregate<A extends keyof Aggs, Aggs = AggregateFunctions, V = FunctionResult<A, Aggs>>(type: A, ...args: FunctionArgumentInputs<A, Aggs>): ExprAggregate<T, S, W, A, Aggs, V> {
-      return new ExprAggregate<T, S, W, A, Aggs, V>(exprs as ExprFactory<T, S, W>, type, (args as any).map( toExpr ));
+      return new ExprAggregate<T, S, W, A, Aggs, V>(exprs as ExprFactory<T, S, W>, type, (args as any).filter( (v: any) => v !== undefined ).map( toExpr ));
     },
 
     count(value?: ExprScalar<any>): ExprAggregate<T, S, W, 'count'> {

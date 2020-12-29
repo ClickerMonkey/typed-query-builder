@@ -18,6 +18,8 @@ export interface SourceTableInput<N extends Name, F extends DataTypeInputMap>
 
 export class SourceTable<N extends Name, S extends Selects, F extends DataTypeInputMap> extends Source<S> implements NamedSource<N, S>, SourceFieldsFunctions<S>
 {
+
+  public static readonly id = ExprKind.TABLE;
   
   public static create<N extends Name, F extends DataTypeInputMap>(input: SourceTableInput<N, F>): SourceTable<N, DataTypeInputMapSelects<F>, F> 
   {
@@ -46,31 +48,43 @@ export class SourceTable<N extends Name, S extends Selects, F extends DataTypeIn
     this.fields = ExprField.createFieldsFactory(this.selects, this.fieldMap);
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.TABLE;
   }
 
-  public getSelects(): S {
+  public isSimple(): boolean
+  {
+    return true;
+  }
+
+  public getSelects(): S 
+  {
     return this.selects;
   }
 
-  public getName(): N {
+  public getName(): N 
+  {
     return this.name;
   }
 
-  public getSource(): Source<S> {
+  public getSource(): Source<S> 
+  {
     return this;
   }
 
-  public getFields(): SourceFieldsFromSelects<S> {
+  public getFields(): SourceFieldsFromSelects<S> 
+  {
     return this.fieldMap;
   }
 
-  public getFieldsFactory(): SourceFieldsFactory<S> {
+  public getFieldsFactory(): SourceFieldsFactory<S> 
+  {
     return this.fields;
   }
 
-  public extend<E extends Name, EF extends DataTypeInputMap>(input: SourceTableInput<E, EF>): SourceTable<E, TupleAppend<S, DataTypeInputMapSelects<EF>>, MergeObjects<F, EF>> {
+  public extend<E extends Name, EF extends DataTypeInputMap>(input: SourceTableInput<E, EF>): SourceTable<E, TupleAppend<S, DataTypeInputMapSelects<EF>>, MergeObjects<F, EF>> 
+  {
     return new SourceTable({
       name: input.name,
       table: input.table || this.table,
@@ -89,7 +103,8 @@ export class SourceTable<N extends Name, S extends Selects, F extends DataTypeIn
   public all(): S 
   public all<P extends string>(prefix: P): SelectsWithKeyPrefixed<S, any, P>
   public all<P extends string, T extends TextModifyType>(prefix: P, modify: T): SelectsWithKeyPrefixed<S, any, P, T> 
-  public all(prefix: string = '', modify: TextModifyType = 'NONE'): never {
+  public all(prefix: string = '', modify: TextModifyType = 'NONE'): never 
+  {
     return this.mapSelects(this.selects, prefix, modify) as never;
   }
   
@@ -97,7 +112,8 @@ export class SourceTable<N extends Name, S extends Selects, F extends DataTypeIn
   public only<C extends SelectsKey<S>>(only: C[]): SelectsWithKey<S, unknown extends C ? never : C>
   public only<C extends SelectsKey<S>, P extends string>(only: C[], prefix: P): SelectsWithKeyPrefixed<S, unknown extends C ? never : C, P>
   public only<C extends SelectsKey<S>, P extends string, T extends TextModifyType>(only: C[], prefix: P, modify: T): SelectsWithKeyPrefixed<S, unknown extends C ? never : C, P, T>
-  public only(onlyInput?: string[], prefix: string = '', modify: TextModifyType = 'NONE'): never {
+  public only(onlyInput?: string[], prefix: string = '', modify: TextModifyType = 'NONE'): never 
+  {
     const only = onlyInput
       ? onlyInput.map( (field) => this.fieldMap[field as any] )
       : [];
@@ -110,7 +126,8 @@ export class SourceTable<N extends Name, S extends Selects, F extends DataTypeIn
   public exclude<C extends SelectsKey<S>>(exclude: C[]): SelectsWithKey<S, unknown extends C ? SelectsKey<S> : Exclude<SelectsKey<S>, C>>
   public exclude<C extends SelectsKey<S>, P extends string>(exclude: C[], prefix: P): SelectsWithKeyPrefixed<S, unknown extends C ? SelectsKey<S> : Exclude<SelectsKey<S>, C>, P>;
   public exclude<C extends SelectsKey<S>, P extends string, T extends TextModifyType>(exclude: C[], prefix: P, modify: T): SelectsWithKeyPrefixed<S, unknown extends C ? SelectsKey<S> : Exclude<SelectsKey<S>, C>, P, T>;
-  public exclude(excludeInput?: string[], prefix: string = '', modify: TextModifyType = 'NONE'): never {
+  public exclude(excludeInput?: string[], prefix: string = '', modify: TextModifyType = 'NONE'): never 
+  {
     const exclude = excludeInput
       ? this.selects.filter( s => excludeInput.indexOf(s.alias as any) === -1 )
       : this.selects;
@@ -130,7 +147,8 @@ export class SourceTable<N extends Name, S extends Selects, F extends DataTypeIn
     }
   }
 
-  public mapped<K extends SelectsKey<S>, M extends Record<string, K>>(map: M): SelectsMap<S, K, M> {
+  public mapped<K extends SelectsKey<S>, M extends Record<string, K>>(map: M): SelectsMap<S, K, M> 
+  {
     const out = [];
 
     for (const prop in map)

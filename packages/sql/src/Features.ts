@@ -1,5 +1,5 @@
 
-export const enum DialectFeatures
+export enum DialectFeatures
 {
   WITH                    = (1 << 0),
   WITH_RECURSIVE          = (1 << 1),

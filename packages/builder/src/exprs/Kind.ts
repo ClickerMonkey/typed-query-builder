@@ -1,5 +1,5 @@
 
-export const enum ExprKind {
+export enum ExprKind {
     AGGREGATE               = 'agg',
     BETWEEN                 = 'btwn',
     CASE                    = 'case',

@@ -1,8 +1,9 @@
 import { Dialect } from './Dialect';
-import { addExists } from './exprs/Exists';
+import { addExprs } from './exprs';
 import { addFeatures } from './feature';
 import { addQuery } from './query';
 import { ReservedWords } from './Reserved';
+import { addSources } from './sources';
 
 
 export const DialectBase = new Dialect();
@@ -15,7 +16,14 @@ DialectBase.joinTypeAlias['INNER'] = 'INNER JOIN';
 DialectBase.joinTypeAlias['LEFT'] = 'LEFT JOIN';
 DialectBase.joinTypeAlias['RIGHT'] = 'RIGHT JOIN';
 DialectBase.joinTypeAlias['FULL'] = 'FULL JOIN';
+DialectBase.valueFormatter.push(
+  Dialect.FormatBoolean,
+  Dialect.FormatDate,
+  Dialect.FormatString,
+  Dialect.FormatNumber,
+);
 
-addExists(DialectBase);
+addExprs(DialectBase);
 addFeatures(DialectBase);
 addQuery(DialectBase);
+addSources(DialectBase);

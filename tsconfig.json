@@ -2,9 +2,19 @@
   "extends": "./tsconfig.build.json",
 
   "compilerOptions": {
-    "baseUrl": "./packages",
+    "baseUrl": ".",
     "paths": {
-      "@typed-query-builder/*": ["*/src"]
+      "@typed-query-builder/*": [
+        "packages/builder",
+        "packages/run",
+        "packages/sql",
+        "packages/mssql",
+        "packages/pgsql",
+        "packages/mysql"
+      ]
     },
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["jest", "node"]
   }
 }

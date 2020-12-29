@@ -11,8 +11,6 @@ export function addList(dialect: Dialect)
     {
       const { criteria, item } = expr;
 
-      criteria.limit = 1;
-
       let x = '';
 
       x += 'SELECT ';

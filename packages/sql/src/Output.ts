@@ -54,7 +54,7 @@ export class DialectOutput
       this.params[this.paramCount] = value;
       this.paramTypes[this.paramCount] = dataType;
 
-      return this.addParam(String(this.paramCount));
+      return this.addParam(String(this.paramCount + this.dialect.paramOffset));
     }
     else
     {

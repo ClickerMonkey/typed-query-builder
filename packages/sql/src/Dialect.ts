@@ -2,7 +2,7 @@ import {
   Transformer, Expr, isString, isFunction, DataTypeTypes, DataTypeInputs, OperationUnaryType, GroupingSetType, InsertPriority, 
   JoinType, LockRowLock, LockStrength, OperationBinaryType, OrderDirection, PredicateBinaryListPass, PredicateBinaryListType, 
   PredicateBinaryType, PredicateRowType, PredicatesType, PredicateUnaryType, SetOperation, WindowFrameExclusion, WindowFrameMode, 
-  mapRecord, isArray, isBoolean, compileFormat
+  mapRecord, isArray, isBoolean, compileFormat, isNumber
 } from '@typed-query-builder/builder';
 
 import { DialectFeatures, DialectFeaturesDescription } from './Features';
@@ -34,9 +34,9 @@ export class Dialect
   public transformer: Transformer<DialectTransformTransformer, [DialectOutput]>;
   public valueQuoter: DialectQuoteFormatter;
   public aliasQuoter: DialectQuoteFormatter;
-  public aliasQuoteAlways: boolean;
+  public aliasQuotesOptional: RegExp;
   public nameQuoter: DialectQuoteFormatter;
-  public nameQuoteAlways: boolean;
+  public nameQuotesOptional: RegExp;
   public reservedWords: Record<string, boolean>;
   public valueFormatter: DialectValueFormatter[];
   public dataTypeFormatter: DialectMap<keyof DataTypeTypes, DialectDataTypeFormatter>;
@@ -77,12 +77,13 @@ export class Dialect
     this.transformer = new Transformer();
     this.valueQuoter = Dialect.quoter(["'", "''"]);
     this.aliasQuoter = Dialect.quoter(['"', '""']);
+    this.aliasQuotesOptional = /^\w+$/;
     this.nameQuoter = Dialect.quoter(['"', '""']);
+    this.nameQuotesOptional = /^\w+$/;
     this.dataTypeUnsignedIdentifier = 'UNSIGNED';
     this.dataTypeNullIdentifier = 'NULL';
     this.dataTypeArrayFormatter = (element, length) => `${element} ARRAY[${length || ''}]`;
-    this.aliasQuoteAlways = false;
-    this.nameQuoteAlways = false;
+    
     this.dataTypeFormatter = {};
     this.reservedWords = {};
     this.operationUnaryAlias = {};
@@ -471,7 +472,7 @@ export class Dialect
 
   public quoteAlias(alias: string): string
   {
-    return this.aliasQuoteAlways || this.reservedWords[alias.toLowerCase()]
+    return !this.aliasQuotesOptional.test(alias) || this.reservedWords[alias.toLowerCase()]
       ? this.aliasQuoter(alias, this)
       : alias;
   }
@@ -481,11 +482,11 @@ export class Dialect
     this.nameQuoter = Dialect.quoter(input);
   }
 
-  public quoteName(alias: string): string
+  public quoteName(name: string): string
   {
-    return this.nameQuoteAlways || this.reservedWords[alias.toLowerCase()]
-      ? this.nameQuoter(alias, this)
-      : alias;
+    return !this.nameQuotesOptional.test(name) || this.reservedWords[name.toLowerCase()]
+      ? this.nameQuoter(name, this)
+      : name;
   }
 
   public static quoter(input: DialectQuoteInput): DialectQuoteFormatter
@@ -533,6 +534,11 @@ export class Dialect
         return iso.substring(0, 10) + ' ' + iso.substring(11, 19);
       }
     }
+  };
+  
+  public static FormatNumber: DialectValueFormatter = (value, dialect) => 
+  {
+    return isNumber(value) ? value.toString() : undefined;
   };
 
 }

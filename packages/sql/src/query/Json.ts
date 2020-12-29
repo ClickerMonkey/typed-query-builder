@@ -11,7 +11,7 @@ export function addJson(dialect: Dialect)
     {
       out.dialect.requireSupport(DialectFeatures.JSON);
 
-      return '';
+      return `JSON(${transform(expr, out)})`;
     }
   );
 }

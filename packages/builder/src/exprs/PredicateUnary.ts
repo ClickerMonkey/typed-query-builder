@@ -13,8 +13,14 @@ export class ExprPredicateUnary extends ExprScalar<boolean>
     super();
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.PREDICATE_UNARY;
+  }
+
+  public isPredicate(): boolean 
+  {
+    return true;
   }
 
   public traverse<R>(traverse: Traverser<Expr<any>, R>): R {

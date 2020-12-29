@@ -1,4 +1,4 @@
-import { QueryFirstValue } from '@typed-query-builder/builder';
+import { ExprAggregate, QueryFirstValue } from '@typed-query-builder/builder';
 import { Dialect } from '../Dialect';
 import { getCriteria } from '../helpers/Criteria';
 
@@ -11,7 +11,10 @@ export function addFirstValue(dialect: Dialect)
     {
       const { criteria, value, defaultValue } = expr;
 
-      criteria.limit = 1;
+      if (!(value.getExpr() instanceof ExprAggregate))
+      {
+        criteria.limit = 1;
+      }
 
       let x = '';
 

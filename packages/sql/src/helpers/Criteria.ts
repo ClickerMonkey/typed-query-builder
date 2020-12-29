@@ -5,6 +5,7 @@ import { DialectOutput } from '../Output';
 import { getGroup } from './Group';
 import { getNamedSource } from './NamedSource';
 import { getOrder } from './Order';
+import { getPredicate } from './Predicate';
 import { getPredicates } from './Predicates';
 import { getSelects } from './Selects';
 import { getWindow } from './Window';
@@ -24,7 +25,7 @@ export function getCriteria(criteria: QueryCriteria<any, any, any>, transform: D
     } 
     else 
     {
-      x += selects.map( (e: Select<any, any>) => out.wrap(e.getExpr()) ).join(', ');
+      x += selects.map( (s: Select<any, any>) => out.wrap(s.getExpr()) ).join(', ');
     }
 
     x += ' ';
@@ -76,7 +77,7 @@ export function getCriteria(criteria: QueryCriteria<any, any, any>, transform: D
   if (having) 
   {
     x += ' HAVING ';
-    x += transform( having, out );
+    x += getPredicate( having, transform, out );
   }
 
   if (hasWindows && !isEmpty(windows)) 

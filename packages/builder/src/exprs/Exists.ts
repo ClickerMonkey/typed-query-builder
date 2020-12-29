@@ -13,8 +13,14 @@ export class ExprExists extends ExprScalar<boolean>
     super();
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.EXISTS;
+  }
+
+  public isPredicate(): boolean 
+  {
+    return true;
   }
 
   public traverse<R>(traverse: Traverser<Expr<any>, R>): R {

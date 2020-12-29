@@ -25,7 +25,7 @@
     "compile": "tsc -p tsconfig.build.json",
     "prepublishOnly": "yarn run build",
     "test": "jest",
-    "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
+    "test:debug": "node --inspect-brk ../../node_modules/jest/bin/jest.js --runInBand",
     "test:watch": "npm test -- --watch",
     "test:coverage": "npm test -- --coverage",
     "test:only-changed": "npm test -- --bail --onlyChanged",
@@ -43,5 +43,5 @@
   },
   "dependencies": {
     "@typed-query-builder/builder": "*"
-  }
+  } 
 }
