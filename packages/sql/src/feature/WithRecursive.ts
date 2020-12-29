@@ -13,7 +13,7 @@ export function addWithRecursiveFeature(dialect: Dialect)
     x += ' (';
     x += (value.getSource().getSelects() as Selects).map( s => s.alias ).join(', ');
     x += ') AS (';
-    x += transform(value.source, out);
+    x += out.modify({ excludeSelectAlias: true }, () => transform(value.source, out));
     x += ' UNION ';
     if (value.all) {
       x += 'ALL ';

@@ -83,6 +83,19 @@ export class SourceTable<N extends Name, S extends Selects, F extends DataTypeIn
     return this.fields;
   }
 
+  public hasColumn(column: string): boolean
+  {
+    for (const field in this.fieldColumn)
+    {
+      if (this.fieldColumn[field] === column)
+      {
+        return true;
+      }
+    }
+
+    return !!this.fieldMap[column] && !this.fieldColumn[column];
+  }
+
   public extend<E extends Name, EF extends DataTypeInputMap>(input: SourceTableInput<E, EF>): SourceTable<E, TupleAppend<S, DataTypeInputMapSelects<EF>>, MergeObjects<F, EF>> 
   {
     return new SourceTable({

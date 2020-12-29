@@ -13,12 +13,15 @@ export function addExistential(dialect: Dialect)
 
       criteria.limit = 1;
 
-      let x = '';
+      return out.addSources(criteria.sources.map( s => s.source ), () =>
+      {
+        let x = '';
+  
+        x += 'SELECT 1 ';
+        x += getCriteria(criteria, transform, out, false, false, false, false, true);
 
-      x += 'SELECT 1 ';
-      x += getCriteria(criteria, transform, out, false, false, false, false, true);
-
-      return x;
+        return x;
+      });
     }
   );
 }

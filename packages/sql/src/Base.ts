@@ -21,6 +21,7 @@ DialectBase.valueFormatter.push(
   Dialect.FormatDate,
   Dialect.FormatString,
   Dialect.FormatNumber,
+  Dialect.FormatNull,
 );
 
 addExprs(DialectBase);

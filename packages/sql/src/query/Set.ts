@@ -26,20 +26,25 @@ export function addSet(dialect: Dialect)
           {
             x += 'ALL ';
           }
+          
+          x += '(';
+          x += out.modify({ excludeSelectAlias: true }, () => transform( source, out ));
+          x += ')';
         }
-
-        x += '(';
-        x += transform( source, out );
-        x += ')';
+        else
+        {
+          x += '(';
+          x += transform( source, out );
+          x += ')';
+        }
 
         sourceIndex++;
       }
 
       if (orderBy.length > 0) 
       {
-        // TODO exclude "set"
         x += ' ORDER BY ';
-        x += orderBy.map( o => getOrder(o, out ) ).join(', ');
+        x += out.modify({ excludeSource: true }, () => orderBy.map( o => getOrder(o, out ) ).join(', '));
       }
 
       if (isNumber(offset)) 

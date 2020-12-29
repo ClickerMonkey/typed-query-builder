@@ -53,14 +53,8 @@ export type SelectsNormalize<T extends Selects> =
   }, Selects>
 ;
 
-export type SelectsRecord<T extends Selects> = 
-  Simplify<UnionToIntersection<{
-    [K in keyof T]: T[K] extends Select<infer N, infer V> ? Record<N, V> : {};
-  }[number]>>
-;
-
 export type SelectsRecordExprs<S extends Selects, C extends Tuple<SelectsKey<S>>> = 
-  Simplify<UnionToIntersection<{
+  UndefinedToOptional<UnionToIntersection<{
     [I in keyof C]: SelectExprRecord<SelectWithKey<S, C[I]>>;
   }[number]>>
 ;

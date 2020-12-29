@@ -2,7 +2,7 @@ import {
   Transformer, Expr, isString, isFunction, DataTypeTypes, DataTypeInputs, OperationUnaryType, GroupingSetType, InsertPriority, 
   JoinType, LockRowLock, LockStrength, OperationBinaryType, OrderDirection, PredicateBinaryListPass, PredicateBinaryListType, 
   PredicateBinaryType, PredicateRowType, PredicatesType, PredicateUnaryType, SetOperation, WindowFrameExclusion, WindowFrameMode, 
-  mapRecord, isArray, isBoolean, compileFormat, isNumber
+  mapRecord, isArray, isBoolean, compileFormat, isNumber, AggregateFunctions
 } from '@typed-query-builder/builder';
 
 import { DialectFeatures, DialectFeaturesDescription } from './Features';
@@ -71,6 +71,7 @@ export class Dialect
   public selectExpression: (expr: string) => string;
   public supports: number;
   public defaultOptions: DialectOutputOptions;
+  public aggregateRequiresArgument: DialectMap<keyof AggregateFunctions, string>;
 
   public constructor()
   {
@@ -113,6 +114,7 @@ export class Dialect
     this.falseIdentifier = 'FALSE';
     this.nullIdentifier = 'NULL';
     this.defaultOptions = {};
+    this.aggregateRequiresArgument = { count: '*' };
     this.selectExpression = (expr) => `SELECT (${expr}) AS ${this.quoteAlias('value')}`;
     this.supports = DialectFeatures.ALL;
   }
@@ -512,6 +514,11 @@ export class Dialect
   public static FormatString: DialectValueFormatter = (value, dialect) => 
   {
     return isString(value) ? dialect.quoteValue(value) : undefined;
+  };
+
+  public static FormatNull: DialectValueFormatter = (value, dialect) => 
+  {
+    return value === null ? dialect.nullIdentifier : undefined;
   };
 
   public static FormatBoolean: DialectValueFormatter = (value, dialect) => 

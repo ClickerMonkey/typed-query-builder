@@ -1,4 +1,4 @@
-import { DataTypeInputs, Expr, isNumber } from '@typed-query-builder/builder';
+import { DataTypeInputs, Expr, isNumber, NamedSource, SourceTable } from '@typed-query-builder/builder';
 import { Dialect } from './Dialect';
 import { DialectFeatures } from './Features';
 
@@ -8,6 +8,9 @@ export interface DialectOutputOptions
   throwError?: boolean;
   constantsAsParams?: boolean;
   raw?: boolean;
+  excludeSource?: boolean;
+  excludeSelectAlias?: boolean;
+  simplifySelects?: boolean;
 }
 
 export class DialectOutput
@@ -21,6 +24,7 @@ export class DialectOutput
   public paramTypes: Array<DataTypeInputs | undefined>;
   public query: string;
   public error?: Error;
+  public sources: NamedSource<any, any>[];
 
   public constructor(dialect: Dialect, options: DialectOutputOptions)
   {
@@ -32,6 +36,7 @@ export class DialectOutput
     this.paramTypes = [];
     this.query = '';
     this.error = undefined;
+    this.sources = [];
   }
 
   public addParam(param: string): string
@@ -84,6 +89,62 @@ export class DialectOutput
     const transformed = this.dialect.transformer.transform(e, this);
 
     return e.isSimple() ? transformed : `(${transformed})`;
+  }
+
+  public modify<R = void>(options: DialectOutputOptions, modifier: () => R): R
+  {
+    const saved = this.options;
+
+    this.options = {
+      ...saved,
+      ...options,
+    };
+
+    const result = modifier();
+
+    this.options = saved;
+
+    return result;
+  }
+
+  public isUnique(column: string, exclude?: NamedSource<any, any>): boolean
+  {
+    for (const source of this.sources)
+    {
+      if (source === exclude)
+      {
+        continue;
+      }
+
+      const original = source.getSource();
+
+      if (original instanceof SourceTable)
+      {
+        if (original.hasColumn(column))
+        {
+          return false;
+        }
+      }
+      else if (source.getFields()[column])
+      {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  public addSources<R = void>(sources: NamedSource<any, any>[], adder: () => R): R
+  {
+    const saved = this.sources.slice();
+
+    this.sources = saved.concat(sources);
+
+    const result = adder();
+
+    this.sources = saved;
+
+    return result;
   }
 
 }

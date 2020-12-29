@@ -16,7 +16,7 @@ export function addInsertUpdateDuplicateFeature(dialect: Dialect)
     if (where.length > 0)
     {
       x += ' WHERE ';
-      x += getPredicates( where, 'AND', transform, out );
+      x += out.modify({ excludeSource: true }, () => getPredicates( where, 'AND', transform, out ));
     }
 
     return x;

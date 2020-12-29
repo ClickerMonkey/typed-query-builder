@@ -12,11 +12,16 @@ export function addAggregate(dialect: Dialect)
     {
       const { _type, _values, _filter, _distinct, _order, _overWindow, _overWindowDefinition } = expr;
 
-      let args = ['*'];
+      const requiredArgument = out.dialect.aggregateRequiresArgument[_type];
+      let args: string[] = [];
 
       if (isArray(_values) && _values.length > 0) 
       {
         args = _values.map( v => out.wrap(v) );
+      }
+      else if (requiredArgument)
+      {
+        args.push(requiredArgument);
       }
 
       let prefix = '';
@@ -39,7 +44,7 @@ export function addAggregate(dialect: Dialect)
       if (_overWindow) {
         out.dialect.requireSupport(DialectFeatures.AGGREGATE_OVER);
 
-        x += ` OVER ${dialect.nameQuoter(_overWindow, dialect)})`;
+        x += ` OVER ${dialect.quoteName(_overWindow)}`;
       }
       else if (_overWindowDefinition) {
         out.dialect.requireSupport(DialectFeatures.AGGREGATE_OVER);

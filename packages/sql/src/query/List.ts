@@ -11,16 +11,19 @@ export function addList(dialect: Dialect)
     {
       const { criteria, item } = expr;
 
-      let x = '';
+      return out.addSources(criteria.sources.map( s => s.source ), () =>
+      {
+        let x = '';
+        
+        x += 'SELECT ';
+        x += out.wrap(item);
+        x += ' AS ';
+        x += out.dialect.quoteAlias('item');
+        x += ' ';
+        x += getCriteria(criteria, transform, out, false, false, true, true, true);
 
-      x += 'SELECT ';
-      x += out.wrap(item);
-      x += ' AS ';
-      x += out.dialect.quoteAlias('item');
-      x += ' ';
-      x += getCriteria(criteria, transform, out, false, false, true, true, true);
-
-      return x;
+        return x;
+      });
     }
   );
 }

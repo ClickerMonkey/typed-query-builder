@@ -84,9 +84,11 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
   public join<JN extends Name, JT extends Selects>(type: 'FULL', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W>
   public join<JN extends Name, JT extends Selects>(type: JoinType, source: NamedSource<JN, JT>, on: any): never
   {
-    const onExpr = toExpr(this._criteria.exprs.provide(on as any));
+    const join = new SourceJoin(source, type, toExpr(true));
 
-    this._criteria.addSource(new SourceJoin(source as any, type, onExpr), SourceKind.JOIN);
+    this._criteria.addSource(join as any, SourceKind.JOIN);
+
+    join.condition = toExpr(this._criteria.exprs.provide(on as any));
 
     return this as never;
   }

@@ -13,55 +13,58 @@ export function addUpdate(dialect: Dialect)
     {
       const { _sources, _returning, _target, _sets, _where } = expr;
 
-      let x = '';
-
-      const withs = _sources
-        .filter( s => s.kind === SourceKind.WITH )
-        .map( s => s.source )
-      ;
-
-      x += withs.map( w => out.dialect.getFeatureOutput(DialectFeatures.WITH, w, out) ).join(' ');
-
-      x += 'UPDATE ';
-
-      const only = _sources.some( s => s.source === _target && s.kind === SourceKind.ONLY );
-      if (only)
+      return out.addSources( _sources.map( s => s.source ), () =>
       {
-        x += 'ONLY ';
-      }
+        let x = '';
 
-      x += out.dialect.quoteName(String(_target.table));
-      
-      if (_sets.length > 0)
-      {
-        x += ' SET ';
-        x += _sets.map( s => getStatementSet( s, transform, out ) ).join(', ');
-      }
+        const withs = _sources
+          .filter( s => s.kind === SourceKind.WITH )
+          .map( s => s.source )
+        ;
 
-      const froms = _sources
-        .filter( s => s.kind === SourceKind.FROM )
-        .map( s => s.source )
-      ;
+        x += withs.map( w => out.dialect.getFeatureOutput(DialectFeatures.WITH, w, out) ).join(' ');
 
-      if (froms.length > 0)
-      {
-        x += ' ';
-        x += out.dialect.getFeatureOutput(DialectFeatures.UPDATE_FROM, froms, out);
-      }
+        x += 'UPDATE ';
 
-      if (_where.length > 0)
-      {
-        x += ' WHERE ';
-        x += getPredicates(_where, 'AND', transform, out);
-      }
-      
-      if (_returning.length > 0) 
-      {
-        x += ' ';
-        x += out.dialect.getFeatureOutput(DialectFeatures.UPDATE_RETURNING, _returning, out );
-      }
+        const only = _sources.some( s => s.source === _target && s.kind === SourceKind.ONLY );
+        if (only)
+        {
+          x += 'ONLY ';
+        }
 
-      return x;
+        x += out.dialect.quoteName(String(_target.table));
+        
+        if (_sets.length > 0)
+        {
+          x += ' SET ';
+          x += _sets.map( s => getStatementSet( s, transform, out ) ).join(', ');
+        }
+
+        const froms = _sources
+          .filter( s => s.kind === SourceKind.FROM )
+          .map( s => s.source )
+        ;
+
+        if (froms.length > 0)
+        {
+          x += ' ';
+          x += out.dialect.getFeatureOutput(DialectFeatures.UPDATE_FROM, froms, out);
+        }
+
+        if (_where.length > 0)
+        {
+          x += ' WHERE ';
+          x += getPredicates(_where, 'AND', transform, out);
+        }
+        
+        if (_returning.length > 0) 
+        {
+          x += ' ';
+          x += out.dialect.getFeatureOutput(DialectFeatures.UPDATE_RETURNING, _returning, out );
+        }
+
+        return x;
+      });
     }
   );
 }

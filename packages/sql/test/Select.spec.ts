@@ -26,13 +26,13 @@ describe('Select', () =>
     },
   });
 
-  // const People = table({
-  //   name: 'people',
-  //   fields: {
-  //     id: 'INT',
-  //     name: ['VARCHAR', 64],
-  //   },
-  // });
+  const People = table({
+    name: 'people',
+    fields: {
+      id: 'INT',
+      name: ['VARCHAR', 64],
+    },
+  });
 
   it('all', () =>
   {
@@ -50,6 +50,105 @@ describe('Select', () =>
         task.parentId AS parentId, 
         task.assignee AS assignee 
       FROM task
+    `);
+  });
+
+  it('all with differing names', () =>
+  {
+    const Project = table({
+      name: 'project',
+      table: 'projects',
+      fields: {
+        id: 'INT',
+        name: 'TEXT',
+      },
+      fieldColumn: {
+        id: 'ProjectID',
+        name: 'ProjectName'
+      },
+    });
+
+    const x = from(Project)
+      .select('*')
+      .run(sql)
+    ;
+
+    expectText({ condenseSpace: true }, x, `
+      SELECT 
+        projects.ProjectID AS id, 
+        projects.ProjectName AS name
+      FROM projects
+    `);
+  });
+
+  it('all with differing names simplified', () =>
+  {
+    const Project = table({
+      name: 'project',
+      table: 'projects',
+      fields: {
+        id: 'INT',
+        name: 'TEXT',
+      },
+      fieldColumn: {
+        id: 'ProjectID',
+        name: 'ProjectName'
+      },
+    });
+
+    const x = from(Project)
+      .select('*')
+      .run(sqlWithOptions({ simplifySelects: true }))
+    ;
+
+    expectText({ condenseSpace: true }, x, `
+      SELECT 
+        ProjectID AS id, 
+        ProjectName AS name
+      FROM projects
+    `);
+  });
+
+  it('all simplified', () =>
+  {
+    const x = from(Task)
+      .select('*')
+      .run(sqlWithOptions({ simplifySelects: true }))
+    ;
+
+    expectText({ condenseSpace: true }, x, `
+      SELECT 
+        id, 
+        name,
+        done, 
+        doneAt, 
+        parentId, 
+        assignee 
+      FROM task
+    `);
+  });
+
+  it('all simplified with join', () =>
+  {
+    const x = from(Task)
+      .joinInner(People, ({ people, task }) => task.assignee.eq(people.id))
+      .select(({ task }) => task.all())
+      .select(({ people }) => people.all('assignee', 'CAPITAL'))
+      .run(sqlWithOptions({ simplifySelects: true }))
+    ;
+
+    expectText({ condenseSpace: true }, x, `
+      SELECT 
+        task.id AS id, 
+        task.name AS name,
+        done, 
+        doneAt, 
+        parentId, 
+        assignee,
+        people.id AS assigneeId,
+        people.name AS assigneeName
+      FROM task
+      INNER JOIN people ON assignee = people.id
     `);
   });
 
@@ -159,8 +258,6 @@ describe('Select', () =>
 
   it('select where subquery', () =>
   {
-    debugger;
-
     const x = from(Book)
       .select(Book.all())
       .where(Book.fields.price.lt(Book.fields.price.avg()))
@@ -176,6 +273,54 @@ describe('Select', () =>
       FROM book
       WHERE book.price < (SELECT AVG(book.price) AS avg FROM book)
       ORDER BY book.title
+    `);
+  });
+
+  it('select window', () =>
+  {
+    const x = from(Task)
+      .window('w', (w, { task }) => w.partition(task.done).order(task.doneAt))
+      .select(({ task }) => task.all())
+      .select(({ task }, { rank }) => [
+        rank().over('w').as('rank'),
+      ])
+      .run(sql)
+    ;
+
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT 
+        task.id AS id, 
+        task.name AS name,
+        task.done AS done, 
+        task.doneAt AS doneAt, 
+        task.parentId AS parentId, 
+        task.assignee AS assignee,
+        RANK() OVER w AS rank
+      FROM task
+      WINDOW w AS (PARTITION BY task.done ORDER BY task.doneAt)
+    `);
+  });
+
+  it('select window over', () =>
+  {
+    const x = from(Task)
+      .select(({ task }) => task.all())
+      .select(({ task }, { rank }) => [
+        rank().over((w) => w.partition(task.done).order(task.doneAt)).as('rank'),
+      ])
+      .run(sql)
+    ;
+
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT 
+        task.id AS id, 
+        task.name AS name,
+        task.done AS done, 
+        task.doneAt AS doneAt, 
+        task.parentId AS parentId, 
+        task.assignee AS assignee,
+        RANK() OVER (PARTITION BY task.done ORDER BY task.doneAt) AS rank
+      FROM task
     `);
   });
 

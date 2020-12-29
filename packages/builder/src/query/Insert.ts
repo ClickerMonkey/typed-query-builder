@@ -120,7 +120,7 @@ export class StatementInsert<
 
   public valuesFromParams(): this
   {
-    this._values.push(this._columns.map((column) => new ExprParam(column as string)) as any);
+    this._values.push(toExpr(this._columns.map((column) => new ExprParam(column as string)) as any));
 
     return this;
   }

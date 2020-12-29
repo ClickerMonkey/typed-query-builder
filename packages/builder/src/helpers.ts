@@ -1,7 +1,8 @@
 import { 
   QuerySelect, StatementInsert, Name, Selects, SelectsFromTypeAndColumns, Sources, Simplify, SelectsKey, MergeObjects, Tuple, 
   DataTypeInputMap, DataTypeInputMapSelects, NamedSource, SourceTableInput, Source, SourceTable, SourceValues, ExprProvider, 
-  StatementUpdate, StatementDelete, SourcesFieldsFactory, SelectsExprs, createExprFactory
+  StatementUpdate, StatementDelete, SourcesFieldsFactory, SelectsExprs, createExprFactory, JoinedInner, Cast, SelectsFromKeys,
+  SelectsKeys,
 } from './internal';
 
 
@@ -48,21 +49,28 @@ export function insert<
   T extends Selects = [], 
   C extends Tuple<SelectsKey<T>> = never,
   R extends Selects = []
->(target: SourceTable<I, T, any>): StatementInsert<MergeObjects<W, Record<I, T>>, I, T, C, R> 
+>(target: SourceTable<I, T, any>): StatementInsert<JoinedInner<W, I, T>, I, T, Cast<SelectsKeys<T>, Tuple<SelectsKey<T>>>, R> 
 export function insert<
   W extends Sources = {}, 
   I extends Name = never,
   T extends Selects = [], 
   C extends Tuple<SelectsKey<T>> = never,
   R extends Selects = []
->(target?: SourceTable<I, T, any>, columns?: C): StatementInsert<W, I, T, C, R> {
+>(target: SourceTable<I, T, any>, columns: C): StatementInsert<JoinedInner<W, I, T>, I, SelectsFromKeys<T, C>, C, R> 
+export function insert<
+  W extends Sources = {}, 
+  I extends Name = never,
+  T extends Selects = [], 
+  C extends Tuple<SelectsKey<T>> = never,
+  R extends Selects = []
+>(target?: SourceTable<I, T, any>, columns?: C): never {
   const query = new StatementInsert<W, I, T, C, R>();
 
   if (target) {
     query.into(target, columns as any);
   }
 
-  return query;
+  return query as never;
 }
 
 export function update<
