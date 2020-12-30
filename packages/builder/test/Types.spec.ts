@@ -1,4 +1,4 @@
-import { Expr, Select, ExprValueObjects, ExprValueTuples, TupleFlatten, ExprValueToExpr, MergeObjects, UndefinedKeys, SelectWithKey, UnionToIntersection, UnionToTuple, ArrayToTuple, TupleAppend, ObjectKeys, SelectsKeys, SelectsValues, SelectsNameless, ObjectFromSelects, SelectsExprs, TuplesJoin, ExprField, SelectsFromObject, values, SelectsWithKey, Source, NamedSource, TextModify } from '../src';
+import { Expr, Select, ExprValueObjects, ExprValueTuples, TupleFlatten, ExprValueToExpr, MergeObjects, UndefinedKeys, SelectWithKey, UnionToIntersection, UnionToTuple, ArrayToTuple, TupleAppend, ObjectKeys, SelectsKeys, SelectsValues, SelectsNameless, ObjectFromSelects, SelectsExprs, TuplesJoin, ExprField, SelectsFromObject, values, SelectsWithKey, Source, NamedSource, TextModify, ExprScalar } from '../src';
 import { expectType, expectTypeMatch } from './helper';
 
 
@@ -121,7 +121,7 @@ describe('Types', () => {
     });
 
     it('SelectsExprs', () => {
-        expectTypeMatch<{ name: Expr<string>, id: Expr<number> }, SelectsExprs<[Select<'name', string>, Select<'id', number>]>>(true);
+        expectTypeMatch<{ name: ExprScalar<string>, id: ExprScalar<number> }, SelectsExprs<[Select<'name', string>, Select<'id', number>]>>(true);
     });
 
     it('JoinTuples', () => {

@@ -48,3 +48,9 @@ export function addExprs(dialect: Dialect)
   addRaw(dialect);
   addRow(dialect);
 }
+
+export { 
+  addAggregate, addBetween, addCase, addCast, addConstant, addDefault, addField, addFunction, addIn, addNot, addNull, 
+  addOperationBinary, addOperationUnary, addParam, addPredicateBinary, addPredicateBinaryList, addPredicateRow,
+  addPredicates, addPredicateUnary, addRaw, addRow
+};

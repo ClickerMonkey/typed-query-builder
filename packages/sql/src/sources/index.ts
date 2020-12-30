@@ -8,3 +8,8 @@ export function addSources(dialect: Dialect)
   addTable(dialect);
   addValues(dialect);
 }
+
+export {
+  addTable,
+  addValues
+};

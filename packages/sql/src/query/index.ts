@@ -24,3 +24,7 @@ export function addQuery(dialect: Dialect)
   addSet(dialect);
   addUpdate(dialect);
 }
+
+export {
+  addDelete, addExistential, addFirst, addFirstValue, addInsert, addJson, addList, addSelect, addSet, addUpdate
+};

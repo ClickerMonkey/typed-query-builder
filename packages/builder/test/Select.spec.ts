@@ -320,8 +320,7 @@ describe('Select', () => {
       .list('name')
     ;
     
-    expectExprType<Select<'name', string>[]>(q);
-    expectExpr<string[]>(q);
+    expectExprType<[Select<'name', string>][]>(q);
   });
 
   it('lists from all select', () => {
@@ -331,9 +330,8 @@ describe('Select', () => {
       .list('name')
     ;
     
-    expectExprType<Select<'name', string>[]>(q);
-    expectExtends<Expr<Select<'name', string>[]>, typeof q>();
-    expectExpr<string[]>(q);
+    expectExprType<[Select<'name', string>][]>(q);
+    expectExtends<Expr<[Select<'name', string>][]>, typeof q>();
   });
 
   it('lists from expr', () => {

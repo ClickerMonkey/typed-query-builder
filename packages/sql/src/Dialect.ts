@@ -2,7 +2,7 @@ import {
   Transformer, Expr, isString, isFunction, DataTypeTypes, DataTypeInputs, OperationUnaryType, GroupingSetType, InsertPriority, 
   JoinType, LockRowLock, LockStrength, OperationBinaryType, OrderDirection, PredicateBinaryListPass, PredicateBinaryListType, 
   PredicateBinaryType, PredicateRowType, PredicatesType, PredicateUnaryType, SetOperation, WindowFrameExclusion, WindowFrameMode, 
-  mapRecord, isArray, isBoolean, compileFormat, isNumber, AggregateFunctions
+  mapRecord, isArray, isBoolean, compileFormat, isNumber, AggregateFunctions, getDataTypeFromValue, getDataTypeFromInput
 } from '@typed-query-builder/builder';
 
 import { DialectFeatures, DialectFeaturesDescription } from './Features';
@@ -39,6 +39,7 @@ export class Dialect
   public nameQuotesOptional: RegExp;
   public reservedWords: Record<string, boolean>;
   public valueFormatter: DialectValueFormatter[];
+  public valueFormatterMap: DialectMap<keyof DataTypeTypes, DialectValueFormatter>;
   public dataTypeFormatter: DialectMap<keyof DataTypeTypes, DialectDataTypeFormatter>;
   public dataTypeUnsignedIdentifier: string;
   public dataTypeNullIdentifier: string;
@@ -106,6 +107,7 @@ export class Dialect
     this.lockRowAlias = {};
     this.functionsFormatter = {};
     this.valueFormatter = [];
+    this.valueFormatterMap = {};
     this.featureFormatter = {};
     this.paramOffset = 1;
     this.paramPrefix = '$';
@@ -292,9 +294,15 @@ export class Dialect
     {
       return this.nullIdentifier;
     }
-    else if (isString(value))
+
+    const type = dataType || getDataTypeFromValue(value);
+    const typeName = getDataTypeFromInput(type);
+    const formatter = this.valueFormatterMap[typeName];
+    const formatted = formatter ? formatter(value, this, type) : undefined;
+
+    if (formatted !== undefined)
     {
-      return this.quoteValue(value);
+      return formatted;
     }
 
     for (const formatter of this.valueFormatter)
@@ -312,13 +320,7 @@ export class Dialect
 
   public getDataTypeString(type: DataTypeInputs): string
   {
-    const key = isString(type)
-      ? type
-      : isArray(type)
-        ? type[0]
-        : 'unsigned' in type
-          ? type.unsigned
-          : type.timezoned;
+    const key = getDataTypeFromInput(type);
 
     const formatter = this.dataTypeFormatter[key];
 

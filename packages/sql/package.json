@@ -3,7 +3,7 @@
   "license": "GPL-3.0-or-later",
   "version": "1.0.0",
   "description": "A generic SQL dialect for typed-query-builder",
-  "main": "dist/typed-query-builder-sql.js",
+  "main": "dist/index.js",
   "typings": "typings/index.d.ts",
   "files": [
     "dist"
@@ -21,7 +21,7 @@
   },
   "scripts": {
     "build": "yarn run clean && yarn run compile",
-    "clean": "rimraf -rf ./dist",
+    "clean": "rimraf -rf ./dist tsconfig.build.tsbuildinfo typings",
     "compile": "tsc -p tsconfig.build.json",
     "prepublishOnly": "yarn run build",
     "test": "jest",

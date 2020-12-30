@@ -1,4 +1,6 @@
-import { Cast, Json, SelectsFromObject, Selects, Simplify } from './internal';
+import { 
+  isArray, isBoolean, isDate, isNumber, isObject, isString, Cast, Json, SelectsFromObject, Selects, Simplify 
+} from './internal';
 
 
 export type defineType<F extends DataTypeInputMap> = Simplify<DataTypeInputMapTypes<F>>;
@@ -44,6 +46,7 @@ export type DataTypeInputs =
   'DOUBLE' |
   [ type: 'DOUBLE', totalDigits: number, fractionDigits: number] |
   { unsigned: 'DOUBLE', totalDigits?: number, fractionDigits?: number } |
+  'MONEY' |
   [ type: 'CHAR', length: number] |
   [ type: 'VARCHAR', length: number] | 
   'TEXT' |
@@ -62,6 +65,7 @@ export type DataTypeInputs =
   [ type: 'VARBINARY', length: number ] |
   'BLOB' | 
   'JSON' |
+  'XML' | 
   'POINT' | 
   'SEGMENT' |
   'LINE' | 
@@ -69,6 +73,8 @@ export type DataTypeInputs =
   'PATH' | 
   'POLYGON' | 
   'CIRCLE' | 
+  [ geography: 'POINT' | 'SEGMENT' | 'LINE' | 'BOX' | 'PATH' | 'POLYGON' | 'CIRCLE', srid: number ] |
+  { world: 'POINT' | 'SEGMENT' | 'LINE' | 'BOX' | 'PATH' | 'POLYGON' | 'CIRCLE' } |
   [ type: 'ARRAY', element: DataTypeInputs, length?: number ] |
   'ANY' |
   [ nulls: 'NULL', type: DataTypeInputs ]
@@ -123,15 +129,19 @@ export type DataTypeSegment = defineType<{
 }>;
 
 export type DataTypeBox = defineType<{
-  x1: 'FLOAT',
-  y1: 'FLOAT',
-  x2: 'FLOAT',
-  y2: 'FLOAT'
+  l: 'FLOAT',
+  t: 'FLOAT',
+  r: 'FLOAT',
+  b: 'FLOAT'
 }>;
 
-export type DataTypePath = DataTypePoint[];
+export type DataTypePath = defineType<{
+  points: ['ARRAY', 'POINT']
+}>;
 
-export type DataTypePolygon = DataTypePoint[];
+export type DataTypePolygon = defineType<{
+  corners: ['ARRAY', 'POINT']
+}>;
 
 export type DataTypeCircle = defineType<{
   x: 'FLOAT',
@@ -173,14 +183,215 @@ export interface DataTypeTypes {
   VARBINARY: string;
   BLOB: string;
   JSON: Json;
+  XML: string;
 
   POINT: DataTypePoint;
   LINE: DataTypeLine;
   SEGMENT: DataTypeSegment;
   BOX: DataTypeBox;
-  POLYGON: DataTypePolygon
+  POLYGON: DataTypePolygon;
   PATH: DataTypePath;
   CIRCLE: DataTypeCircle;
 
   ANY: any;
+  ARRAY: any[];
+  NULL: null;
+}
+
+export interface DataTypeMeta
+{
+  srid?: number;
+  length?: number;
+  totalDigits?: number;
+  fractionDigits?: number;
+  secondFractionDigits?: number;
+  timezoned?: boolean;
+  innerType?: DataTypeInputs;
+  unsigned?: boolean;
+  nullable?: boolean;
+  array?: boolean;
+  arrayLength?: number;
+}
+
+export function getDataTypeMeta(input: DataTypeInputs): DataTypeMeta 
+{
+  switch (getDataTypeFromInput(input))
+  {
+    case 'BITS':
+      return { 
+        length: input[1] 
+      };
+
+    case 'TINYINT':
+    case 'SMALLINT':
+    case 'MEDIUMINT':
+    case 'INT':
+    case 'BIGINT':
+      return {
+        length: isArray(input) ? input[1] as number : undefined,
+        unsigned: isObject(input),
+      };
+
+    case 'NUMERIC':
+    case 'DECIMAL':
+    case 'FLOAT':
+    case 'DOUBLE':
+      return {
+        totalDigits: isArray(input) ? input[1] as number : isObject(input) ? (input as any).totalDigits : undefined,
+        fractionDigits: isArray(input) ? input[2] as number : isObject(input) ? (input as any).fractionDigits : undefined,
+      };
+    
+    case 'DATE':
+    case 'TIME':
+    case 'TIMESTAMP':
+      return {
+        secondFractionDigits: isArray(input) ? input[1] as number : isObject(input) ? (input as any).secondFractionDigits : undefined,
+        timezoned: isObject(input),
+      };
+
+    case 'CHAR':
+    case 'VARCHAR':
+      return {
+        length: input[1],
+      };
+
+    case 'BINARY':
+    case 'VARBINARY':
+      return {
+        length: input[1],
+      };
+
+    case 'POINT':
+    case 'LINE':
+    case 'SEGMENT':
+    case 'BOX':
+    case 'POLYGON':
+    case 'PATH':
+    case 'CIRCLE':
+      return {
+        srid: isArray(input) ? input[1] as number : isObject(input) ? 4326 : 0
+      };
+
+    case 'ARRAY':
+      const arrayable = getDataTypeMeta(input[1]);
+      arrayable.array = true;
+      arrayable.arrayLength = input[2];
+      return arrayable;
+
+    case 'NULL':
+      const nullable = getDataTypeMeta(input[1]);
+      nullable.nullable = true;
+      return nullable;
+  }
+
+  return {};
+}
+
+export function getDataTypeFromValue(value: any): DataTypeInputs
+{
+  if (value === null)
+  {
+    return ['NULL', 'ANY'];
+  }
+  if (isBoolean(value))
+  {
+    return 'BOOLEAN';
+  }
+  if (isString(value))
+  {
+    return 'TEXT';
+  }
+  if (isNumber(value))
+  {
+    return Math.floor(value) === value ? 'INT' : 'DOUBLE';
+  }
+  if (typeof BigInt !== 'undefined' && value instanceof BigInt)
+  {
+    return 'BIGINT';
+  }
+  if (isArray(value))
+  {
+    return value[0] !== undefined && value[0] !== null
+      ? ['ARRAY', getDataTypeFromValue(value[0])]
+      : ['ARRAY', 'ANY'];
+  }
+  if (isDate(value))
+  {
+    return value.getHours() === 0 && value.getMinutes() === 0 && value.getSeconds() === 0
+      ? 'DATE'
+      : 'TIMESTAMP';
+  }
+  if (isObject(value))
+  {
+    if (isArray(value.points))
+    {
+      return 'PATH';
+    }
+    if (isArray(value.corners))
+    {
+      return 'POLYGON';
+    }
+    if ('x' in value && 'y' in value && 'r' in value)
+    {
+      return 'CIRCLE';
+    }
+    if ('a' in value && 'b' in value && 'c' in value)
+    {
+      return 'LINE';
+    }
+    if ('x1' in value && 'y1' in value && 'x2' in value && 'y2' in value)
+    {
+      return 'SEGMENT';
+    }
+    if ('l' in value && 't' in value && 'r' in value && 'b' in value)
+    {
+      return 'BOX';
+    }
+    if ('x' in value && 'y' in value)
+    {
+      return 'POINT';
+    }
+
+    return 'JSON';
+  }
+
+  return 'ANY';
+}
+
+export function isDataType<T extends keyof DataTypeTypes>(value: any, type: T): value is DataTypeTypes[T]
+{
+  return getDataTypeFromInput(getDataTypeFromValue(value)) === type;
+}
+
+export function getDataTypeFromInput(input: DataTypeInputs): keyof DataTypeTypes
+{
+  if (isString(input))
+  {
+    return input;
+  }
+
+  if (isArray(input))
+  {
+    return input[0];
+  }
+
+  if (isObject(input))
+  {
+    if ('unsigned' in input)
+    {
+      return input.unsigned;
+    }
+
+    if ('timezoned' in input)
+    {
+      return input.timezoned;
+    }
+
+    if ('world' in input)
+    {
+      return input.world;
+    }
+  }
+
+  return 'ANY';
 }

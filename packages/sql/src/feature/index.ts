@@ -34,3 +34,10 @@ export function addFeatures(dialect: Dialect)
   addWithFeature(dialect);
   addWithRecursiveFeature(dialect);
 }
+
+export {
+  addAggregateDistinctFeature, addAggregateFilterFeature, addAggregateOrderFeature, addDefaultFeature, addDeleteReturningFeature, 
+  addDeleteUsingFeature, addInsertIgnoreDuplicateFeature, addInsertPriorityFeature, addInsertReturningFeature, 
+  addInsertUpdateDuplicateFeature, addSelectDistinctOnFeature, addUpdateFromFeature, addUpdateReturningFeature, addWithFeature, 
+  addWithRecursiveFeature,
+};
