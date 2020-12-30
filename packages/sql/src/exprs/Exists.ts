@@ -1,4 +1,4 @@
-import { ExprExists, Expr } from '@typed-query-builder/builder';
+import { ExprExists } from '@typed-query-builder/builder';
 import { Dialect } from '../Dialect';
 
 
@@ -17,7 +17,7 @@ export function addExists(dialect: Dialect)
         x += 'NOT ';
       }
       x += 'EXISTS ';
-      x += transform(value as Expr<unknown>, out);
+      x += out.wrap(value);
 
       return x;
     }

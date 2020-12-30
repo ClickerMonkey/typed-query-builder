@@ -63,6 +63,11 @@ export class SourceTable<N extends Name, S extends Selects, F extends DataTypeIn
     return false;
   }
 
+  public isSource(other: NamedSource<any, any> | Source<any>): boolean
+  {
+    return (this as any) === other;
+  }
+
   public getSelects(): S 
   {
     return this.selects;

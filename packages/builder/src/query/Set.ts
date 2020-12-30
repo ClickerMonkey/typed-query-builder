@@ -1,6 +1,6 @@
 import { 
-  SourceKind, isArray, isString, OrderDirection, Selects, SelectsKeys, SetOperation, SourceCompatible, Expr, ExprField, 
-  ExprProvider, OrderBy, Source, ExprKind, QueryCriteria 
+  SourceKind, isArray, OrderDirection, Selects, SelectsKey, SetOperation, SourceCompatible, ExprField, 
+  OrderBy, Source, ExprKind, QueryCriteria 
 } from '../internal';
 
 
@@ -97,18 +97,14 @@ export class QuerySet<S extends Selects> extends Source<S>
     return this.addSet('EXCEPT', query, true);
   }
 
-  public orderBy<K extends SelectsKeys<S>>(select: K, order?: OrderDirection, nullsLast?: boolean): this
-  public orderBy(values: ExprProvider<{ set: S }, S, never, Expr<any> | Expr<any>[]>, order?: OrderDirection, nullsLast?: boolean): this
-  public orderBy<K extends SelectsKeys<S>>(values: K | ExprProvider<{ set: S }, S, never, Expr<any> | Expr<any>[]>, order?: OrderDirection, nullsLast?: boolean): this 
+  public orderBy<K extends SelectsKey<S>>(selects: K | K[], order?: OrderDirection, nullsLast?: boolean): this
   {
-    const resolved = isString(values)
-      ? this._criteria.selectsExpr[values as any]
-      : this._criteria.exprs.provide(values);
-    const resolvedArray = isArray(resolved)
-      ? resolved
-      : [ resolved ];
-
-    this._criteria.orderBy.push(...resolvedArray.map((value) => new OrderBy(value, order, nullsLast)));
+    const selectsTuple = isArray(selects)
+      ? selects
+      : [ selects ];
+    const selectsExprs = selectsTuple.map( s => this._criteria.selectsExpr[String(s)] );
+    
+    this._criteria.orderBy.push(...selectsExprs.map((expr) => new OrderBy(expr, order, nullsLast)));
 
     return this;
   }

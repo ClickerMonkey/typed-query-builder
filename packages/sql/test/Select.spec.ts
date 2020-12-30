@@ -302,7 +302,7 @@ describe('Select', () =>
         book.title AS title,
         book.price AS price
       FROM book
-      WHERE book.price < (SELECT AVG(book.price) AS avg FROM book)
+      WHERE book.price < (SELECT AVG(book.price) FROM book)
       ORDER BY book.title
     `);
   });
@@ -650,6 +650,308 @@ describe('Select', () =>
       WHERE doneAt IS NOT NULL
       GROUP BY dateGet('dayOfWeek', doneAt)
       HAVING COUNT(*) > 0
+    `);
+  });
+
+  it('order by default', () =>
+  {
+    const x = from(Task)
+      .select(Task.only(['id', 'name']))
+      .orderBy('name')
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT
+        id,
+        name
+      FROM task
+      ORDER BY name
+    `);
+  });
+
+  it('order by asc', () =>
+  {
+    const x = from(Task)
+      .select(Task.only(['id', 'name']))
+      .orderBy('name', 'ASC')
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT
+        id,
+        name
+      FROM task
+      ORDER BY name ASC
+    `);
+  });
+
+  it('order by desc', () =>
+  {
+    const x = from(Task)
+      .select(Task.only(['id', 'name']))
+      .orderBy('name', 'DESC')
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT
+        id,
+        name
+      FROM task
+      ORDER BY name DESC
+    `);
+  });
+
+  it('order by asc nulls last', () =>
+  {
+    const x = from(Task)
+      .select(Task.only(['id', 'name']))
+      .orderBy('name', 'ASC', true)
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT
+        id,
+        name
+      FROM task
+      ORDER BY name ASC NULLS LAST
+    `);
+  });
+
+  it('order by asc nulls first', () =>
+  {
+    const x = from(Task)
+      .select(Task.only(['id', 'name']))
+      .orderBy('name', 'ASC', false)
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT
+        id,
+        name
+      FROM task
+      ORDER BY name ASC NULLS FIRST
+    `);
+  });
+
+  it('limit only', () =>
+  {
+    const x = from(Task)
+      .select(Task.only(['id', 'name']))
+      .limit(10)
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT
+        id,
+        name
+      FROM task
+      LIMIT 10
+    `);
+  });
+
+  it('limit offset', () =>
+  {
+    const x = from(Task)
+      .select(Task.only(['id', 'name']))
+      .limit(10)
+      .offset(5)
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT
+        id,
+        name
+      FROM task
+      LIMIT 10
+      OFFSET 5
+    `);
+  });
+
+  it('offset only', () =>
+  {
+    const x = from(Task)
+      .select(Task.only(['id', 'name']))
+      .offset(5)
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT
+        id,
+        name
+      FROM task
+      LIMIT ALL
+      OFFSET 5
+    `);
+  });
+
+  it('select count', () =>
+  {
+    const x = from(Task)
+      .count()
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT
+        COUNT(*)
+      FROM task
+    `);
+  });
+
+  it('select countIf', () =>
+  {
+    const x = from(Task)
+      .countIf(Task.fields.done)
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT
+        COUNTIF(done)
+      FROM task
+    `);
+  });
+
+  it('select sum', () =>
+  {
+    const x = from(Task)
+      .sum(Task.fields.assignee)
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT
+        SUM(assignee)
+      FROM task
+    `);
+  });
+
+  it('select first', () =>
+  {
+    const x = from(Task)
+      .select(Task.only(['id']))
+      .first()
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT
+        id
+      FROM task
+      LIMIT 1
+    `);
+  });
+
+  it('select exists', () =>
+  {
+    const x = from(Task)
+      .select(Task.only(['id']))
+      .where(Task.fields.done)
+      .exists()
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT 1
+      FROM task
+      WHERE done = TRUE
+      LIMIT 1
+    `);
+  });
+
+  it('select list', () =>
+  {
+    const x = from(Task)
+      .select(Task.only(['id']))
+      .where(Task.fields.done)
+      .list('id')
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT 
+        id AS item
+      FROM task
+      WHERE done = TRUE
+    `);
+  });
+
+  it('select value', () =>
+  {
+    const x = from(Task)
+      .select(Task.only(['id']))
+      .where(Task.fields.done)
+      .value('id')
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT 
+        id
+      FROM task
+      WHERE done = TRUE
+      LIMIT 1
+    `);
+  });
+  
+  it('select subquery', () =>
+  {
+    const x = from(Task)
+      .select(({ task }) => [
+        task.id,
+        task.name,
+        from(Task.as('child')).where(({ child }) => child.parentId.eq(task.id)).count().as('childCount')
+      ])
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT 
+        id,
+        name,
+        (SELECT COUNT(*) FROM task AS child WHERE child.parentId = task.id) AS childCount
+      FROM task
+    `);
+  });
+
+  it('union', () =>
+  {
+    const x = from(Task)
+      .select(Task.only(['id', 'name']))
+      .where(Task.fields.done)
+      .union(
+        from(Task)
+        .select(Task.only(['id', 'name']))
+        .where(Task.fields.doneAt.isNotNull())
+        .generic()
+      )
+      .orderBy('id')
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreSpace: true, ignoreCase: true }, x, `
+      (
+        SELECT 
+          id, name
+        FROM task
+        WHERE done = TRUE
+      )
+      UNION
+      (
+        SELECT 
+          id, name
+        FROM task
+        WHERE doneAt IS NOT NULL
+      )
+      ORDER BY id
     `);
   });
 

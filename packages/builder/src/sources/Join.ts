@@ -11,5 +11,10 @@ export class SourceJoin<N extends Name, S extends Selects> extends NamedSourceBa
   ) {
     super( source.getName(), source.getSource() );
   }
+  
+  public isSource(other: NamedSource<any, any>): boolean
+  {
+    return (this as any) === other || (this.getSource() as any) === other;
+  }
 
 }

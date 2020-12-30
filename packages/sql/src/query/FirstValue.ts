@@ -11,7 +11,7 @@ export function addFirstValue(dialect: Dialect)
     {
       const { criteria, value, defaultValue } = expr;
 
-      if (!(value.getExpr() instanceof ExprAggregate))
+      if (!(value instanceof ExprAggregate))
       {
         criteria.limit = 1;
       }
@@ -27,20 +27,14 @@ export function addFirstValue(dialect: Dialect)
         if (defaultValue)
         {
           x += 'COALESCE(';
-          x += transform(value.getExpr(), out);
+          x += transform(value, out);
           x += ', ';
           x += transform(defaultValue, out);
           x += ')';
         } 
         else 
         {
-          x += out.wrap(value.getExpr());
-        }
-
-        if (!out.options.excludeSelectAlias)
-        {
-          x += ' AS ';
-          x += out.dialect.quoteAlias(value.alias);
+          x += out.wrap(value);
         }
       });
 

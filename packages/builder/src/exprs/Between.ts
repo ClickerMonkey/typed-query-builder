@@ -25,8 +25,10 @@ export class ExprBetween<T> extends ExprScalar<boolean>
     return true;
   }
 
-  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
-    return traverse.enter(this, () => {
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R 
+  {
+    return traverse.enter(this, () => 
+    {
       traverse.step('value', this.value, (replace) => this.value = replace as any);
       traverse.step('low', this.low, (replace) => this.low = replace as any);
       traverse.step('high', this.high, (replace) => this.high = replace as any);

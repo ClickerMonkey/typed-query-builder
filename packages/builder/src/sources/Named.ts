@@ -9,4 +9,5 @@ export interface NamedSource<N extends Name, S extends Selects> extends Traversa
     getFieldsFactory(): SourceFieldsFactory<S>;
     getFieldTarget(field: string): string;
     isVirtual(): boolean;
+    isSource(other: NamedSource<any, any> | Source<any>): boolean;
 }

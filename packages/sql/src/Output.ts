@@ -17,6 +17,7 @@ export class DialectOutput
 {
 
   public dialect: Dialect;
+  public expr: Expr<any>;
   public options: DialectOutputOptions;
   public paramIndices: Record<string, number>;
   public paramCount: number;
@@ -26,9 +27,10 @@ export class DialectOutput
   public error?: Error;
   public sources: NamedSource<any, any>[];
 
-  public constructor(dialect: Dialect, options: DialectOutputOptions)
+  public constructor(dialect: Dialect, expr: Expr<any>, options: DialectOutputOptions)
   {
     this.dialect = dialect;
+    this.expr = expr;
     this.options = options;
     this.paramIndices = {};
     this.paramCount = 0;
@@ -111,7 +113,7 @@ export class DialectOutput
   {
     for (const source of this.sources)
     {
-      if (source === exclude || source.getSource() === exclude)
+      if (exclude && source.isSource(exclude))
       {
         continue;
       }

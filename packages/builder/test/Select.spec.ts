@@ -392,7 +392,7 @@ describe('Select', () => {
           )
           .generic()
       )
-      .orderBy(({ set }) => set.message, 'DESC')
+      .orderBy('message', 'DESC')
       .offset(10)
       .limit(10)
     ;

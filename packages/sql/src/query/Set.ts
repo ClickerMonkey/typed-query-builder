@@ -19,7 +19,7 @@ export function addSet(dialect: Dialect)
         if (sourceIndex > 0)
         {
           x += ' ';
-          x += _op;
+          x += out.dialect.getAlias(out.dialect.setOperationAlias, _op);
           x += ' ';
 
           if (_all[sourceIndex - 1])

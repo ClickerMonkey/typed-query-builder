@@ -1,5 +1,6 @@
 import { ExprNot } from '@typed-query-builder/builder';
 import { Dialect } from '../Dialect';
+import { getPredicate } from '../helpers/Predicate';
 
 
 export function addNot(dialect: Dialect)
@@ -8,7 +9,7 @@ export function addNot(dialect: Dialect)
     ExprNot,
     (expr, transform, out) => 
     {
-      return `NOT ${transform(expr.predicate, out)}`;
+      return `NOT ${getPredicate(expr.predicate, transform, out)}`;
     }
   );
 }

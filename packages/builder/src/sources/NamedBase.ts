@@ -45,6 +45,11 @@ export class NamedSourceBase<N extends Name, S extends Selects> implements Named
     return false;
   }
 
+  public isSource(other: NamedSource<any, any> | Source<any>): boolean
+  {
+    return (this as any) === other;
+  }
+
   public traverse<R>(traverse: Traverser<Expr<unknown>, R>): R 
   {
     return this.source.traverse(traverse);

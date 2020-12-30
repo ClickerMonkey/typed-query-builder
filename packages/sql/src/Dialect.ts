@@ -115,7 +115,7 @@ export class Dialect
     this.nullIdentifier = 'NULL';
     this.defaultOptions = {};
     this.aggregateRequiresArgument = { count: '*' };
-    this.selectExpression = (expr) => `SELECT (${expr}) AS ${this.quoteAlias('value')}`;
+    this.selectExpression = (expr) => `SELECT ${expr}`;
     this.supports = DialectFeatures.ALL;
   }
 
@@ -128,7 +128,7 @@ export class Dialect
         ...options,
       };
 
-      const out = new DialectOutput(this, derivedOptions);
+      const out = new DialectOutput(this, e, derivedOptions);
 
       try
       {

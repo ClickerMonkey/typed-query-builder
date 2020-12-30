@@ -14,7 +14,7 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
   
   public static readonly id = ExprKind.QUERY_SELECT;
 
-
+  
   public _locks: Lock[];
   public _distinct: boolean;
   public _distinctOn: ExprScalar<any>[];
@@ -309,18 +309,21 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
 
   public aggregate<A extends keyof Aggs, V extends SelectsKey<S>, Aggs = AggregateFunctions, R = FunctionResult<A, Aggs>>(type: A, values: V | ExprProvider<T, S, W, FunctionArgumentInputs<A, Aggs>>, distinct?: boolean, filter?: ExprProvider<T, S, W, ExprScalar<boolean>>, orderBy?: OrderBy[]): ExprScalar<R> 
   {
+    const valuesResolved = this._criteria.exprs.provide(values);
+    const valuesTuple = isArray(valuesResolved) ? valuesResolved : [valuesResolved];
+    const valuesFiltered = valuesTuple.filter( v => v !== undefined );
+    const valuesExprs = valuesFiltered.map( v => isString(v) ? this._criteria.selectsExpr[v] : toExpr(v) );
+
     return new QueryFirstValue<T, S, W, R>(
       this._criteria.extend(), 
       new ExprAggregate<T, S, W, A, Aggs, R>(
         this._criteria.exprs,
         type,
-        isString(values)
-          ? this._criteria.selectsExpr[values as any]
-          : this._criteria.exprs.provide(values),
+        valuesExprs as any,
         distinct,
         this._criteria.exprs.provide(filter),
         orderBy
-      ).as(String(type))
+      )
     );
   }
 
@@ -378,13 +381,15 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     return new QueryExistential<T, S, W>(this._criteria.extend());
   }
 
-  public list<V extends SelectsKey<S>>(select: V): QueryList<T, S, W, SelectWithKey<S, V>>
+  public list<V extends SelectsKey<S>>(select: V): QueryList<T, S, W, [SelectWithKey<S, V>]>
   public list<E>(value: ExprProvider<T, S, W, Expr<E>>): QueryList<T, S, W, ExprType<E>>
   public list<V extends SelectsKey<S>, E>(value: V | ExprProvider<T, S, W, Expr<E>>): Expr<any> 
   {
-    return new QueryList(this._criteria.extend(), isString(value) 
-      ? this._criteria.selectsExpr[value as any]
-      : this._criteria.exprs.provide(value)
+    return new QueryList(
+      this._criteria.extend(),
+      isString(value)
+        ? this._criteria.selectsExpr[value as any]
+        : this._criteria.exprs.provide(value)
     );
   }
 
@@ -392,7 +397,8 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
   public value<E>(value: ExprProvider<T, S, W, ExprScalar<E>>, defaultValue?: ExprProvider<T, S, W, ExprInput<E>>): ExprScalar<E>
   public value<V extends SelectsKey<S>, E>(value: V | ExprProvider<T, S, W, ExprScalar<E>>, defaultValue?: ExprProvider<T, S, W, ExprInput<E>>): ExprScalar<any> 
   {
-    return new QueryFirstValue<T, S, W, E>(this._criteria.extend(), 
+    return new QueryFirstValue<T, S, W, E>(
+      this._criteria.extend(),
       isString(value)
         ? this._criteria.selectsExpr[value as any]
         : this._criteria.exprs.provide(value),
