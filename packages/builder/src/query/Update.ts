@@ -1,8 +1,8 @@
 import { 
-  SelectsFromKeys, SourceKind, isArray, isString, Name, Selects, Sources, SelectsKey, SelectsTupleEquivalent, 
-  ObjectExprFromSelects, Tuple, JoinedInner, SelectValueWithKey, ExprField, ExprInput, ExprProvider, ExprScalar, NamedSource, 
+  Expr, SourceKind, isArray, isString, Name, Selects, Sources, SelectsKey, SelectsValuesExprs, StatementSet, SelectsFromKeys,
+  ObjectExprFromSelects, Tuple, JoinedInner, SelectValueWithKey, ExprInput, ExprProvider, ExprScalar, NamedSource, 
   Source, SourceTable, ExprKind, Select, Statement, StatementReturningColumns, StatementReturningExpressions, toExpr,
-  StatementSet
+  SelectsNameless,
 } from '../internal';
 
 
@@ -48,41 +48,32 @@ export class StatementUpdate<
   {
     (this as any)._target = target;
     
-    this.addSource(target as any, only ? SourceKind.ONLY : SourceKind.TARGET);
+    this.setTargetSource(target as any, only);
     
     return this as never;
   }
 
-  public set<V>(field: ExprField<any, V>, value: ExprProvider<T, S, never, ExprInput<V>>): this
+  public set<U extends Tuple<SelectsKey<S>>>(fields: U, value: ExprProvider<T, S, never, SelectsValuesExprs<SelectsFromKeys<S, U>>>): this
+  public set<U extends Tuple<SelectsKey<S>>>(fields: U, value: ExprProvider<T, S, never, Expr<SelectsNameless<SelectsFromKeys<S, U>>>>): this
   public set<K extends SelectsKey<S>>(field: K, value: ExprProvider<T, S, never, ExprInput<SelectValueWithKey<S, K>>>): this
   public set<M extends ObjectExprFromSelects<S>>(multiple: ExprProvider<T, S, never, M>): this
-  public set<U extends Tuple<Select<any, any>>>(fields: ExprProvider<T, S, never, U>, value: ExprProvider<T, S, never, SelectsTupleEquivalent<U>>): this
-  public set<U extends Tuple<SelectsKey<S>>>(fields: U, value: ExprProvider<T, S, never, SelectsTupleEquivalent<SelectsFromKeys<S, U>>>): this
   public set(a0: any, a1?: any): this 
   {
-    if (a0 instanceof ExprField) 
+    if (isString(a0))
     {
-      this._sets.push(new StatementSet([a0], this._exprs.provide(a1)));
+      this._sets.push(new StatementSet(this._target as any, [a0], [toExpr(this._exprs.provide(a1))]));
     }
-    else if (isString(a0))
-    {
-      this._sets.push(new StatementSet([this._target.fields[a0]], this._exprs.provide(a1)));
-    }
-    else if (a1 === undefined) 
+    else if (a1 === undefined)
     {
       const multiple = this._exprs.provide(a0);
 
       for (const field in multiple) 
       { 
-        this._sets.push(new StatementSet([this._target.fields[field]], toExpr(multiple[field])));
+        this._sets.push(new StatementSet(this._target as any, [field], [toExpr(multiple[field])]));
       }
     }
     else if (isArray(a0))
     {
-      const selects = isString(a0[0])
-        ? a0.map((field) => this._target.fields[ field ])
-        : this._exprs.provide(a0);
-
       const values = this._exprs.provide(a1);
 
       if (isArray(values)) {
@@ -91,7 +82,7 @@ export class StatementUpdate<
         }
       }
 
-      this._sets.push(new StatementSet(selects, values));
+      this._sets.push(new StatementSet(this._target as any, a0 as any, values));
     }
 
     return this;

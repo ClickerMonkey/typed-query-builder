@@ -5,7 +5,7 @@ import {
   ExprCase, ExprCast, ExprPredicateBinary, ExprPredicates, ExprPredicateUnary, ExprConstant, ExprExists, ExprFunction, fns,
   ExprIn, ExprNot, ExprOperationBinary, ExprOperationUnary, ExprParam, Expr, ExprTypeMap, ExprField, ExprRaw, ExprRow,
   ExprDefault, ExprPredicateBinaryList, ExprScalar, ExprInput, Select, SourceUnspecified, QuerySelectScalarInput, ExprNull,
-  QuerySelectScalar, isString, Cast, toExpr, ExprInputType
+  QuerySelectScalar, isString, Cast, toExpr, ExprInputType, toAnyExpr
 } from '../internal';
 
 
@@ -61,16 +61,16 @@ export interface ExprFactory<T extends Sources, S extends Selects, W extends Nam
   is<V>(value: ExprInput<V>, op: PredicateBinaryType, test: ExprInput<V>): ExprScalar<boolean>;
   is<V>(op: PredicateUnaryType, value: ExprInput<V>): ExprScalar<boolean>;
   is(a1: any, a2: any, a3?: any): ExprScalar<boolean>;
-  any<V>(value: ExprInput<V>, op: PredicateBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): ExprScalar<boolean>;
-  all<V>(value: ExprInput<V>, op: PredicateBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): ExprScalar<boolean>;
+  any<V>(value: ExprInput<V>, op: PredicateBinaryListType, values: ExprInput<V>[] | ExprInput<V[]> | Expr<V[]> | Expr<[Select<any, V>][]>): ExprScalar<boolean>;
+  all<V>(value: ExprInput<V>, op: PredicateBinaryListType, values: ExprInput<V>[] | ExprInput<V[]> | Expr<V[]> | Expr<[Select<any, V>][]>): ExprScalar<boolean>;
   isNull<V>(value: ExprInput<V>): ExprScalar<boolean>;
   isNotNull<V>(value: ExprInput<V>): ExprScalar<boolean>;
   isTrue(value: ExprInput<boolean>): ExprScalar<boolean>;
   isFalse(value: ExprInput<boolean>): ExprScalar<boolean>;
-  in<V>(value: ExprInput<V>, values: ExprInput<V[]> | ExprInput<V>[]): ExprScalar<boolean>;
+  in<V>(value: ExprInput<V>, values: ExprInput<V[]> | ExprInput<V>[] | Expr<V[]> | Expr<[Select<any, V>][]>): ExprScalar<boolean>;
   in<V>(value: ExprInput<V>, ...values: ExprInput<V>[]): ExprScalar<boolean> ;
   in<V>(value: ExprInput<V>, ...values: any[]): ExprScalar<boolean>;
-  notIn<V>(value: ExprInput<V>, values: ExprInput<V[]> | ExprInput<V>[]): ExprScalar<boolean>;
+  notIn<V>(value: ExprInput<V>, values: ExprInput<V[]> | ExprInput<V>[] | Expr<V[]> | Expr<[Select<any, V>][]>): ExprScalar<boolean>;
   notIn<V>(value: ExprInput<V>, ...values: ExprInput<V>[]): ExprScalar<boolean>;
   notIn<V>(value: ExprInput<V>, ...values: any[]): ExprScalar<boolean>;
 }
@@ -282,7 +282,7 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
         ? values.map( toExpr )
         : isArray(values[0])
           ? values[0].map( toExpr )
-          : toExpr( values[0] )
+          : toAnyExpr( values[0] )
       );
     },
 
@@ -292,7 +292,7 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
         ? values.map( toExpr )
         : isArray(values[0])
           ? values[0].map( toExpr )
-          : toExpr( values[0] ), 
+          : toAnyExpr( values[0] ), 
         true
       );
     },

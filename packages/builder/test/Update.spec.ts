@@ -28,7 +28,7 @@ describe('Select', () => {
 
   it('update normal', () => {
     const q = update(Task)
-      .set(Task.fields.name, 'Hello')
+      .set('name', 'Hello')
       .where(Task.fields.id.eq(10))
     ;
 
@@ -37,7 +37,7 @@ describe('Select', () => {
 
   it('update returning all', () => {
     const q = update(Task)
-      .set(Task.fields.name, 'Hello')
+      .set('name', 'Hello')
       .where(Task.fields.id.eq(10))
       .returning('*')
     ;
@@ -73,35 +73,19 @@ describe('Select', () => {
     expectExprType<[][]>(q);
   });
 
-  it('update row dynamic constant', () => {
-    update(Task)
-      .set(({ task }) => [
-        task.id,
-        task.name
-      ], [
-        43,
-        'hello!'
-      ])
-    ;
-  });
-
-  it('update row dynamic dynamic', () => {
-    update(Task)
-      .set(({ task }) => [
-        task.id,
-        task.name
-      ], ({ task }, exprs, { concat }) => [
-        task.id.add(1),
-        concat(task.name, '+')
-      ])
-    ;
-  });
-
   it('update row constant dynamic', () => {
     update(Task)
-      .set(['id', 'name'], ({ task }, exprs, { concat }) => [
+      .set(['id', 'name'], ({ task }, _, { concat }) => [
         task.id.add(1),
         concat(task.name, '+')
+      ])
+    ;
+  });
+
+  it('update row constant single dynamic', () => {
+    update(Task)
+      .set(['id'], ({ task }) => [
+        task.id.add(1)
       ])
     ;
   });
@@ -115,9 +99,18 @@ describe('Select', () => {
     ;
   });
 
+  it('update row constant constant', () => {
+    update(Task)
+      .set(
+        ['id', 'name'], 
+        [23, 'Hello']
+      )
+    ;
+  });
+
   it('update with multiple returning columns', () => {
     const q = update(Task)
-      .set(Task.fields.done, true)
+      .set('done', true)
       .where(Task.fields.doneAt.lt(new Date()))
       .returning(['id', 'done'])
     ;
@@ -128,7 +121,7 @@ describe('Select', () => {
 
   it('update with multiple returning expression', () => {
     const q = update(Task)
-      .set(Task.fields.done, true)
+      .set('done', true)
       .where(Task.fields.doneAt.lt(new Date()))
       .returning(({ task }, {}, { lower }) => [
         lower(task.name).as('lower')
@@ -141,7 +134,7 @@ describe('Select', () => {
 
   it('update with multiple returning expression with rest', () => {
     const q = update(Task)
-      .set(Task.fields.done, true)
+      .set('done', true)
       .where(Task.fields.doneAt.lt(new Date()))
       .returning(({ task }, {}, { lower }) => [
         lower(task.name).as('lower'),

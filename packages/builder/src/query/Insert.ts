@@ -1,8 +1,8 @@
 import { 
-  SourceKind, Cast, Name, Selects, Sources, SelectsKeys, SelectsKey, SelectsColumnsExprs, ExprField, ExprParam,
+  Cast, Name, Selects, Sources, SelectsKeys, SelectsKey, SelectsColumnsExprs, ExprParam,
   SelectsRecordExprs, JoinedInner, Tuple, Expr, ExprInput, ExprProvider, NamedSource, Source, SourceTable, SelectValueWithKey,
   ExprKind, Statement, StatementReturningColumns, StatementReturningExpressions, Select, toExpr, StatementSet, SelectsNameless,
-  ObjectExprFromSelects, isString, isArray, SelectsTupleEquivalent, SelectsFromKeys, InsertPriority, ExprScalar, 
+  ObjectExprFromSelects, isString, isArray, SelectsValuesExprs, SelectsFromKeys, InsertPriority, ExprScalar, 
   QuerySelectScalarInput, SourceCompatible
 } from '../internal';
 
@@ -106,7 +106,7 @@ export class StatementInsert<
     (this as any)._into = into;
     (this as any)._columns = columns || into.getSelects().map( s => s.alias );
 
-    this.addSource(into as any, SourceKind.TARGET);
+    this.setTargetSource(into as any, false);
     
     return this as never;
   }
@@ -132,37 +132,27 @@ export class StatementInsert<
     return this;
   }
 
-  
-  public setOnDuplicate<V>(field: ExprField<any, V>, value: ExprProvider<T, S, never, ExprInput<V>>): this
+  public setOnDuplicate<U extends Tuple<SelectsKey<S>>>(fields: U, value: ExprProvider<T, S, never, SelectsValuesExprs<SelectsFromKeys<S, U>>>): this
+  public setOnDuplicate<U extends Tuple<SelectsKey<S>>>(fields: U, value: ExprProvider<T, S, never, Expr<SelectsNameless<SelectsFromKeys<S, U>>>>): this
   public setOnDuplicate<K extends SelectsKey<S>>(field: K, value: ExprProvider<T, S, never, ExprInput<SelectValueWithKey<S, K>>>): this
   public setOnDuplicate<M extends ObjectExprFromSelects<S>>(multiple: ExprProvider<T, S, never, M>): this
-  public setOnDuplicate<U extends Tuple<Select<any, any>>>(fields: ExprProvider<T, S, never, U>, value: ExprProvider<T, S, never, SelectsTupleEquivalent<U>>): this
-  public setOnDuplicate<U extends Tuple<SelectsKey<S>>>(fields: U, value: ExprProvider<T, S, never, SelectsTupleEquivalent<SelectsFromKeys<S, U>>>): this
   public setOnDuplicate(a0: any, a1?: any): this 
   {
-    if (a0 instanceof ExprField) 
+    if (isString(a0))
     {
-      this._sets.push(new StatementSet([a0], this._exprs.provide(a1)));
+      this._sets.push(new StatementSet(this._into as any, [a0], [toExpr(this._exprs.provide(a1))]));
     }
-    else if (isString(a0))
-    {
-      this._sets.push(new StatementSet([this._into.fields[a0]], this._exprs.provide(a1)));
-    }
-    else if (a1 === undefined) 
+    else if (a1 === undefined)
     {
       const multiple = this._exprs.provide(a0);
 
-      for (const field in multiple) 
+      for (const field in multiple)
       { 
-        this._sets.push(new StatementSet([this._into.fields[field]], toExpr(multiple[field])));
+        this._sets.push(new StatementSet(this._into as any, [field], [toExpr(multiple[field])]));
       }
     }
     else if (isArray(a0))
     {
-      const selects = isString(a0[0])
-        ? a0.map((field) => this._into.fields[ field ])
-        : this._exprs.provide(a0);
-
       const values = this._exprs.provide(a1);
 
       if (isArray(values)) {
@@ -171,7 +161,7 @@ export class StatementInsert<
         }
       }
 
-      this._sets.push(new StatementSet(selects, values));
+      this._sets.push(new StatementSet(this._into as any, a0 as any, values));
     }
 
     return this;

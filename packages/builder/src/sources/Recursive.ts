@@ -13,7 +13,13 @@ export class SourceRecursive<N extends Name, S extends Selects> extends NamedSou
     super( name, initial );
   }
 
-  public traverse<R>(traverse: Traverser<Expr<unknown>, R>): R {
+  public isVirtual(): boolean
+  {
+    return true;
+  }
+
+  public traverse<R>(traverse: Traverser<Expr<unknown>, R>): R 
+  {
     traverse.step('initial', this.source);
     traverse.step('recursive', this.source);
 

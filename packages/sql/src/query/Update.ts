@@ -13,58 +13,68 @@ export function addUpdate(dialect: Dialect)
     {
       const { _sources, _returning, _target, _sets, _where } = expr;
 
-      return out.addSources( _sources.map( s => s.source ), () =>
+      const saved = out.saveSources();
+
+      let x = '';
+
+      const withs = _sources
+        .filter( s => s.kind === SourceKind.WITH )
+        .map( s => s.source )
+      ;
+
+      x += withs.map( w => 
       {
-        let x = '';
+        const s = out.dialect.getFeatureOutput(DialectFeatures.WITH, w, out);
 
-        const withs = _sources
-          .filter( s => s.kind === SourceKind.WITH )
-          .map( s => s.source )
-        ;
+        out.sources.push(w);
 
-        x += withs.map( w => out.dialect.getFeatureOutput(DialectFeatures.WITH, w, out) ).join(' ');
+        return s;
+      }).join(' ');
 
-        x += 'UPDATE ';
+      x += 'UPDATE ';
 
-        const only = _sources.some( s => s.source === _target && s.kind === SourceKind.ONLY );
-        if (only)
-        {
-          x += 'ONLY ';
-        }
+      const only = _sources.some( s => s.source === _target && s.kind === SourceKind.ONLY );
+      if (only)
+      {
+        x += 'ONLY ';
+      }
 
-        x += out.dialect.quoteName(String(_target.table));
-        
-        if (_sets.length > 0)
-        {
-          x += ' SET ';
-          x += _sets.map( s => getStatementSet( s, transform, out ) ).join(', ');
-        }
+      x += out.dialect.quoteName(String(_target.table));
 
-        const froms = _sources
-          .filter( s => s.kind === SourceKind.FROM )
-          .map( s => s.source )
-        ;
+      out.sources.push(_target as any);
+      
+      if (_sets.length > 0)
+      {
+        x += ' SET ';
+        x += _sets.map( s => getStatementSet( s, transform, out ) ).join(', ');
+      }
 
-        if (froms.length > 0)
-        {
-          x += ' ';
-          x += out.dialect.getFeatureOutput(DialectFeatures.UPDATE_FROM, froms, out);
-        }
+      const froms = _sources
+        .filter( s => s.kind === SourceKind.FROM )
+        .map( s => s.source )
+      ;
 
-        if (_where.length > 0)
-        {
-          x += ' WHERE ';
-          x += getPredicates(_where, 'AND', transform, out);
-        }
-        
-        if (_returning.length > 0) 
-        {
-          x += ' ';
-          x += out.dialect.getFeatureOutput(DialectFeatures.UPDATE_RETURNING, _returning, out );
-        }
+      if (froms.length > 0)
+      {
+        x += ' ';
+        x += out.dialect.getFeatureOutput(DialectFeatures.UPDATE_FROM, froms, out);
+      }
 
-        return x;
-      });
+      if (_where.length > 0)
+      {
+        x += ' WHERE ';
+        x += getPredicates(_where, 'AND', transform, out);
+      }
+      
+      if (_returning.length > 0) 
+      {
+        x += ' ';
+        x += out.dialect.getFeatureOutput(DialectFeatures.UPDATE_RETURNING, _returning, out );
+      }
+
+      out.restoreSources(saved);
+
+      return x;
     }
   );
 }

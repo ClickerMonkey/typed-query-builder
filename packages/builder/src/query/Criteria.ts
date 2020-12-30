@@ -38,49 +38,59 @@ export class QueryCriteria<T extends Sources, S extends Selects, W extends Name>
     this.exprs = createExprFactory(this.sourcesFields, this.selectsExpr);
   }
 
-  public addSource(source: NamedSource<any, any>, kind: SourceKind): void {
+  public addSource(source: NamedSource<any, any>, kind: SourceKind): void 
+  {
     this.sources.push(new SourceKindPair(kind, source));
     (this.sourcesFields as any)[source.getName()] = source.getFieldsFactory();
   }
 
-  public replaceSource(source: NamedSource<any, any>, kind: SourceKind): void {
+  public replaceSource(source: NamedSource<any, any>, kind: SourceKind): void 
+  {
     this.sources.pop();
     this.addSource(source, kind);
   }
 
-  public addSources(sources: NamedSource<any, any>[], kind: SourceKind): void {
+  public addSources(sources: NamedSource<any, any>[], kind: SourceKind): void 
+  {
     sources.forEach( source => this.addSource( source, kind ) );
   }
 
-  public addSelect(select: Select<any, any>): void {
+  public addSelect(select: Select<any, any>): void 
+  {
     this.selects.push(select);
     this.selectsExpr[select.alias] = select.getExpr();
   }
 
-  public clearSelects(): void {
+  public clearSelects(): void 
+  {
     this.selects = [] as any;
     this.selectsExpr = {} as any;
   }
 
-  public addSelects(selects: Select<any, any>[]): void {
+  public addSelects(selects: Select<any, any>[]): void 
+  {
     selects.forEach( select => this.addSelect( select ) );
   }
 
-  public addWindow<WA extends Name>(name: WA, defined: (window: QueryWindow<WA, T, S, W>, sources: SourcesFieldsFactory<T>, exprs: ExprFactory<T, S, W>, fns: FunctionProxy<Functions>, selects: SelectsExprs<S>) => QueryWindow<WA, T, S, W>): void {
+  public addWindow<WA extends Name>(name: WA, defined: (window: QueryWindow<WA, T, S, W>, sources: SourcesFieldsFactory<T>, exprs: ExprFactory<T, S, W>, fns: FunctionProxy<Functions>, selects: SelectsExprs<S>) => QueryWindow<WA, T, S, W>): void 
+  {
     const { exprs, sourcesFields, selectsExpr } = this;
 
     this.windows[name as string] = defined(new QueryWindow(exprs, name), sourcesFields, exprs, fns, selectsExpr);
   }
 
-  public clearWindows(): void {
+  public clearWindows(): void 
+  {
     this.windows = {} as any;
   }
 
-  public extend(): QueryCriteria<T, S, W> {
+  public extend(): QueryCriteria<T, S, W> 
+  {
     return new QueryCriteria(this);
   }
 
-  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R 
+  {
     const { sources, selectsExpr, where, having, windows, orderBy } = this;
     
     traverse.step('source', () => {

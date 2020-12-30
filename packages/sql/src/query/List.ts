@@ -11,19 +11,23 @@ export function addList(dialect: Dialect)
     {
       const { criteria, item } = expr;
 
-      return out.addSources(criteria.sources.map( s => s.source ), () =>
+      const allSources = criteria.sources.map( s => s.source );
+
+      let x = '';
+      
+      x += 'SELECT ';
+      x += out.addSources(allSources, () => out.wrap(item));
+
+      if (!out.options.excludeSelectAlias)
       {
-        let x = '';
-        
-        x += 'SELECT ';
-        x += out.wrap(item);
         x += ' AS ';
         x += out.dialect.quoteAlias('item');
-        x += ' ';
-        x += getCriteria(criteria, transform, out, false, false, true, true, true);
+      }
+      
+      x += ' ';
+      x += getCriteria(criteria, transform, out, false, false, true, true, true);
 
-        return x;
-      });
+      return x;
     }
   );
 }

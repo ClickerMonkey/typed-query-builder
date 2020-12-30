@@ -339,7 +339,7 @@ update(Task).set({ name: 'New Name' }).where(Task.fields.id.eq(10));
 #### Delete
 ```ts
 // DELETE FROM task WHERE id = 10 RETURNING name
-remove(Task).where(Task.fields.id.eq(10)).returning('name');
+deletes(Task).where(Task.fields.id.eq(10)).returning('name');
 
 // TODO examples:
 // - delete example with extensive WITH & RETURNING expressions

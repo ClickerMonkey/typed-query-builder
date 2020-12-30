@@ -1,4 +1,4 @@
-import { isArray, Select, StatementSet } from '@typed-query-builder/builder';
+import { Expr, isArray, Select, StatementSet } from '@typed-query-builder/builder';
 import { DialectTransformTransformer } from '../Dialect';
 import { DialectOutput } from '../Output';
 
@@ -11,20 +11,20 @@ export function getStatementSet(setter: StatementSet<Select<any, any>[]>, transf
 
   if (set.length === 1)
   {
-    x += out.dialect.quoteName(set[0].alias);
+    x += out.dialect.quoteName(setter.table.getFieldTarget(set[0]));
     x += ' = ';
-    x += transform(value as any, out);
+    x += value instanceof Expr 
+      ? out.modify({ excludeSelectAlias: true }, () => out.wrap(value))
+      : out.modify({ excludeSelectAlias: true }, () => out.wrap(value[0]));
   }
   else
   {
     x += '(';
-    x += set.map( s => out.dialect.quoteName(s.alias) ).join(', ');
+    x += set.map( s => out.dialect.quoteName(setter.table.getFieldTarget(s)) ).join(', ');
     x += ') = (';
-    if (isArray(value)) {
-      x += value.map( v => transform(v, out) ).join(', ');
-    } else {
-      x += transform(value, out);
-    }
+    x += isArray(value)
+      ? value.map( v => transform(v, out) ).join(', ')
+      : out.modify({ excludeSelectAlias: true }, () => transform(value, out))
     x += ')';
   }
 

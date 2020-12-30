@@ -3,7 +3,7 @@ import {
   SourcesFieldsFactory, JoinType, Selects, Sources, Name, OrderDirection, MergeObjects, Lock, SelectWithKey, Simplify, 
   SelectValueWithKey, SelectsKey, SelectsKeyWithType, JoinedInner, JoinedRight, JoinedLeft, JoinedFull, SelectAllSelects, 
   SelectGivenSelects, MaybeSources, MaybeSelects, AggregateFunctions, Tuple, SourceCompatible, ExprAggregate, ExprProvider, 
-  ExprFactory, Expr, ExprType, QueryExistential, QueryFirst, QueryFirstValue, QueryList, Source, SourceTable,
+  ExprFactory, Expr, ExprType, QueryExistential, QueryFirst, QueryFirstValue, QueryList, Source, SourceTable, SourceVirtual,
   SourceJoin, OrderBy, Select, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions, QueryCriteria, ExprKind, 
   NamedSource, SourceRecursive, ExprInput, ExprScalar, fns, QueryGroup, toExpr, GroupingSetType, LockRowLock, LockStrength
 } from '../internal';
@@ -54,7 +54,7 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
   {
     const source = this._criteria.exprs.provide(sourceProvider);
 
-    this._criteria.addSource(source as any, SourceKind.WITH);
+    this._criteria.addSource(new SourceVirtual(source) as any, SourceKind.WITH);
 
     if (recursive) 
     {
@@ -108,7 +108,7 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     return this.join('RIGHT', source, on);
   }
 
-  public joinOuter<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W> 
+  public joinFull<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W> 
   {
     return this.join('FULL', source, on);
   }
@@ -170,7 +170,7 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
 
     for (const source of this._criteria.sources) 
     {
-      if (source.kind !== SourceKind.WITH) 
+      if (source.kind !== SourceKind.WITH)
       {
         all.push(...source.source.getSource().getSelects());
       }

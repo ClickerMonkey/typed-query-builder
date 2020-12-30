@@ -1,4 +1,4 @@
-import { NamedSource, Selects } from '@typed-query-builder/builder';
+import { NamedSource } from '@typed-query-builder/builder';
 import { Dialect } from '../Dialect';
 import { DialectFeatures } from '../Features';
 
@@ -9,10 +9,11 @@ export function addWithFeature(dialect: Dialect)
     let x = '';
 
     x += 'WITH ';
-    x += value.getName();
-    x += ' (';
-    x += (value.getSource().getSelects() as Selects).map( s => s.alias ).join(', ');
-    x += ') AS (';
+    x += out.dialect.quoteName(value.getName());
+    // x += ' (';
+    // x += (value.getSource().getSelects() as Selects).map( s => s.alias ).join(', ');
+    // x += ') AS (';
+    x += ' AS (';
     x += transform(value.getSource(), out);
     x += ') '
 

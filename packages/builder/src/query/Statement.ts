@@ -1,7 +1,7 @@
 import { 
   createExprFactory, SourceKindPair, SourceKind, isArray, isString, Cast, Name, Selects, Sources, ArrayToTuple, 
   SourcesFieldsFactory, SelectsKey, SelectsWithKey, SelectsNormalize, TupleAppend, JoinedInner, Tuple, ExprFactory, 
-  ExprProvider, NamedSource, Source, SourceRecursive, SourceTable, Select, Traverser, Expr 
+  ExprProvider, NamedSource, Source, SourceRecursive, SourceTable, Select, Traverser, Expr, SourceVirtual
 } from '../internal';
 
 
@@ -60,9 +60,9 @@ export abstract class Statement<
   {
     const source = this._exprs.provide(sourceProvider as any);
 
-    this.addSource(source as any, SourceKind.WITH);
+    this.addSource(new SourceVirtual(source), SourceKind.WITH);
 
-    if (recursive) 
+    if (recursive)
     {
       const recursiveSource = this._exprs.provide(recursive as any);
 
@@ -72,7 +72,7 @@ export abstract class Statement<
     return this as any;
   }
 
-  protected addSource(source: NamedSource<any, any>, kind: SourceKind): void 
+  public addSource(source: NamedSource<any, any>, kind: SourceKind): void 
   {
     this._sources.push(new SourceKindPair(kind, source));
     (this._sourceFields as any)[source.getName()] = source.getFieldsFactory();
@@ -82,6 +82,24 @@ export abstract class Statement<
   {
     this._sources.pop();
     this.addSource(source, kind);
+  }
+
+  protected setTargetSource(source: NamedSource<any, any>, only: boolean)
+  {
+    const { _sources, _sourceFields } = this;
+
+    for (let i = _sources.length - 1; i >= 0; i--)
+    {
+      const s = _sources[i];
+
+      if (s.kind === SourceKind.ONLY || s.kind === SourceKind.TARGET)
+      {
+        delete _sourceFields[ s.source.getName() ];
+        _sources.splice(i, 1);
+      }
+    }
+
+    this.addSource(source, only ? SourceKind.ONLY : SourceKind.TARGET);
   }
 
   public returning(output: '*'): Statement<T, N, S, S>
@@ -121,18 +139,24 @@ export abstract class Statement<
     return this as any;
   }
 
-  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R 
+  {
     const { _sources, _returning } = this;
 
-    traverse.step('source', () => {
-      for (let i = 0; i < _sources.length; i++) {
+    traverse.step('source', () => 
+    {
+      for (let i = 0; i < _sources.length; i++) 
+      {
         traverse.step(i, _sources[i].source, (replaceWith) => _sources[i] = replaceWith as any);
       }
     });
 
-    if (_returning.length > 0) {
-      traverse.step('returning', () => {
-        for (let i = 0; i < _returning.length; i++) {
+    if (_returning.length > 0) 
+    {
+      traverse.step('returning', () => 
+      {
+        for (let i = 0; i < _returning.length; i++) 
+        {
           traverse.step(i, _returning[i].getExpr(), (replaceWith) => _returning[i] = replaceWith as any);
         }
       });

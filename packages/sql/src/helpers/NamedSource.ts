@@ -7,12 +7,24 @@ export function getNamedSource(source: NamedSource<any, any>, out: DialectOutput
   const original = source.getSource();
   let x = '';
 
-  x += out.wrap(original);
+  if (source.isVirtual())
+  {
+    x += out.dialect.quoteName(source.getName());
+  }
+  else
+  {
+    x += out.wrap(original);
+  }
 
   if (!original.getName() || original.getName() !== source.getName())
   {
-    x += ' AS ';
-    x += out.dialect.quoteAlias(source.getName());
+    const alias = out.dialect.quoteAlias(source.getName());
+
+    if (alias !== x)
+    {
+      x += ' AS ';
+      x += alias;
+    }
   }
 
   if (original.hasAnonymousSelects())

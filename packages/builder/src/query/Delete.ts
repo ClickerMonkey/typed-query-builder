@@ -41,11 +41,11 @@ export class StatementDelete<
     return super.with(sourceProvider, recursive, all) as any;
   }
 
-  public from<FN extends Name, FS extends Selects>(from: SourceTable<FN, FS, any>): StatementDelete<T, FN, FS, []> 
+  public from<FN extends Name, FS extends Selects>(from: SourceTable<FN, FS, any>, only: boolean = false): StatementDelete<JoinedInner<T, FN, FS>, FN, FS, []> 
   {
     (this as any)._from = from;
     
-    this.addSource(from as any, SourceKind.TARGET);
+    this.setTargetSource(from as any, only);
     
     return this as never;
   }
@@ -94,13 +94,18 @@ export class StatementDelete<
     return super.clearReturning() as any;
   }
   
-  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
-    return traverse.enter(this, () => {
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R 
+  {
+    return traverse.enter(this, () => 
+    {
       const { _where } = this;
 
-      if (_where.length > 0) {
-        traverse.step('where', () => {
-          for (let i = 0; i < _where.length; i++) { 
+      if (_where.length > 0) 
+      {
+        traverse.step('where', () => 
+        {
+          for (let i = 0; i < _where.length; i++) 
+          { 
             traverse.step(i, _where[i], (replaceWith) => _where[i] = replaceWith as any);
           }
         });

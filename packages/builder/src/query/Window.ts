@@ -29,39 +29,46 @@ export class QueryWindow<N extends Name, T extends Sources, S extends Selects, W
 
   }
 
-  public partition(...values: QuerySelectScalarInput<T, S, any>): this {
+  public partition(...values: QuerySelectScalarInput<T, S, any>): this 
+  {
     const exprs = this._exprs.parse(values);
 
-    for (const expr of exprs) {
+    for (const expr of exprs) 
+    {
       this._partitionBy.push(expr);
     }
 
     return this;
   }
 
-  public clearPartition(): this {
+  public clearPartition(): this 
+  {
     this._partitionBy = [];
 
     return this;
   }
 
-  public order(values: QuerySelectScalarProvider<T, S, W, any>, order?: OrderDirection, nullsLast?: boolean): this {
+  public order(values: QuerySelectScalarProvider<T, S, W, any>, order?: OrderDirection, nullsLast?: boolean): this 
+  {
     const exprs = this._exprs.parse([values]);
 
-    for (const expr of exprs) {
+    for (const expr of exprs) 
+    {
       this._orderBy.push(new OrderBy(expr, order, nullsLast));
     }
 
     return this;
   }
 
-  public clearOrder(): this {
+  public clearOrder(): this 
+  {
     this._orderBy = [];
 
     return this;
   }
 
-  public mode(mode: WindowFrameMode): this {
+  public mode(mode: WindowFrameMode): this 
+  {
     this._mode = mode;
 
     return this;
@@ -72,7 +79,8 @@ export class QueryWindow<N extends Name, T extends Sources, S extends Selects, W
   public start(type: 'CURRENT ROW'): this 
   public start(type: 'FOLLOWING', offset: number): this 
   public start(type: 'UNBOUNDED FOLLOWING'): this 
-  public start(type: string, offset?: number): this {
+  public start(type: string, offset?: number): this 
+  {
     switch(type) {
       case 'UNBOUNDED PRECEDING':
         this._startUnbounded = true;
@@ -104,7 +112,8 @@ export class QueryWindow<N extends Name, T extends Sources, S extends Selects, W
   public end(type: 'CURRENT ROW'): this 
   public end(type: 'FOLLOWING', offset: number): this 
   public end(type: 'UNBOUNDED FOLLOWING'): this 
-  public end(type: string, offset?: number): this {
+  public end(type: string, offset?: number): this 
+  {
     switch(type) {
       case 'UNBOUNDED PRECEDING':
         this._endUnbounded = true;
@@ -131,13 +140,15 @@ export class QueryWindow<N extends Name, T extends Sources, S extends Selects, W
     return this;
   }
 
-  public exclude(exclusion: WindowFrameExclusion): this {
+  public exclude(exclusion: WindowFrameExclusion): this 
+  {
     this._exclusion = exclusion;
 
     return this;
   }
   
-  public extend<A extends Name>(alias: A): QueryWindow<A, T, S, W> {
+  public extend<A extends Name>(alias: A): QueryWindow<A, T, S, W> 
+  {
     return new QueryWindow(
       this._exprs, 
       alias, 
@@ -152,18 +163,24 @@ export class QueryWindow<N extends Name, T extends Sources, S extends Selects, W
     );
   }
 
-  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
-    traverse.step('window', () => {
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R 
+  {
+    traverse.step('window', () => 
+    {
       const { _partitionBy, _orderBy } = this;
       
-      traverse.step('partition', () => {
-        for (let i = 0; i < _partitionBy.length; i++) {
+      traverse.step('partition', () => 
+      {
+        for (let i = 0; i < _partitionBy.length; i++) 
+        {
           traverse.step(i, _partitionBy[i], (replaceWith) => _partitionBy[i] = replaceWith as any);
         }
       });
       
-      traverse.step('order', () => {
-        for (let i = 0; i < _orderBy.length; i++) {
+      traverse.step('order', () => 
+      {
+        for (let i = 0; i < _orderBy.length; i++) 
+        {
           traverse.step(i, _orderBy[i].value, (replaceWith) => _orderBy[i].value = replaceWith as any);
         }
       });

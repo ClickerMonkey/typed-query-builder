@@ -1,11 +1,12 @@
-import { Selects, SelectsTupleEquivalent } from '../internal';
+import { SourceTable, Tuple, SelectsKey, Selects, SelectsTupleEquivalent } from '../internal';
 
 
 export class StatementSet<S extends Selects>
 {
   
   public constructor(
-    public set: S,
+    public table: SourceTable<any, any, any>,
+    public set: Tuple<SelectsKey<S>>,
     public value: SelectsTupleEquivalent<S>
   ) {
     

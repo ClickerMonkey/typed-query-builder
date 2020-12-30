@@ -1,5 +1,5 @@
 import { 
-  Expr, Traverser, Name, Selects, SourceFieldsFromSelects, SourceFieldsFactory, NamedSource, Source, ExprField
+  Expr, Traverser, Name, Selects, SourceFieldsFromSelects, SourceFieldsFactory, NamedSource, Source, ExprField, SourceTable
 } from '../internal';
 
 
@@ -31,6 +31,18 @@ export class NamedSourceBase<N extends Name, S extends Selects> implements Named
   public getFieldsFactory(): SourceFieldsFactory<S> 
   {
     return ExprField.createFieldsFactory(this.source.getSelects(), this.getFields());
+  }
+
+  public getFieldTarget(field: string): string
+  {
+    const source = this.source;
+
+    return source instanceof SourceTable ? source.getFieldTarget(field) : field;
+  }
+
+  public isVirtual(): boolean
+  {
+    return false;
   }
 
   public traverse<R>(traverse: Traverser<Expr<unknown>, R>): R 

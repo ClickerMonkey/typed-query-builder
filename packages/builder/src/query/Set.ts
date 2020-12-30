@@ -40,17 +40,17 @@ export class QuerySet<S extends Selects> extends Source<S>
     this._criteria.addSource(set as any, SourceKind.TARGET);
   }
 
-  public getKind(): ExprKind 
+  public getKind(): ExprKind
   {
     return ExprKind.QUERY_SET_OPERATION;
   }
   
-  public isStatement(): boolean 
+  public isStatement(): boolean
   {
     return true;
   }
 
-  public getSelects(): S 
+  public getSelects(): S
   {
     return this._first.getSelects();
   }
@@ -67,33 +67,40 @@ export class QuerySet<S extends Selects> extends Source<S>
     }
   }
 
-  public union(query: SourceCompatible<S>, all: boolean = false) {
+  public union(query: SourceCompatible<S>, all: boolean = false)
+  {
     return this.addSet('UNION', query, all);
   }
 
-  public unionAll(query: SourceCompatible<S>) {
+  public unionAll(query: SourceCompatible<S>)
+  {
     return this.addSet('UNION', query, true);
   }
 
-  public intersect(query: SourceCompatible<S>, all: boolean = false) {
+  public intersect(query: SourceCompatible<S>, all: boolean = false)
+  {
     return this.addSet('INTERSECT', query, all);
   }
 
-  public intersectAll(query: SourceCompatible<S>) {
+  public intersectAll(query: SourceCompatible<S>)
+  {
     return this.addSet('INTERSECT', query, true);
   }
 
-  public except(query: SourceCompatible<S>, all: boolean = false) {
+  public except(query: SourceCompatible<S>, all: boolean = false)
+  {
     return this.addSet('EXCEPT', query, all);
   }
 
-  public exceptAll(query: SourceCompatible<S>) {
+  public exceptAll(query: SourceCompatible<S>)
+  {
     return this.addSet('EXCEPT', query, true);
   }
 
   public orderBy<K extends SelectsKeys<S>>(select: K, order?: OrderDirection, nullsLast?: boolean): this
   public orderBy(values: ExprProvider<{ set: S }, S, never, Expr<any> | Expr<any>[]>, order?: OrderDirection, nullsLast?: boolean): this
-  public orderBy<K extends SelectsKeys<S>>(values: K | ExprProvider<{ set: S }, S, never, Expr<any> | Expr<any>[]>, order?: OrderDirection, nullsLast?: boolean): this {
+  public orderBy<K extends SelectsKeys<S>>(values: K | ExprProvider<{ set: S }, S, never, Expr<any> | Expr<any>[]>, order?: OrderDirection, nullsLast?: boolean): this 
+  {
     const resolved = isString(values)
       ? this._criteria.selectsExpr[values as any]
       : this._criteria.exprs.provide(values);
@@ -106,19 +113,22 @@ export class QuerySet<S extends Selects> extends Source<S>
     return this;
   }
 
-  public clearOrderBy(): this {
+  public clearOrderBy(): this
+  {
     this._criteria.orderBy = [];
 
     return this;
   }
 
-  public limit(limit?: number): this {
+  public limit(limit?: number): this
+  {
     this._criteria.limit = limit;
 
     return this;
   }
 
-  public offset(offset?: number): this {
+  public offset(offset?: number): this
+  {
     this._criteria.offset = offset;
 
     return this;    

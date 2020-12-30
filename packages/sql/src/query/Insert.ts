@@ -50,90 +50,100 @@ export function addInsert(dialect: Dialect)
     {
       const { _sources, _returning, _into, _columns, _values, _sets, _setsWhere, _ignoreDuplicate, _priority } = expr;
 
-      return out.addSources(_sources.map( s => s.source ), () =>
+      const saved = out.saveSources();
+
+      let x = '';
+
+      const withs = _sources
+        .filter( s => s.kind === SourceKind.WITH )
+        .map( s => s.source )
+      ;
+
+      x += withs.map( w => 
       {
-        let x = '';
+        const s = out.dialect.getFeatureOutput(DialectFeatures.WITH, w, out);
 
-        const withs = _sources
-          .filter( s => s.kind === SourceKind.WITH )
-          .map( s => s.source )
-        ;
+        out.sources.push(w);
 
-        x += withs.map( w => out.dialect.getFeatureOutput(DialectFeatures.WITH, w, out) ).join(' ');
+        return s;
+      }).join(' ');
 
-        x += 'INSERT ';
+      x += 'INSERT ';
 
-        if (_priority)
-        {
-          x += out.dialect.getFeatureOutput(DialectFeatures.INSERT_PRIORITY, _priority, out);
-          x += ' ';
-        }
+      if (_priority)
+      {
+        x += out.dialect.getFeatureOutput(DialectFeatures.INSERT_PRIORITY, _priority, out);
+        x += ' ';
+      }
 
-        x += 'INTO ';
-        x += out.dialect.quoteName(String(_into.table));
-        x += ' (';
-        x += _columns.map( (c: string) => out.dialect.quoteName(c) ).join(', ');
-        x += ') ';
+      x += 'INTO ';
+      x += out.dialect.quoteName(String(_into.table));
+      x += ' (';
+      x += _columns.map( (c: string) => out.dialect.quoteName(c) ).join(', ');
+      x += ') ';
 
-        const hasSources = _values.some( v => v instanceof Source );
+      out.sources.push(_into as any);
 
-        if (hasSources)
-        {
-          x += '(';
-          x += _values
-            .map( v => valuesOrSource(v as any, _columns) )
-            .map( tuples => 
-              tuples instanceof Source
-                ? transform(tuples, out)
-                : tuples.map( tuple => 
-                    'SELECT ' + 
-                    tuple.map( e => 
-                      e instanceof Expr 
-                        ? transform(e, out) 
-                        : out.getConstant(e)
-                    ).join(', ')
-                  )
-              .join(' UNION ALL ') )
-            .join(' UNION ALL ');
-          x += ')';
-        }
-        else
-        {
-          x += ' VALUES ';
-          x += _values
-            .map( v => valuesOrSource(v as any, _columns) )
-            .map( tuples => 
-              (tuples as any[][])
-                .map( tuple => '(' + 
+      const hasSources = _values.some( v => v instanceof Source );
+
+      if (hasSources)
+      {
+        x += '(';
+        x += _values
+          .map( v => valuesOrSource(v as any, _columns) )
+          .map( tuples => 
+            tuples instanceof Source
+              ? transform(tuples, out)
+              : tuples.map( tuple => 
+                  'SELECT ' + 
                   tuple.map( e => 
                     e instanceof Expr 
                       ? transform(e, out) 
                       : out.getConstant(e)
-                  ).join(', ') + 
-                ')')
-              .join(', ') )
-            .join(', ');
-        }
+                  ).join(', ')
+                )
+            .join(' UNION ALL ') )
+          .join(' UNION ALL ');
+        x += ')';
+      }
+      else
+      {
+        x += ' VALUES ';
+        x += _values
+          .map( v => valuesOrSource(v as any, _columns) )
+          .map( tuples => 
+            (tuples as any[][])
+              .map( tuple => '(' + 
+                tuple.map( e => 
+                  e instanceof Expr 
+                    ? transform(e, out) 
+                    : out.getConstant(e)
+                ).join(', ') + 
+              ')')
+            .join(', ') )
+          .join(', ');
+      }
 
-        if (_ignoreDuplicate)
-        {
-          x += ' ';
-          x += out.dialect.getFeatureOutput(DialectFeatures.INSERT_IGNORE_DUPLICATE, null, out);
-        }
-        else if (_sets.length > 0)
-        {
-          x += ' ';
-          x += out.dialect.getFeatureOutput(DialectFeatures.INSERT_SET_ON_DUPLICATE, { sets: _sets, where: _setsWhere }, out);
-        }
+      if (_ignoreDuplicate)
+      {
+        x += ' ';
+        x += out.dialect.getFeatureOutput(DialectFeatures.INSERT_IGNORE_DUPLICATE, null, out);
+      }
+      else if (_sets.length > 0)
+      {
+        x += ' ';
+        x += out.dialect.getFeatureOutput(DialectFeatures.INSERT_SET_ON_DUPLICATE, { sets: _sets, where: _setsWhere }, out);
+      }
 
-        if (_returning.length > 0) 
-        {
-          x += ' ';
-          x += out.dialect.getFeatureOutput(DialectFeatures.INSERT_RETURNING, _returning, out );
-        }
+      if (_returning.length > 0) 
+      {
+        x += ' ';
+        x += out.dialect.getFeatureOutput(DialectFeatures.INSERT_RETURNING, _returning, out );
+      }
 
-        return x;
-      });
+      out.restoreSources(saved);
+
+      return x;
     }
   );
 }

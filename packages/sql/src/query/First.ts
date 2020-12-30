@@ -13,15 +13,12 @@ export function addFirst(dialect: Dialect)
 
       criteria.limit = 1;
 
-      return out.addSources(criteria.sources.map( s => s.source ), () =>
-      {
-        let x = '';
-  
-        x += 'SELECT ';
-        x += getCriteria(criteria, transform, out, true, true, true, true, true);
+      let x = '';
 
-        return x;
-      });
+      x += 'SELECT ';
+      x += getCriteria(criteria, transform, out, true, true, true, true, true);
+
+      return x;
     }
   );
 }

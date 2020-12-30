@@ -12,45 +12,62 @@ export function addDelete(dialect: Dialect)
     {
       const { _sources, _from, _where, _returning } = expr;
 
-      return out.addSources(_sources.map( s => s.source ), () => 
+      const saved = out.saveSources();
+
+      let x = '';
+
+      const withs = _sources
+        .filter( s => s.kind === SourceKind.WITH )
+        .map( s => s.source )
+      ;
+
+      x += withs.map( w => 
       {
-        let x = '';
+        const s = out.dialect.getFeatureOutput(DialectFeatures.WITH, w, out);
 
-        const withs = _sources
-          .filter( s => s.kind === SourceKind.WITH )
-          .map( s => s.source )
-        ;
+        out.sources.push(w);
 
-        x += withs.map( w => out.dialect.getFeatureOutput(DialectFeatures.WITH, w, out) ).join(' ');
-        
-        x += 'DELETE FROM ';
-        x += out.dialect.quoteName(String(_from.table));
+        return s;
+      }).join(' ');
+      
+      x += 'DELETE FROM ';
+      x += out.dialect.quoteName(String(_from.table));
 
-        const usings = _sources
-          .filter( s => s.kind === SourceKind.USING )
-          .map( s => s.source )
-        ;
+      out.sources.push(_from as any);
 
-        if (usings.length > 0) 
+      const usings = _sources
+        .filter( s => s.kind === SourceKind.USING )
+        .map( s => s.source )
+      ;
+
+      if (usings.length > 0) 
+      {
+        x += ' ';
+        x += usings.map( u => 
         {
-          x += ' ';
-          x += usings.map( u => out.dialect.getFeatureOutput(DialectFeatures.DELETE_USING, u, out )).join(' ');
-        }
+          const s = out.dialect.getFeatureOutput(DialectFeatures.DELETE_USING, u, out );
 
-        if (_where.length > 0) 
-        {
-          x += ' WHERE ';
-          x += getPredicates( _where, 'AND', transform, out );
-        }
+          out.sources.push(u);
 
-        if (_returning.length > 0) 
-        {
-          x += ' ';
-          x += out.dialect.getFeatureOutput(DialectFeatures.DELETE_RETURNING, _returning, out );
-        }
+          return s;
+        }).join(' ');
+      }
 
-        return x;
-      });
+      if (_where.length > 0) 
+      {
+        x += ' WHERE ';
+        x += getPredicates( _where, 'AND', transform, out );
+      }
+
+      if (_returning.length > 0) 
+      {
+        x += ' ';
+        x += out.dialect.getFeatureOutput(DialectFeatures.DELETE_RETURNING, _returning, out );
+      }
+
+      out.restoreSources(saved);
+
+      return x;
     }
   );
 }

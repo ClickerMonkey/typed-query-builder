@@ -13,7 +13,9 @@ import { getWindow } from './Window';
 
 export function getCriteria(criteria: QueryCriteria<any, any, any>, transform: DialectTransformTransformer, out: DialectOutput, hasSelects: boolean, hasSelectAliases: boolean, hasWindows: boolean, hasOrders: boolean, hasPaging: boolean ): string
 {
-  const { sources, selects, where, group, having, windows, orderBy, limit, offset } = criteria;
+  const { sources, selects, where, group, having, windows, orderBy, limit, offset, selectsExpr } = criteria;
+
+  const allSources = sources.map( s => s.source );
 
   let x = '';
 
@@ -21,7 +23,7 @@ export function getCriteria(criteria: QueryCriteria<any, any, any>, transform: D
   {
     if (hasSelectAliases) 
     {
-      x += getSelects(selects, out);
+      x += out.addSources(allSources, () => getSelects(selects, out));
     } 
     else 
     {
@@ -31,13 +33,22 @@ export function getCriteria(criteria: QueryCriteria<any, any, any>, transform: D
     x += ' ';
   }
 
+  const saved = out.saveSources();
+
   const froms = sources
     .filter( s => s.kind === SourceKind.FROM )
     .map( s => s.source )
   ;
 
   x += 'FROM ';
-  x += froms.map( s => getNamedSource(s, out) ).join(', ');
+  x += froms.map( f => 
+  {
+    const s = getNamedSource(f, out) 
+
+    out.sources.push(f);
+
+    return s;
+  }).join(', ');
 
   const joins = sources
     .filter( s => s.kind === SourceKind.JOIN )
@@ -51,6 +62,8 @@ export function getCriteria(criteria: QueryCriteria<any, any, any>, transform: D
     x += ' ';
     x += getNamedSource( join, out );
     x += ' ON ';
+
+    out.sources.push(join);
 
     if (join.condition) 
     {
@@ -71,7 +84,7 @@ export function getCriteria(criteria: QueryCriteria<any, any, any>, transform: D
   if (group.length > 0) 
   {
     x += ' GROUP BY ';
-    x += group.map( g => getGroup( g, transform, out ) ).join(', ');
+    x += group.map( g => getGroup( g, selectsExpr, transform, out ) ).join(', ');
   }
 
   if (having) 
@@ -87,8 +100,11 @@ export function getCriteria(criteria: QueryCriteria<any, any, any>, transform: D
     x += ' WINDOW ';
 
     let windowIndex = 0;
-    for (const windowName in windows) {
-      if (windowIndex > 0) {
+
+    for (const windowName in windows) 
+    {
+      if (windowIndex > 0) 
+      {
         x += ', ';
       }
       x += out.dialect.quoteAlias(windowName);
@@ -121,6 +137,8 @@ export function getCriteria(criteria: QueryCriteria<any, any, any>, transform: D
       x += limit.toFixed(0);
     }
   }
+
+  out.restoreSources(saved);
 
   return x;
 }

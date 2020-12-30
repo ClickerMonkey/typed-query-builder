@@ -10,7 +10,7 @@ export function getSelects(selects: Selects, out: DialectOutput): string
       const alias = out.dialect.quoteAlias(String(s.alias));
       let x = expr;
 
-      if (!out.options.excludeSelectAlias && (!out.options.simplifySelects || expr !== alias))
+      if (!out.options.excludeSelectAlias && (!out.options.simplifyReferences || expr !== alias))
       {
         x += ' AS ';
         x += alias;

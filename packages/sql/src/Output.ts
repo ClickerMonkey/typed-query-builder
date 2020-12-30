@@ -1,4 +1,4 @@
-import { DataTypeInputs, Expr, isNumber, NamedSource, SourceTable } from '@typed-query-builder/builder';
+import { DataTypeInputs, Expr, isNumber, NamedSource, Source, SourceTable } from '@typed-query-builder/builder';
 import { Dialect } from './Dialect';
 import { DialectFeatures } from './Features';
 
@@ -10,7 +10,7 @@ export interface DialectOutputOptions
   raw?: boolean;
   excludeSource?: boolean;
   excludeSelectAlias?: boolean;
-  simplifySelects?: boolean;
+  simplifyReferences?: boolean;
 }
 
 export class DialectOutput
@@ -107,11 +107,11 @@ export class DialectOutput
     return result;
   }
 
-  public isUnique(column: string, exclude?: NamedSource<any, any>): boolean
+  public isUnique(column: string, exclude?: NamedSource<any, any> | Source<any>): boolean
   {
     for (const source of this.sources)
     {
-      if (source === exclude)
+      if (source === exclude || source.getSource() === exclude)
       {
         continue;
       }
@@ -136,15 +136,29 @@ export class DialectOutput
 
   public addSources<R = void>(sources: NamedSource<any, any>[], adder: () => R): R
   {
-    const saved = this.sources.slice();
+    const saved = this.saveSources();
 
     this.sources = saved.concat(sources);
 
     const result = adder();
 
-    this.sources = saved;
+    this.restoreSources(saved);
 
     return result;
+  }
+
+  public saveSources(): NamedSource<any, any>[]
+  {
+    const saved = this.sources;
+
+    this.sources = saved.slice();
+
+    return saved;
+  }
+
+  public restoreSources(saved: NamedSource<any, any>[])
+  {
+    this.sources = saved;
   }
 
 }

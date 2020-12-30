@@ -248,7 +248,7 @@ describe('Insert', () =>
       .setOnDuplicate({
         name: 'New Name'
       })
-      .setOnDuplicateWhere(({ task }, { not }) => [ task.done.isFalse() ])
+      .setOnDuplicateWhere(({ task }) => [ task.done.isFalse() ])
       .run(sql)
     ;
 
@@ -266,7 +266,7 @@ describe('Insert', () =>
     const x = insert(Task, ['name'])
       .values([['Task 1'], ['Task 2'], ['Task 3']])
       .returning(({ task }) => [ task.id ])
-      .run(sqlWithOptions({ simplifySelects: true }))
+      .run(sqlWithOptions({ simplifyReferences: true }))
     ;
 
     expectText({ condenseSpace: true }, x, `

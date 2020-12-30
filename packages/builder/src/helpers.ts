@@ -2,7 +2,7 @@ import {
   QuerySelect, StatementInsert, Name, Selects, SelectsFromTypeAndColumns, Sources, Simplify, SelectsKey, MergeObjects, Tuple, 
   DataTypeInputMap, DataTypeInputMapSelects, NamedSource, SourceTableInput, Source, SourceTable, SourceValues, ExprProvider, 
   StatementUpdate, StatementDelete, SourcesFieldsFactory, SelectsExprs, createExprFactory, JoinedInner, Cast, SelectsFromKeys,
-  SelectsKeys,
+  SelectsKeys, WithBuilder
 } from './internal';
 
 
@@ -100,19 +100,19 @@ export function update<
   return query;
 }
 
-export function remove<
+export function deletes<
   T extends Sources = {}, 
   F extends Name = never,
   S extends Selects = [], 
   R extends Selects = []
 >(): StatementDelete<T, F, S, R>
-export function remove<
+export function deletes<
   T extends Sources = {}, 
   F extends Name = never,
   S extends Selects = [], 
   R extends Selects = []
 >(target: SourceTable<F, S, any>): StatementDelete<MergeObjects<T, Record<F, S>>, F, S, R>
-export function remove<
+export function deletes<
   T extends Sources = {}, 
   F extends Name = never,
   S extends Selects = [], 
@@ -127,7 +127,6 @@ export function remove<
   return query;
 }
 
-
 export function exprs<
   T extends Sources = {},
   S extends Selects = [], 
@@ -135,4 +134,16 @@ export function exprs<
 >(sources: SourcesFieldsFactory<T> = {} as any, selects: SelectsExprs<S> = [] as any)
 {
   return createExprFactory<T, S, W>(sources, selects);
+}
+
+export function withs<
+  WN extends Name, 
+  WS extends Selects
+>(
+  sourceProvider: ExprProvider<{}, [], never, NamedSource<WN, WS>>, 
+  recursive?: ExprProvider<Simplify<Record<WN, WS>>, [], never, Source<WS>>, 
+  all?: boolean
+): WithBuilder<Simplify<Record<WN, WS>>>
+{
+  return new WithBuilder().with(sourceProvider, recursive as any, all) as any;
 }

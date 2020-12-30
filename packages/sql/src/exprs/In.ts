@@ -23,7 +23,7 @@ export function addIn(dialect: Dialect)
       if (isArray(list)) {
         x += list.map( (item) => out.wrap(item) ).join(', ');
       } else {
-        x += transform(list, out);
+        x += out.modify({ excludeSelectAlias: true }, () => transform(list, out));
       }
 
       x += ')';

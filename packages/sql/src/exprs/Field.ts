@@ -13,7 +13,7 @@ export function addField(dialect: Dialect)
 
       let x = '';
 
-      if (!out.options.excludeSource && (!out.options.simplifySelects || !out.isUnique(alias, source)))
+      if (!out.options.excludeSource && (!out.options.simplifyReferences || !out.isUnique(alias, source)))
       {
         x += namedSource instanceof SourceTable && namedSource === source
           ? out.dialect.quoteName(String(namedSource.table))

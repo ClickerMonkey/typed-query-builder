@@ -73,6 +73,15 @@ export type SelectsTupleEquivalent<S extends Selects> =
       : SelectsValuesExprs<S> | Expr<S>
 ;
 
+
+export type SelectsTupleEquivalentInput<S extends Selects> =
+  S extends []
+    ? never
+    : S extends [Select<any, infer V>]
+      ? V | Expr<V>
+      : SelectsValuesExprs<S>
+;
+
 export type ObjectFromSelects<T extends Selects> = 
   UndefinedToOptional<
     Simplify<UnionToIntersection<{
@@ -110,11 +119,11 @@ export type SelectsFromTypeAndColumns<T, C extends Tuple<keyof T>> =
 ;
 
 export type SelectsFromKeys<S extends Selects, K extends Tuple<SelectsKey<S>>> = {
-    [I in keyof K]: SelectWithKey<S, K[I]>
+  [I in keyof K]: SelectWithKey<S, K[I]>
 };
 
 export type SelectsFromValues<V extends any[]> = {
-    [I in keyof V]: Select<any, V[I]>
+  [I in keyof V]: Select<any, V[I]>
 };
 
 export type SelectWithKey<S extends Selects, K> = {
@@ -167,7 +176,7 @@ export type SelectsOptional<S extends Selects> = {
 export type SelectsExprs<T extends Selects> =
   Required<Simplify<UnionToIntersection<{
     [K in keyof T]: T[K] extends Select<infer P, infer V>
-      ? { [_P in P]: Expr<V> }
+      ? { [_P in P]: ExprScalar<V> }
       : {}
   }[number]>>>
 ;

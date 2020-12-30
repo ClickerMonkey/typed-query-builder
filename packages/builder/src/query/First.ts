@@ -25,11 +25,13 @@ export class QueryFirst<T extends Sources, S extends Selects, W extends Name> ex
     return true;
   }
 
-  public is(type: PredicateRowType, row: Expr<SelectsValues<S>> | Expr<SelectsNameless<S>> | ExprInputTuple<SelectsValues<S>>): ExprScalar<boolean> {
+  public is(type: PredicateRowType, row: Expr<SelectsValues<S>> | Expr<SelectsNameless<S>> | ExprInputTuple<SelectsValues<S>>): ExprScalar<boolean> 
+  {
     return new ExprPredicateRow<SelectsValues<S>>(type, this as any, isArray(row) ? row.map( toExpr ) : row as any);
   }
 
-  public json(): ExprScalar<ObjectFromSelects<S>> {
+  public json(): ExprScalar<ObjectFromSelects<S>> 
+  {
     return new QueryJson<S, ObjectFromSelects<S>>(this);
   }
 

@@ -1,4 +1,4 @@
-import { ExprKind, ExprScalar, Traverser, Expr, PredicateBinaryListPass, PredicateBinaryListType, isArray } from '../internal';
+import { Select, ExprKind, ExprScalar, Traverser, Expr, PredicateBinaryListPass, PredicateBinaryListType, isArray } from '../internal';
 
 
 export class ExprPredicateBinaryList<T> extends ExprScalar<boolean> 
@@ -10,7 +10,7 @@ export class ExprPredicateBinaryList<T> extends ExprScalar<boolean>
     public type: PredicateBinaryListType,
     public pass: PredicateBinaryListPass,
     public value: ExprScalar<T>,
-    public test: ExprScalar<T[]> | ExprScalar<T>[]
+    public test: ExprScalar<T[]> | ExprScalar<T>[] | Expr<T[]> | Expr<[Select<any, T>][]>
   ) {
     super();
   }

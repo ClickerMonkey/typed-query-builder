@@ -12,12 +12,15 @@ export class QueryJson<S extends Selects, V> extends ExprScalar<V>
     super();
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.JSON;
   }
 
-  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
-    return traverse.enter(this, () => {
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R 
+  {
+    return traverse.enter(this, () => 
+    {
       traverse.step('json', this.json, (replace) => this.json = replace as any);
     });
   }

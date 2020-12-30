@@ -11,7 +11,14 @@ export function addUpdateFromFeature(dialect: Dialect)
     let x = '';
 
     x += 'FROM ';
-    x += froms.map( s => getNamedSource(s, out) ).join(', ');
+    x += froms.map( f => 
+    {
+      const s = getNamedSource(f, out);
+
+      out.sources.push(f);
+
+      return s;
+    }).join(', ');
     
     return x;
   };

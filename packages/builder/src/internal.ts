@@ -56,6 +56,7 @@ export * from './sources/Source';
 export * from './sources/Table';
 export * from './sources/Unspecified';
 export * from './sources/Values';
+export * from './sources/Virtual';
 
 export * from './query/Criteria';
 export * from './query/Statement';
@@ -73,6 +74,7 @@ export * from './query/Select';
 export * from './query/Set';
 export * from './query/Update';
 export * from './query/Json';
+export * from './query/With';
 
 export * from './Transformer';
 

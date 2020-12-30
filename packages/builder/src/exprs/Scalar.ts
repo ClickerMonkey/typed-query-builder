@@ -1,6 +1,6 @@
 import {  
   OperationUnaryType, OperationBinaryType, PredicateBinaryType, PredicateUnaryType, PredicateBinaryListType, DataTypeInputs, 
-  DataTypeInputType, Select, SelectExpr, ExprCast, ExprCase, ExprPredicateBinaryList, ExprOperationUnary,
+  DataTypeInputType, Select, SelectExpr, ExprCast, ExprCase, ExprPredicateBinaryList, ExprOperationUnary, toAnyExpr,
   ExprOperationBinary, ExprPredicateUnary, ExprPredicateBinary, ExprBetween, ExprIn, ExprPredicates, Expr, isArray, toExpr
 } from '../internal';
 
@@ -68,21 +68,21 @@ export abstract class ExprScalar<T> extends Expr<T>
     }
   }
 
-  public any(op: PredicateBinaryListType, values: ExprInput<T>[] | ExprInput<T[]>): ExprScalar<boolean> {
+  public any(op: PredicateBinaryListType, values: ExprInput<T>[] | ExprInput<T[]> | Expr<T[]> | Expr<[Select<any, T>][]>): ExprScalar<boolean> {
     return new ExprPredicateBinaryList(op, 'ANY', 
       this,
       isArray(values) 
         ? (values as any[]).map( toExpr ) 
-        : toExpr( values )
+        : toAnyExpr<T[] | [Select<any, T>][]>( values )
     );
   }
 
-  public all(op: PredicateBinaryListType, values: ExprInput<T>[] | ExprInput<T[]>): ExprScalar<boolean> {
+  public all(op: PredicateBinaryListType, values: ExprInput<T>[] | ExprInput<T[]> | Expr<T[]> | Expr<[Select<any, T>][]>): ExprScalar<boolean> {
     return new ExprPredicateBinaryList(op, 'ALL', 
       this,
       isArray(values) 
       ? (values as any[]).map( toExpr ) 
-        : toExpr( values )
+        : toAnyExpr<T[] | [Select<any, T>][]>( values )
     );
   }
 
@@ -128,25 +128,25 @@ export abstract class ExprScalar<T> extends Expr<T>
     return new ExprPredicateUnary('FALSE', this);
   }
 
-  public in(values: ExprInput<T[]> | ExprInput<T>[]): ExprScalar<boolean>
+  public in(values: ExprInput<T[]> | ExprInput<T>[] | Expr<T[]> | Expr<[Select<any, T>][]>): ExprScalar<boolean>
   public in(...values: ExprInput<T>[]): ExprScalar<boolean> 
   public in(...values: any[]): ExprScalar<boolean> {
     return new ExprIn(this, values.length !== 1 
       ? values.map( toExpr )
       : isArray(values[0])
         ? values[0].map( toExpr )
-        : toExpr( values[0] )
+        : toAnyExpr( values[0] )
     );
   }
 
-  public notIn(values: ExprInput<T[]> | ExprInput<T>[]): ExprScalar<boolean>
+  public notIn(values: ExprInput<T[]> | ExprInput<T>[] | Expr<T[]> | Expr<[Select<any, T>][]>): ExprScalar<boolean>
   public notIn(...values: ExprInput<T>[]): ExprScalar<boolean> 
   public notIn(...values: any[]): ExprScalar<boolean> {
     return new ExprIn(this, values.length !== 1 
       ? values.map( toExpr )
       : isArray(values[0])
         ? values[0].map( toExpr )
-        : toExpr( values[0] ), 
+        : toAnyExpr( values[0] ), 
       true
     );
   }

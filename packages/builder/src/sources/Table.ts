@@ -58,6 +58,11 @@ export class SourceTable<N extends Name, S extends Selects, F extends DataTypeIn
     return true;
   }
 
+  public isVirtual(): boolean
+  {
+    return false;
+  }
+
   public getSelects(): S 
   {
     return this.selects;
@@ -81,6 +86,11 @@ export class SourceTable<N extends Name, S extends Selects, F extends DataTypeIn
   public getFieldsFactory(): SourceFieldsFactory<S> 
   {
     return this.fields;
+  }
+
+  public getFieldTarget(field: string): string
+  {
+    return this.fieldColumn[field] || field;
   }
 
   public hasColumn(column: string): boolean

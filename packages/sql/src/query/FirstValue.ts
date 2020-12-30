@@ -16,13 +16,15 @@ export function addFirstValue(dialect: Dialect)
         criteria.limit = 1;
       }
 
-      return out.addSources(criteria.sources.map( s => s.source ), () =>
-      {
-        let x = '';
-  
-        x += 'SELECT ';
+      const allSources = criteria.sources.map( s => s.source );
 
-        if (defaultValue) 
+      let x = '';
+
+      x += 'SELECT ';
+
+      out.addSources(allSources, () =>
+      {
+        if (defaultValue)
         {
           x += 'COALESCE(';
           x += transform(value.getExpr(), out);
@@ -35,13 +37,17 @@ export function addFirstValue(dialect: Dialect)
           x += out.wrap(value.getExpr());
         }
 
-        x += ' AS ';
-        x += out.dialect.quoteAlias(value.alias);
-        x += ' ';
-        x += getCriteria(criteria, transform, out, false, false, true, true, true);
-
-        return x;
+        if (!out.options.excludeSelectAlias)
+        {
+          x += ' AS ';
+          x += out.dialect.quoteAlias(value.alias);
+        }
       });
+
+      x += ' ';
+      x += getCriteria(criteria, transform, out, false, false, true, true, true);
+
+      return x;
     }
   );
 }
