@@ -1,17 +1,19 @@
 import { 
   Transformer, Expr, isString, isFunction, DataTypeTypes, DataTypeInputs, OperationUnaryType, GroupingSetType, InsertPriority, 
-  JoinType, LockRowLock, LockStrength, OperationBinaryType, OrderDirection, PredicateBinaryListPass, PredicateBinaryListType, 
+  JoinType, LockRowLock, LockStrength, OperationBinaryType, OrderDirection, PredicateBinaryListType, 
   PredicateBinaryType, PredicateRowType, PredicatesType, PredicateUnaryType, SetOperation, WindowFrameExclusion, WindowFrameMode, 
-  mapRecord, isArray, isBoolean, compileFormat, isNumber, AggregateFunctions, getDataTypeFromValue, getDataTypeFromInput
+  isArray, isBoolean, compileFormat, isNumber, AggregateFunctions, getDataTypeFromValue, getDataTypeFromInput, Functions
 } from '@typed-query-builder/builder';
 
 import { DialectFeatures, DialectFeaturesDescription } from './Features';
+import { DialectFormatter } from './Formatter';
 import { DialectOutput, DialectOutputOptions } from './Output';
 
 
 export interface DialectTransformTransformer {
   <T>(value: Expr<T>, out: DialectOutput): string;
 }
+
 
 export type DialectQuoteFormatter = (value: string, dialect: Dialect) => string;
 
@@ -21,11 +23,27 @@ export type DialectValueFormatter = (value: any, dialect: Dialect, dataType?: Da
 
 export type DialectDataTypeFormatter = (type: DataTypeInputs) => string;
 
-export type DialectFunctionFormatter = (args: string[]) => string;
-
 export type DialectMap<T extends string, V = string> = Partial<Record<T, V>>;
 
 export type DialectFeatureFormatter = (value: any, transform: DialectTransformTransformer, out: DialectOutput) => string
+
+export type DialectParamsOperationUnary = Record<'op' | 'value', string>;
+
+export type DialectParamsOperationBinary = Record<'first' | 'op' | 'second', string>;
+
+export type DialectParamsPredicateUnary = Record<'op' | 'value', string>;
+
+export type DialectParamsPredicateBinary = Record<'first' | 'op' | 'second', string>;
+
+export type DialectParamsPredicateBinaryList = Record<'first' | 'op' | 'pass' | 'second', string>;
+
+export type DialectParamsPredicateRow = Record<'first' | 'op' | 'second' | number, string>;
+
+export type DialectParamsAggregate = Record<'name' | 'args' | 'distinct' | 'order' | 'over' | 'filter' | number, string> & Record<'argCount', number> & Record<'argList', string[]>;
+
+export type DialectParamsFunction = Record<'name' | 'args' | number, string> & Record<'argCount', number> & Record<'argList', string[]>;
+
+export type DialectParamsNamed = Record<'name', string>;
 
 
 export class Dialect
@@ -50,29 +68,35 @@ export class Dialect
   public trueIdentifier: string;
   public falseIdentifier: string;
   public nullIdentifier: string;
-  public operationUnaryAlias: DialectMap<OperationUnaryType>;
-  public operationBinaryAlias: DialectMap<OperationBinaryType>;
-  public predicateUnaryAlias: DialectMap<PredicateUnaryType>;
-  public predicateBinaryAlias: DialectMap<PredicateBinaryType>;
-  public predicateTypesAlias: DialectMap<PredicatesType>;
-  public joinTypeAlias: DialectMap<JoinType>;
-  public orderDirectionAlias: DialectMap<OrderDirection>;
-  public setOperationAlias: DialectMap<SetOperation>;
-  public predicateBinaryListAlias: DialectMap<PredicateBinaryListType>;
-  public predicateBinaryListPassAlias: DialectMap<PredicateBinaryListPass>;
-  public predicateRowAlias: DialectMap<PredicateRowType>;
-  public windowFrameModeAlias: DialectMap<WindowFrameMode>;
-  public windowFrameExclusionAlias: DialectMap<WindowFrameExclusion>;
-  public groupingSetAlias: DialectMap<GroupingSetType>;
-  public insertPriorityAlias: DialectMap<InsertPriority>;
-  public lockStrengthAlias: DialectMap<LockStrength>;
-  public lockRowAlias: DialectMap<LockRowLock>;
-  public functionsFormatter: DialectMap<string, DialectFunctionFormatter>;
   public featureFormatter: Record<DialectFeatures, DialectFeatureFormatter>;
   public selectExpression: (expr: string) => string;
   public supports: number;
   public defaultOptions: DialectOutputOptions;
   public aggregateRequiresArgument: DialectMap<keyof AggregateFunctions, string>;
+  public implicitPredicates: boolean;
+  public selectOffsetOnly: (params: { offset: number }) => string;
+  public selectLimitOnly: (params: { limit: number }) => string;
+  public selectOffsetLimit: (params: { offset: number, limit: number }) => string;
+  
+  public functionsUpper: boolean;
+  public functions: DialectFormatter<keyof Functions, DialectParamsFunction>;
+  public aggregates: DialectFormatter<keyof AggregateFunctions, DialectParamsAggregate>;
+  public operationUnary: DialectFormatter<OperationUnaryType, DialectParamsOperationUnary>;
+  public operationBinary: DialectFormatter<OperationBinaryType, DialectParamsOperationBinary>;
+  public predicateUnary: DialectFormatter<PredicateUnaryType, DialectParamsPredicateUnary>;
+  public predicateBinary: DialectFormatter<PredicateBinaryType, DialectParamsPredicateBinary>;
+  public predicateBinaryList: DialectFormatter<PredicateBinaryListType, DialectParamsPredicateBinaryList>;
+  public predicateRow: DialectFormatter<PredicateRowType, DialectParamsPredicateRow>;
+  public predicateTypes: DialectFormatter<PredicatesType, DialectParamsNamed>;
+  public joinType: DialectFormatter<JoinType, DialectParamsNamed>;
+  public orderDirection: DialectFormatter<OrderDirection, DialectParamsNamed>;
+  public setOperation: DialectFormatter<SetOperation, DialectParamsNamed>;
+  public windowFrameMode: DialectFormatter<WindowFrameMode, DialectParamsNamed>;
+  public windowFrameExclusion: DialectFormatter<WindowFrameExclusion, DialectParamsNamed>;
+  public groupingSet: DialectFormatter<GroupingSetType, DialectParamsNamed>;
+  public insertPriority: DialectFormatter<InsertPriority, DialectParamsNamed>;
+  public lockStrength: DialectFormatter<LockStrength, DialectParamsNamed>;
+  public lockRow: DialectFormatter<LockRowLock, DialectParamsNamed>;
 
   public constructor()
   {
@@ -85,27 +109,29 @@ export class Dialect
     this.dataTypeUnsignedIdentifier = 'UNSIGNED';
     this.dataTypeNullIdentifier = 'NULL';
     this.dataTypeArrayFormatter = (element, length) => `${element} ARRAY[${length || ''}]`;
-    
     this.dataTypeFormatter = {};
     this.reservedWords = {};
-    this.operationUnaryAlias = {};
-    this.operationBinaryAlias = {};
-    this.predicateUnaryAlias = {};
-    this.predicateBinaryAlias = {};
-    this.predicateTypesAlias = {};
-    this.joinTypeAlias = {};
-    this.orderDirectionAlias = {};
-    this.setOperationAlias = {};
-    this.predicateBinaryListAlias = {};
-    this.predicateBinaryListPassAlias = {};
-    this.predicateRowAlias = {};
-    this.windowFrameModeAlias = {};
-    this.windowFrameExclusionAlias = {};
-    this.groupingSetAlias = {};
-    this.insertPriorityAlias = {};
-    this.lockStrengthAlias = {};
-    this.lockRowAlias = {};
-    this.functionsFormatter = {};
+
+    this.functionsUpper = true;
+    this.functions = new DialectFormatter('{name}({args})', ['name', 'args'], 'name');
+    this.aggregates = new DialectFormatter('{name}({distinct}{args}{order}){filter}{over}', ['name', 'distinct', 'args', 'order', 'filter', 'over'], 'name');
+    this.operationUnary = new DialectFormatter('{op}{value}', ['op', 'value'], 'op');
+    this.operationBinary = new DialectFormatter('{first} {op} {second}', ['op', 'first', 'second'], 'op');
+    this.predicateUnary = new DialectFormatter('{value} IS {op}', ['op', 'value'], 'op');
+    this.predicateBinary = new DialectFormatter('{first} {op} {second}', ['op', 'first', 'second'], 'op');
+    this.predicateBinaryList = new DialectFormatter('{first} {op} {pass} ({second})', ['op', 'first', 'pass', 'second'], 'op');
+    this.predicateRow = new DialectFormatter('({first}) {op} ({second})', ['op', 'first', 'second'], 'op');
+    this.predicateTypes = new DialectFormatter('{name}', ['name'], 'name');
+    this.joinType = new DialectFormatter('{name}', ['name'], 'name');
+    this.orderDirection = new DialectFormatter('{name}', ['name'], 'name');
+    this.setOperation = new DialectFormatter('{name}', ['name'], 'name');
+    this.windowFrameMode = new DialectFormatter('{name}', ['name'], 'name');
+    this.windowFrameExclusion = new DialectFormatter('{name}', ['name'], 'name');
+    this.groupingSet = new DialectFormatter('{name}', ['name'], 'name');
+    this.insertPriority = new DialectFormatter('{name}', ['name'], 'name');
+    this.lockStrength = new DialectFormatter('{name}', ['name'], 'name');
+    this.lockRow = new DialectFormatter('{name}', ['name'], 'name');
+    
     this.valueFormatter = [];
     this.valueFormatterMap = {};
     this.featureFormatter = {};
@@ -117,7 +143,11 @@ export class Dialect
     this.nullIdentifier = 'NULL';
     this.defaultOptions = {};
     this.aggregateRequiresArgument = { count: '*' };
+    this.implicitPredicates = false;
     this.selectExpression = (expr) => `SELECT ${expr}`;
+    this.selectOffsetLimit = compileFormat('LIMIT {limit} OFFSET {offset}');
+    this.selectOffsetOnly = compileFormat('LIMIT ALL OFFSET {offset}');
+    this.selectLimitOnly = compileFormat('LIMIT {limit}');
     this.supports = DialectFeatures.ALL;
   }
 
@@ -227,16 +257,6 @@ export class Dialect
     return this;
   }
 
-  public getAlias<K extends string>(map: DialectMap<K>, key: K): string 
-  {
-    if (map[key] === '') 
-    {
-      throw new Error(`The ${key} identifier is not supported by this dialect.`);
-    }
-
-    return map[key] as string || key;
-  }
-
   public setDataTypeUnsupported(type: keyof DataTypeTypes): this
   {
     this.dataTypeFormatter[type] = () => 
@@ -249,8 +269,9 @@ export class Dialect
 
   public setDataTypeFormat(type: keyof DataTypeTypes, formats: Partial<Record<'tuple' | 'constant' | 'object', string>>): this
   {
-    const tupleCompiled = formats.tuple ? compileFormat(formats.tuple) : () => '';
-    const objectCompiled = formats.object ? compileFormat(formats.object) : () => '';
+    const constantType = formats.constant || type;
+    const tupleCompiled = formats.tuple ? compileFormat(formats.tuple) : () => constantType;
+    const objectCompiled = formats.object ? compileFormat(formats.object) : () => constantType;
 
     this.dataTypeFormatter[type] = (dataType) => 
     {
@@ -258,7 +279,7 @@ export class Dialect
 
       if (isString(dataType))
       {
-        result = formats.constant || dataType;
+        result = constantType;
       }
       else if (isArray(dataType))
       {
@@ -380,69 +401,6 @@ export class Dialect
     }
 
     throw new Error(`The type ${JSON.stringify(type)} is not supported by this dialect.`)
-  }
-
-  public setFunctionUnsupported(func: string): this
-  {
-    this.functionsFormatter[func] = undefined;
-
-    return this;
-  }
-
-  public setFunctionAlias(func: string, alias: string): this
-  {
-    this.functionsFormatter[func] = (args) => `${alias}(${args.join(', ')})`;
-
-    return this;
-  }
-
-  public setFunctionFormat(func: string, format: string): this
-  {
-    const compiled = compileFormat(format);
-
-    this.functionsFormatter[func] = (args) => compiled(args);
-
-    return this;
-  }
-
-  public setFunctionFormatByArgCount(func: string, formats: Record<number | '*', string>): this
-  {
-    const compiled = mapRecord(formats, (value) => compileFormat(value));
-
-    this.functionsFormatter[func] = (args) => 
-    {
-      const byArgCount = compiled[args.length];
-
-      if (byArgCount) 
-      {
-        return byArgCount(args);
-      }
-
-      const all = compiled['*'];
-
-      if (all) 
-      {
-        return all(args);
-      }
-
-      throw new Error(`Function ${func} with the given number of arguments is not supported.`);
-    };
-
-    return this;
-  }
-
-  public setFunctionFormatter(func: string, formatter: DialectFunctionFormatter): this
-  {
-    this.functionsFormatter[func] = formatter;
-
-    return this;
-  }
-
-  public getFunctionString(func: string, args: string[], prefix: string = '', suffix: string = ''): string
-  {
-    const format = this.functionsFormatter[func];
-
-    return format ? format(args) : `${func}(${prefix}${args.join(', ')}${suffix})`;
   }
 
   public addReserved(reserved: string[]): this

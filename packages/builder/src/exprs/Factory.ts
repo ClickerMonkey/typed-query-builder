@@ -5,7 +5,7 @@ import {
   ExprCase, ExprCast, ExprPredicateBinary, ExprPredicates, ExprPredicateUnary, ExprConstant, ExprExists, ExprFunction, fns,
   ExprIn, ExprNot, ExprOperationBinary, ExprOperationUnary, ExprParam, Expr, ExprTypeMap, ExprField, ExprRaw, ExprRow,
   ExprDefault, ExprPredicateBinaryList, ExprScalar, ExprInput, Select, SourceUnspecified, QuerySelectScalarInput, ExprNull,
-  QuerySelectScalar, isString, Cast, toExpr, ExprInputType, toAnyExpr
+  QuerySelectScalar, isString, Cast, toExpr, ExprInputType, toAnyExpr, ExprDeep, ExprInputDeep, toExprDeep
 } from '../internal';
 
 
@@ -22,12 +22,13 @@ export interface ExprFactory<T extends Sources, S extends Selects, W extends Nam
   nulls<V>(): Expr<V>;
   param<V>(param: string): ExprScalar<V>;
   row<E extends ExprInput<any | any[]>[]>(...elements: E): ExprRow<Cast<ExprTypeMap<TuplesJoin<E>>, any[]>>;
+  deep<V>(input: ExprInputDeep<V>): ExprScalar<V>;
   inspect<R>(): ExprCase<boolean, R>;
   inspect<R, V>(value: ExprInput<V>): ExprCase<V, R>;
   inspect<R>(value?: ExprInput<any>): ExprCase<any, R>;
   constant<V>(value: V, dataType?: DataTypeInputs): ExprScalar<V>;
   func<F extends keyof Funcs, Funcs = Functions>(func: F, ...args: FunctionArgumentInputs<F, Funcs>): ExprScalar<FunctionResult<F, Funcs>>;
-  cast<I extends DataTypeInputs>(type: I, value: ExprInput<any>): ExprScalar<DataTypeInputType<I>>;
+  cast<I extends DataTypeInputs>(type: I, value: any): ExprScalar<DataTypeInputType<I>>;
   query(): QuerySelect<{}, [], never>;
   not(value: ExprInput<boolean>): ExprScalar<boolean>;
   exists(query: Expr<[Select<any, 1 | null>]> | Expr<1 | null>): ExprScalar<boolean>;
@@ -127,8 +128,12 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
       return new ExprRow(elements.map( toExpr ));
     },
 
-    inspect<R>(value?: ExprInput<any>): ExprCase<any, R> {
+    deep<V>(input: ExprInputDeep<V>): ExprScalar<V> {
       // @ts-ignore
+      return new ExprDeep(toExprDeep(input));
+    },
+
+    inspect<R>(value?: ExprInput<any>): ExprCase<any, R> {
       return new ExprCase(value === undefined ? new ExprConstant(true) : toExpr(value));
     },
 
@@ -140,8 +145,8 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
       return new ExprFunction<F, Funcs>(func, (args as any).map( toExpr ));
     },
 
-    cast<I extends DataTypeInputs>(type: I, value: ExprInput<any>): ExprScalar<DataTypeInputType<I>> {
-      return new ExprCast(type, value);
+    cast<I extends DataTypeInputs>(type: I, value: any): ExprScalar<DataTypeInputType<I>> {
+      return new ExprCast(type, toAnyExpr(value));
     },
 
     query(): QuerySelect<{}, [], never> {
@@ -185,8 +190,8 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
       return new ExprAggregate<T, S, W, A, Aggs, V>(exprs as ExprFactory<T, S, W>, type, (args as any).filter( (v: any) => v !== undefined ).map( toExpr ));
     },
 
-    count(value?: ExprScalar<any>): ExprAggregate<T, S, W, 'count'> {
-      return exprs.aggregate('count', value);
+    count(nonNullValues?: ExprScalar<any>): ExprAggregate<T, S, W, 'count'> {
+      return exprs.aggregate('count', nonNullValues);
     },
     countIf(condition: ExprScalar<boolean>): ExprAggregate<T, S, W, 'countIf'> {
       return exprs.aggregate('countIf', condition);
@@ -234,7 +239,7 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
     op(first: ExprInput<number>, op: OperationBinaryType | OperationUnaryType, second?: ExprInput<number>): ExprScalar<number> {
       return second === undefined
         ? new ExprOperationUnary(op as OperationUnaryType, toExpr(first))
-        : new ExprOperationBinary(op, toExpr(first), toExpr(second));
+        : new ExprOperationBinary(op as OperationBinaryType, toExpr(first), toExpr(second));
     },
 
     is(a1: any, a2: any, a3?: any): ExprScalar<boolean> {

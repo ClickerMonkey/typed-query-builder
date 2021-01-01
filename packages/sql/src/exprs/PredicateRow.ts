@@ -1,5 +1,6 @@
 import { ExprPredicateRow, isArray, Expr } from '@typed-query-builder/builder';
-import { Dialect } from '../Dialect';
+import { Dialect, DialectParamsPredicateRow } from '../Dialect';
+import { DialectFeatures } from '../Features';
 
 
 export function addPredicateRow(dialect: Dialect)
@@ -8,27 +9,19 @@ export function addPredicateRow(dialect: Dialect)
     ExprPredicateRow,
     (expr, transform, out) => 
     {
+      out.dialect.requireSupport(DialectFeatures.ROW_CONSTRUCTOR);
+
       const { value, type, test } = expr;
+      const params: Partial<DialectParamsPredicateRow> = {};
 
-      let x = '';
-      
-      x += '(';
-      if (isArray(value)) {
-        x += value.map( e => transform(e, out) ).join(', ');
-      } else {
-        x += transform(value as Expr<unknown>, out);
-      }
-      x += ') ';
-      x += out.dialect.getAlias(out.dialect.predicateRowAlias, type);
-      x += ' (';
-      if (isArray(test)) {
-        x += test.map( e => transform(e, out) ).join(', ');
-      } else {
-        x += transform(test as Expr<unknown>, out);
-      }
-      x += ')';
+      params.first = isArray(value)
+        ? value.map( e => transform(e, out) ).join(', ')
+        : transform(value as Expr<unknown>, out);
+      params.second = isArray(test)
+        ? test.map( e => transform(e, out) ).join(', ')
+        : transform(test as Expr<unknown>, out);
 
-      return x;
+      return out.dialect.predicateRow.get(type, params);
     }
   );
 }

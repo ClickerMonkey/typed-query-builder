@@ -1,5 +1,5 @@
 import { ExprOperationUnary } from '@typed-query-builder/builder';
-import { Dialect } from '../Dialect';
+import { Dialect, DialectParamsOperationUnary } from '../Dialect';
 
 
 export function addOperationUnary(dialect: Dialect)
@@ -9,13 +9,11 @@ export function addOperationUnary(dialect: Dialect)
     (expr, transform, out) => 
     {
       const { type, value } = expr;
+      const params: Partial<DialectParamsOperationUnary> = {};
 
-      let x = '';
+      params.value = out.wrap(value);
 
-      x += out.dialect.getAlias(out.dialect.operationUnaryAlias, type);
-      x += out.wrap(value);
-
-      return x;
+      return out.dialect.operationUnary.get(type, params);
     }
   );
 }

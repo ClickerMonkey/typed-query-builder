@@ -9,7 +9,7 @@ export class SourceJoin<N extends Name, S extends Selects> extends NamedSourceBa
     public type: JoinType,
     public condition: ExprScalar<boolean>
   ) {
-    super( source.getName(), source.getSource() );
+    super( source.getName(), source.getSource(), source.getSelects() );
   }
   
   public isSource(other: NamedSource<any, any>): boolean

@@ -13,11 +13,13 @@ export class ExprConstant<T> extends ExprScalar<T>
     super();
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.CONSTANT;
   }
 
-  public isSimple(): boolean {
+  public isSimple(): boolean 
+  {
     return true;
   }
 

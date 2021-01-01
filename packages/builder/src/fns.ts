@@ -32,9 +32,14 @@ export function isArray<T = any>(x: any): x is T[]
   return Array.isArray(x);
 }
 
-export function isObject<T = any>(x: any): x is Record<string, any>
+export function isObject<T = Record<string, any>>(x: any): x is T
 {
   return typeof x === 'object' && x !== null && !Array.isArray(x);
+}
+
+export function isPlainObject<T = Record<string, any>>(x: any): x is T
+{
+  return isObject(x) && (x.constructor === Object || !x.constructor);
 }
 
 export function isTuple<T = any>(x: any): x is Tuple<T>
@@ -47,7 +52,12 @@ export function isFunction<T extends (...args: any[]) => any>(x: any): x is T
   return typeof x === 'function';
 }
 
-export function compileFormat(format: string)
+export function isValue(x: any): boolean
+{
+  return x !== null && x !== undefined;
+}
+
+export function compileFormat<P = any>(format: string)
 {
   const SECTION_TYPES = 2;
   const SECTION_INDEX_CONSTANT = 0;
@@ -58,7 +68,7 @@ export function compileFormat(format: string)
       : (source: any) => source && section in source ? source[section] : '';
   });
 
-  return (params: any) =>
+  return (params: P) =>
   {
     return params
         ? sections.reduce((out, section) => out + section(params), '')

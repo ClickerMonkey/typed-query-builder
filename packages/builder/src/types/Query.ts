@@ -15,11 +15,11 @@ export type Scalars = number | string | boolean | null | undefined | Date;
 
 export type OperationUnaryType = '-' | 'BITNOT';
 
-export type OperationBinaryType = '%' | '*' | '+' | '/' | '-' | '^' | 'BITAND' | 'BITXOR' | 'BITOR' | 'BITNOT' | 'BITLEFT' | 'BITRIGHT';
+export type OperationBinaryType = '%' | '*' | '+' | '/' | '-' | '^' | 'BITAND' | 'BITXOR' | 'BITOR' | 'BITLEFT' | 'BITRIGHT';
 
 export type PredicateUnaryType = 'NULL' | 'NOT NULL' | 'TRUE' | 'FALSE';
 
-export type PredicateBinaryType = '>' | '>=' | '<' | '<=' | '=' | '!=' | '<>' | '<=>' | 'LIKE' | 'ILIKE' | 'NOT LIKE' | 'NOT ILIKE';
+export type PredicateBinaryType = '>' | '>=' | '<' | '<=' | '=' | '!=' | '<>' | 'DISTINCT' | 'NOT DISTINCT' | 'LIKE' | 'NOT LIKE';
 
 export type PredicatesType = 'AND' | 'OR';
 
@@ -33,7 +33,7 @@ export type PredicateBinaryListType = '>' | '>=' | '<' | '<=' | '=' | '!=' | '<>
 
 export type PredicateBinaryListPass = 'ANY' | 'ALL';
 
-export type PredicateRowType = '=' | '!=' | '<>' | '<' | '<=' | '>' | '>=' | 'IS DISTINCT FROM' | 'IS NOT DISTINCT FROM';
+export type PredicateRowType = '=' | '!=' | '<>' | '<' | '<=' | '>' | '>=' | 'DISTINCT' | 'NOT DISTINCT';
 
 export type WindowFrameMode = 'RANGE' | 'ROWS' | 'GROUPS';
 

@@ -5,6 +5,7 @@ export interface NamedSource<N extends Name, S extends Selects> extends Traversa
 {
     getName(): N;
     getSource(): Source<S>;
+    getSelects(): S;
     getFields(): SourceFieldsFromSelects<S>;
     getFieldsFactory(): SourceFieldsFactory<S>;
     getFieldTarget(field: string): string;

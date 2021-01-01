@@ -44,12 +44,12 @@ Queries built should read like SQL. **Too often** do ORMs or query builders vent
 - Using the results of a select/insert/update/delete as a source to select/join/insert against.
 
 ### Common Math Operations
-- **Operations Binary**: '%' | '*' | '+' | '/' | '-' | '^' | 'BITAND' | 'BITXOR' | 'BITOR' | 'BITNOT' | 'BITLEFT' | 'BITRIGHT'
+- **Operations Binary**: '%' | '*' | '+' | '/' | '-' | '^' | 'BITAND' | 'BITXOR' | 'BITOR' | 'BITLEFT' | 'BITRIGHT'
 - **Operations Unary**: '-' | 'BITNOT'
-- **Predicates Binary**: '>' | '>=' | '<' | '<=' | '=' | '!=' | '<>' | '<=>' | 'LIKE' | 'ILIKE' | 'NOT LIKE' | 'NOT ILIKE'
+- **Predicates Binary**: '>' | '>=' | '<' | '<=' | '=' | '!=' | '<>' | 'DISTINCT' | 'NOT DISTINCT' | 'LIKE' | 'NOT LIKE'
 - **Predicates Unary**: 'IS NULL' | 'IS NOT NULL' | 'IS TRUE' | 'IS FALSE';
 - **Predicates List**: '>' | '>=' | '<' | '<=' | '=' | '!=' | '<>' ... 'ANY' | 'ALL'
-- **Predicates Row**: '=' | '!=' | '<>' | '<' | '<=' | '>' | '>=' | 'IS DISTINCT FROM' | 'IS NOT DISTINCT FROM'
+- **Predicates Row**: '=' | '!=' | '<>' | '<' | '<=' | '>' | '>=' | 'DISTINCT' | 'NOT DISTINCT'
 
 ### Common Functions
 - **Math**: abs, ceil, floor, exp, ln, mod, power, sqrt, cbrt, degrees, radians, div, factorial, gcd, lcm, log10, log, pi, round, sign, truncate
@@ -57,8 +57,8 @@ Queries built should read like SQL. **Too often** do ORMs or query builders vent
 - **Trigonometric**: aos, acosd, asin, asind, atan, atand, atan2, atan2d, cos, cosd, cot, cotd, sin, sind, tan, tand, sinh, cosh, tanh, asinh, acosh, atanh
 - **Operations**: coalesce, iif, greatest, least
 - **String**: lower, upper, trim, trimLeft, trimRight, concat, length, indexOf, substring, regexGet, regexReplace, char, join, format, left, right, padLeft, padRight, md5, repeat, replace, reverse, startsWith
-- **Date**: dateFormat, dateParse, timestampParse, dateAddDays, dateWithTime, daysBetween, dateSubDays, currentTime, currentTimestamp, currentDate, dateGet, dateTruncate, createDate, createTime, createTimestamp, timestampToSeconds, timestampFromSeconds, datesOverlap, timestampsOverlap
-- **Geometry**: pointAdd, pointSub, pointMultiply, pointDivide, pathJoin, geomLength, geomCenter, geomPoints, lineIntersection, boxIntersection, closestPointOn, distanceBetween, geomContains, geomContainsOrOn, geomOverlaps
+- **Date**: dateFormat, dateParse, timestampParse, dateAddDays, dateWithTime, daysBetween, dateSubDays, currentTime, currentTimestamp, currentDate, dateGet, dateTruncate, dateAdd, dateDiff, createDate, createTime, createTimestamp, timestampToSeconds, timestampFromSeconds, datesOverlap, timestampsOverlap
+- **Geometry**: geomCenter, geomContains, geomDistance, geomWithinDistance, geomIntersection, geomIntersects, geomTouches, geomLength, geomPoints, geomPoint, geomPointX, geomPointY
 
 ### Aggregate Functions
 - count, countIf, sum, avg, min, max, deviation, variance, array, string, bitAnd, bitOr, boolAnd, boolOr
@@ -67,7 +67,10 @@ Queries built should read like SQL. **Too often** do ORMs or query builders vent
 - rowNumber, rank, denseRank, percentRank, culmulativeDistribution, ntile, lag, lead, firstValue, lastValue, nthValue
 
 ## Singular Interface
-Even if the underlying database doesn't support particular functionality, it will appear to and the builder will substitue an equivalent expression when possible. Using a singular interface for communicating with the database also allows built queries to be used on any number of supported databases.
+Even if the underlying database doesn't support particular functionality, it will appear to and the builder will substitue an equivalent expression when possible. Using a singular interface for communicating with the database also allows built queries to be used on any number of supported databases. This also makes it simple to support complex data types like geometry/geography.
+
+For example, **SQL Server** doesn't have the following operations or functions, but they are supported seamlessly:
+- `<<`, `>>`, `least`, `greatest`, `factorial`, `truncate`, `startsWith`, `dateWithTime`, `timestampToSeconds`, `timestampFromSeconds`, `datesOverlap`, `timestampsOverlap`, `boolAnd`, `boolOr`, `countIf`, `padLeft`, `padRight`, `Circle` & `Box` data types to mention a few;
 
 ## Customizable
 Comes with common functions, operations, expressions, and data types. Its trivial to add your own and maintain type safety. 
@@ -80,7 +83,7 @@ interface UserFunctions {
   random(min: number, max: number): number;
 }
 // Adding to dialect
-DialectPgsql.func('random', '(random() * ({1} - {0}) + {0})');
+DialectPgsql.functions.setFormat('random', '(random() * ({1} - {0}) + {0})');
 // the expression used in a query
 func<'random', UserFunctions>(0, from(Table).count());
 ```
@@ -91,19 +94,26 @@ import { ExprScalar, ExprKind } from '@typed-query-builder/builder';
 import { DialectPgsql } from '@typed-query-builder/pgsql';
 
 class MyExpr extends ExprScalar<number> {
-  public getKind() { return ExprKind.USER_DEFINED };
+  public static readonly id = ExprKind.USER_DEFINED_0;
+  public getKind() { return ExprKind.USER_DEFINED_0 };
   public constructor(
     public min: Expr<number>, 
     public max: Expr<number>,
     public whole: boolean
   ) {}
 }
-DialectPgsql.expr(MyExpr, (expr, transform) => {
-  const min = transform(expr.min);
-  const max = transform(expr.max);
-  const rnd = `random() * (${max} - ${min}) + ${min}`;
-  return expr.whole ? `floor(${rnd} + 1)` : rnd;
-});
+
+DialectPgsql.transformer.setTransformer<MyExpr>(
+  MyExpr,
+  (expr, transform, out) => {
+    const min = out.wrap(expr.min);
+    const max = out.wrap(expr.max);
+    const rnd = `random() * (${max} - ${min}) + ${min}`;
+
+    return expr.whole ? `floor(${rnd} + 1)` : rnd;
+  },
+);
+
 // the expression used in a query
 new MyExpr(min, max, whole);
 ```
@@ -113,10 +123,10 @@ Traditionally writing SQL can often be cumbersome. You may find yourself having 
 
 ```ts
 from(Persons)
-  .select(({ person }, exprs, { distance }) => [
+  .select(({ person }, exprs, { geomDistance }) => [
     person.id,
     person.name,
-    distance(person.location, {x: 0, y: 0}).as('meters'),
+    geomDistance(person.location, {x: 0, y: 0}).as('meters'),
   ])
   .where((sources, exprs, fns, { meters }) => [
     meters.lt(1000)
@@ -146,7 +156,9 @@ const results = from(Task)
 ```
 
 ## SQL Implementations
-TODO
+
+- `@typed-query-builder/sql-mssql` contains the dialect for converting expressions into SQL Server query strings.
+
 
 ### `SELECT`
 > A source is a table, a subquery, values (list of objects/tuples), or insert/update/delete expressions with a returning clause.
@@ -304,7 +316,7 @@ from(Task)
     task.doneAt.isNotNull(),
     task.doneAt.between( dateAddDays(currentDate(), -10), currentDate() )
   ])
-  .orderBy(({ task }) => task.doneAt, 'DESC')
+  .orderBy('doneAt', 'DESC')
   .limit(10)
 ;
 ```
@@ -327,8 +339,12 @@ insert(Task, ['name']).values([['Task #1'], ['Task #2']]);
 ```ts
 // UPDATE task SET name = 'New Name' WHERE id = 10
 update(Task).set('name', 'New Name').where(Task.fields.id.eq(10));
-update(Task).set(Task.fields.name, 'New Name').where(Task.fields.id.eq(10));
 update(Task).set({ name: 'New Name' }).where(Task.fields.id.eq(10));
+
+update(Task).set(
+  ['name', 'done'], 
+  ['New Name', true] // could be subquery which returns one [string, boolean]
+).where(Task.fields.id.eq(10));
 
 // TODO
 // - update with multi-set with subquery
@@ -366,30 +382,5 @@ thing please file a bug report. A temporary work-around is to pull that function
 to ignore it in one place.
 
 
-
-
-### Refined TODO
-- for SQL transformers...
-  - which char wraps aliases + policy (always, reserved)
-  - which char wraps table/columns + policy
-- join type comes down to A, AB, and B (what the results should be).
- - if join type does not include A, then iterate on B first
-- Query value iteration
-- Add Database which has...
-   - run(query): RunResult
-   - isSupported(query): boolean
-- Add SQLDatabase which has
-   - DataType to STRING calc
-   - List of unsupported QueryValues
-   - List of unsupported Functions
-   - Additional validators { start: (QV), end: (QV, internal[])}
-- For Postgres, detect when subquery in from references external source, use LATERAL
+### TODO
 - simplified joins `USING (field, ...)` where field is on both
--  FOR NO KEY UPDATE, FOR UPDATE, FOR SHARE and FOR KEY SHARE is not valid with GROUP BY
-- <=> on unsupported DBMS: 
-   - IS NOT DISTINCT FROM
-   - CASE WHEN (a = b) or (a IS NULL AND b IS NULL) THEN 1 ELSE 0 END = 1
-   - NOT A <=> B = IS DISTINCT FROM
-- != is always converted to <>
-- when using if to join and search, outside the if maybe have those joins/froms partialed?
-- add optional default to QuerySelect.value()

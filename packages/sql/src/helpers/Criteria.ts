@@ -58,7 +58,7 @@ export function getCriteria(criteria: QueryCriteria<any, any, any>, transform: D
   for (const join of joins) 
   {
     x += ' ';
-    x += out.dialect.getAlias(out.dialect.joinTypeAlias, join.type);
+    x += out.dialect.joinType.get(join.type);
     x += ' ';
     x += getNamedSource( join, out );
     x += ' ON ';
@@ -126,15 +126,21 @@ export function getCriteria(criteria: QueryCriteria<any, any, any>, transform: D
   {
     if (isNumber(offset)) 
     {
-      x += ' LIMIT ';
-      x += isNumber(limit) ? limit.toFixed(0) : 'ALL';
-      x += ' OFFSET ';
-      x += offset.toFixed(0);
+      x += ' ';
+
+      if (isNumber(limit))
+      {
+        x += out.dialect.selectOffsetLimit({ limit, offset });
+      }
+      else
+      {
+        x += out.dialect.selectOffsetOnly({ offset });
+      }
     } 
     else if (isNumber(limit)) 
     {
-      x += ' LIMIT ';
-      x += limit.toFixed(0);
+      x += ' ';
+      x += out.dialect.selectLimitOnly({ limit });
     }
   }
 

@@ -7,5 +7,7 @@ export function getPredicate(expr: Expr<boolean>, transform: DialectTransformTra
 {
   return expr.isPredicate()
     ? transform(expr, out)
-    : out.wrap(expr) + ' = ' + out.dialect.trueIdentifier;
+    : out.dialect.implicitPredicates
+      ? transform(expr, out)
+      : out.wrap(expr) + ' = ' + out.dialect.trueIdentifier;
 }

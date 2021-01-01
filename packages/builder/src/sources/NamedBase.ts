@@ -6,11 +6,14 @@ import {
 export class NamedSourceBase<N extends Name, S extends Selects> implements NamedSource<N, S>
 {
 
+  public selects: S;
+
   public constructor(
     public name: N,
     public source: Source<S>,
+    selects?: S,
   ) {
-
+    this.selects = selects || source.getSelectsAliases(this);
   }
 
   public getName(): N 
@@ -23,14 +26,19 @@ export class NamedSourceBase<N extends Name, S extends Selects> implements Named
     return this.source;
   }
 
+  public getSelects(): S
+  {
+    return this.selects;
+  }
+
   public getFields(): SourceFieldsFromSelects<S> 
   {
-    return ExprField.createFields(this, this.source.getSelects());
+    return ExprField.createFields(this, this.getSelects());
   }
 
   public getFieldsFactory(): SourceFieldsFactory<S> 
   {
-    return ExprField.createFieldsFactory(this.source.getSelects(), this.getFields());
+    return ExprField.createFieldsFactory(this.getSelects(), this.getFields());
   }
 
   public getFieldTarget(field: string): string

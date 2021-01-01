@@ -1,5 +1,5 @@
 import { ExprOperationBinary } from '@typed-query-builder/builder';
-import { Dialect } from '../Dialect';
+import { Dialect, DialectParamsOperationBinary } from '../Dialect';
 
 
 export function addOperationBinary(dialect: Dialect)
@@ -9,16 +9,12 @@ export function addOperationBinary(dialect: Dialect)
     (expr, transform, out) => 
     {
       const { first, type, second } = expr;
+      const params: Partial<DialectParamsOperationBinary> = {};
 
-      let x = '';
+      params.first = out.wrap(first);
+      params.second = out.wrap(second);
 
-      x += out.wrap(first);
-      x += ' ';
-      x += out.dialect.getAlias(out.dialect.operationBinaryAlias, type);
-      x += ' ';
-      x += out.wrap(second);
-
-      return x;
+      return out.dialect.operationBinary.get(type, params);
     }
   );
 }

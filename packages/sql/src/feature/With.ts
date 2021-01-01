@@ -11,7 +11,7 @@ export function addWithFeature(dialect: Dialect)
     x += 'WITH ';
     x += out.dialect.quoteName(value.getName());
     // x += ' (';
-    // x += (value.getSource().getSelects() as Selects).map( s => s.alias ).join(', ');
+    // x += (value.getSelects() as Selects).map( s => s.alias ).join(', ');
     // x += ') AS (';
     x += ' AS (';
     x += transform(value.getSource(), out);

@@ -21,6 +21,7 @@ export * from './exprs/Aggregate';
 export * from './exprs/Between';
 export * from './exprs/Case';
 export * from './exprs/Cast';
+export * from './exprs/Deep';
 export * from './exprs/PredicateBinary';
 export * from './exprs/PredicateBinaryList'
 export * from './exprs/PredicateRow';

@@ -6,7 +6,7 @@ export class SourceRecursive<N extends Name, S extends Selects> extends NamedSou
 
   public constructor(
     name: N,
-    initial: Source<S>, // insert returning, delete returning, select, update returning, values
+    initial: Source<S>,
     public recursive: Source<S>,
     public all: boolean = false
   ) {

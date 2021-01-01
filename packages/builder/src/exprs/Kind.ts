@@ -22,6 +22,7 @@ export enum ExprKind {
     PARAM                   = 'param',
     RAW                     = 'raw',
     ROW                     = 'row',
+    DEEP                    = 'deep',
     JSON                    = 'json',
     JOIN                    = 'join',
     VALUES                  = 'values',

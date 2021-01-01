@@ -1,5 +1,5 @@
 import { ExprPredicateUnary } from '@typed-query-builder/builder';
-import { Dialect } from '../Dialect';
+import { Dialect, DialectParamsPredicateUnary } from '../Dialect';
 
 
 export function addPredicateUnary(dialect: Dialect)
@@ -9,14 +9,11 @@ export function addPredicateUnary(dialect: Dialect)
     (expr, transform, out) => 
     {
       const { value, type } = expr;
+      const params: Partial<DialectParamsPredicateUnary> = {};
 
-      let x = '';
+      params.value = out.wrap(value);
 
-      x += out.wrap(value);
-      x += ' IS ';
-      x += out.dialect.getAlias(out.dialect.predicateUnaryAlias, type);
-
-      return x;
+      return out.dialect.predicateUnary.get(type, params);
     }
   );
 }

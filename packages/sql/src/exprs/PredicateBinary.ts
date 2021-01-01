@@ -1,5 +1,5 @@
 import { ExprPredicateBinary } from '@typed-query-builder/builder';
-import { Dialect } from '../Dialect';
+import { Dialect, DialectParamsPredicateBinary } from '../Dialect';
 
 
 export function addPredicateBinary(dialect: Dialect)
@@ -9,16 +9,12 @@ export function addPredicateBinary(dialect: Dialect)
     (expr, transform, out) => 
     {
       const { value, type, test } = expr;
+      const params: Partial<DialectParamsPredicateBinary> = {};
 
-      let x = '';
-      
-      x += out.wrap(value);
-      x += ' ';
-      x += out.dialect.getAlias(out.dialect.predicateBinaryAlias, type);
-      x += ' ';
-      x += out.wrap(test);
+      params.first = out.wrap(value);
+      params.second = out.wrap(test);
 
-      return x;
+      return out.dialect.predicateBinary.get(type, params);
     }
   );
 }

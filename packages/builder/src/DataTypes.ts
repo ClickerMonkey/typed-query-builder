@@ -1,5 +1,5 @@
 import { 
-  isArray, isBoolean, isDate, isNumber, isObject, isString, Cast, Json, SelectsFromObject, Selects, Simplify 
+  isValue, isArray, isBoolean, isDate, isNumber, isObject, isString, Cast, Json, SelectsFromObject, Selects, Simplify 
 } from './internal';
 
 
@@ -14,69 +14,51 @@ export type DataTypeInputMapTypes<F extends DataTypeInputMap> = {
 export type DataTypeInputMapSelects<F extends DataTypeInputMap> = 
   Cast<SelectsFromObject<DataTypeInputMapTypes<F>>, Selects>;
 
+export interface DataTypeInputRegistry
+{
+  boolean: 'BOOLEAN';
+  bit: 'BIT';
+  bits: [ type: 'BITS', length: number];
+  tinyint: 'TINYINT' | [ type: 'TINYINT', length: number] | { unsigned: 'TINYINT', length?: number };
+  smallint: 'SMALLINT' | [ type: 'SMALLINT', length: number] | { unsigned: 'SMALLINT', length?: number };
+  mediumint: 'MEDIUMINT' | [ type: 'MEDIUMINT', length: number] | { unsigned: 'MEDIUMINT', length?: number };
+  int: 'INT' | [ type: 'INT', length: number] | { unsigned: 'INT', length?: number };
+  bigint: 'BIGINT' | [ type: 'BIGINT', length: number] | { unsigned: 'BIGINT', length?: number };
+  decimal: 'DECIMAL' | [ type: 'DECIMAL', totalDigits: number, fractionDigits?: number] | { unsigned: 'DECIMAL', totalDigits?: number, fractionDigits?: number };
+  numeric: 'NUMERIC' | [ type: 'NUMERIC', totalDigits: number, fractionDigits?: number] | { unsigned: 'NUMERIC', totalDigits?: number, fractionDigits?: number };
+  float: 'FLOAT' | [ type: 'FLOAT', fractionDigits: number] | [ type: 'FLOAT', totalDigits: number, fractionDigits: number] | { unsigned: 'FLOAT', totalDigits?: number, fractionDigits?: number };
+  double: 'DOUBLE' | [ type: 'DOUBLE', totalDigits: number, fractionDigits: number] | { unsigned: 'DOUBLE', totalDigits?: number, fractionDigits?: number };
+  money: 'MONEY';
+  char: [ type: 'CHAR', length: number];
+  varchar: [ type: 'VARCHAR', length: number];
+  text: 'TEXT';
+  timestamp: 'TIMESTAMP' | [ type: 'TIMESTAMP', secondFractionDigits: number ] | { timezoned: 'TIMESTAMP', secondFractionDigits?: number };
+  date: 'DATE';
+  time: 'TIME' | [ type: 'TIME', secondFractionDigits: number ] | { timezoned: 'TIME', secondFractionDigits?: number };
+  uuid: 'UUID';
+  cidr: 'CIDR';
+  inet: 'INET';
+  macaddr: 'MACADDR';
+  binary: [ type: 'BINARY', lenth: number ];
+  varbinary: [ type: 'VARBINARY', length: number ];
+  blob: 'BLOB';
+  json: 'JSON';
+  xml: 'XML';
+  point: 'POINT';
+  segment: 'SEGMENT';
+  line: 'LINE'; 
+  box: 'BOX';
+  path: 'PATH';
+  polygon: 'POLYGON';
+  circle: 'CIRCLE';
+  geography: [ geography: 'POINT' | 'SEGMENT' | 'LINE' | 'BOX' | 'PATH' | 'POLYGON' | 'CIRCLE', srid: number ];
+  world: { world: 'POINT' | 'SEGMENT' | 'LINE' | 'BOX' | 'PATH' | 'POLYGON' | 'CIRCLE' };
+  any: 'ANY';
+}
+
 export type DataTypeInputs = 
-  'BOOLEAN' | 
-  'BIT' | 
-  [ type: 'BITS', length: number] |
-  'TINYINT' |
-  [ type: 'TINYINT', length: number] |
-  { unsigned: 'TINYINT', length?: number } |
-  'SMALLINT' |
-  [ type: 'SMALLINT', length: number] |
-  { unsigned: 'SMALLINT', length?: number } |
-  'MEDIUMINT' |
-  [ type: 'MEDIUMINT', length: number] |
-  { unsigned: 'MEDIUMINT', length?: number } |
-  'INT' |
-  [ type: 'INT', length: number] |
-  { unsigned: 'INT', length?: number } |
-  'BIGINT' |
-  [ type: 'BIGINT', length: number] |
-  { unsigned: 'BIGINT', length?: number } |
-  'DECIMAL' |
-  [ type: 'DECIMAL', totalDigits: number, fractionDigits?: number] |
-  { unsigned: 'DECIMAL', totalDigits?: number, fractionDigits?: number } |
-  'NUMERIC' |
-  [ type: 'NUMERIC', totalDigits: number, fractionDigits?: number] |
-  { unsigned: 'NUMERIC', totalDigits?: number, fractionDigits?: number } |
-  'FLOAT' |
-  [ type: 'FLOAT', fractionDigits: number] |
-  [ type: 'FLOAT', totalDigits: number, fractionDigits: number] |
-  { unsigned: 'FLOAT', totalDigits?: number, fractionDigits?: number } |
-  'DOUBLE' |
-  [ type: 'DOUBLE', totalDigits: number, fractionDigits: number] |
-  { unsigned: 'DOUBLE', totalDigits?: number, fractionDigits?: number } |
-  'MONEY' |
-  [ type: 'CHAR', length: number] |
-  [ type: 'VARCHAR', length: number] | 
-  'TEXT' |
-  'TIMESTAMP' |
-  [ type: 'TIMESTAMP', secondFractionDigits: number ] |
-  { timezoned: 'TIMESTAMP', secondFractionDigits?: number } |
-  'DATE' |
-  'TIME' |
-  [ type: 'TIME', secondFractionDigits: number ] |
-  { timezoned: 'TIME', secondFractionDigits?: number } | 
-  'UUID' |
-  'CIDR' |
-  'INET' |
-  'MACADDR' |
-  [ type: 'BINARY', lenth: number ] | 
-  [ type: 'VARBINARY', length: number ] |
-  'BLOB' | 
-  'JSON' |
-  'XML' | 
-  'POINT' | 
-  'SEGMENT' |
-  'LINE' | 
-  'BOX' | 
-  'PATH' | 
-  'POLYGON' | 
-  'CIRCLE' | 
-  [ geography: 'POINT' | 'SEGMENT' | 'LINE' | 'BOX' | 'PATH' | 'POLYGON' | 'CIRCLE', srid: number ] |
-  { world: 'POINT' | 'SEGMENT' | 'LINE' | 'BOX' | 'PATH' | 'POLYGON' | 'CIRCLE' } |
+  DataTypeInputRegistry[keyof DataTypeInputRegistry] | 
   [ type: 'ARRAY', element: DataTypeInputs, length?: number ] |
-  'ANY' |
   [ nulls: 'NULL', type: DataTypeInputs ]
 ;
 
@@ -100,12 +82,21 @@ export type DataTypeInputName<I extends DataTypeInputs> =
     : I extends [type: infer K, ...remaining: any[]]
       ? K extends DataTypeNames
         ? K
-        : I extends { unsigned: infer J  }
-          ? J extends DataTypeNames
-            ? J
-            : never
+        : never
+      : I extends { unsigned: infer J  }
+        ? J extends DataTypeNames
+          ? J
           : never
-      : never;
+        : I extends { timezoned: infer L }
+          ? L extends DataTypeNames
+            ? L
+            : never
+          : I extends { world: infer M }
+            ? M extends DataTypeNames
+              ? M
+              : never
+            : never
+;
 
 export type DataTypeNames = keyof DataTypeTypes;
 
@@ -149,6 +140,14 @@ export type DataTypeCircle = defineType<{
   r: 'FLOAT'
 }>;
 
+export type DataTypeGeometry = 
+  DataTypePoint | 
+  DataTypeSegment | 
+  DataTypePath | 
+  DataTypeCircle | 
+  DataTypePolygon |
+  DataTypeBox |
+  DataTypeLine;
 
 export interface DataTypeTypes {
   BOOLEAN: boolean;
@@ -234,11 +233,16 @@ export function getDataTypeMeta(input: DataTypeInputs): DataTypeMeta
 
     case 'NUMERIC':
     case 'DECIMAL':
-    case 'FLOAT':
     case 'DOUBLE':
       return {
         totalDigits: isArray(input) ? input[1] as number : isObject(input) ? (input as any).totalDigits : undefined,
         fractionDigits: isArray(input) ? input[2] as number : isObject(input) ? (input as any).fractionDigits : undefined,
+      };
+
+    case 'FLOAT':
+      return {
+        totalDigits: isArray(input) && input.length === 2 ? input[1] as number : isObject(input) ? (input as any).totalDigits : undefined,
+        fractionDigits: isArray(input) ? (input.length == 2 ? input[1] : input[2]) as number : isObject(input) ? (input as any).fractionDigits : undefined,
       };
     
     case 'DATE':
@@ -311,7 +315,7 @@ export function getDataTypeFromValue(value: any): DataTypeInputs
   }
   if (isArray(value))
   {
-    return value[0] !== undefined && value[0] !== null
+    return isValue(value[0])
       ? ['ARRAY', getDataTypeFromValue(value[0])]
       : ['ARRAY', 'ANY'];
   }

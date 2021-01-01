@@ -1,5 +1,5 @@
 import { ExprPredicateBinaryList, isArray } from '@typed-query-builder/builder';
-import { Dialect } from '../Dialect';
+import { Dialect, DialectParamsPredicateBinaryList } from '../Dialect';
 import { DialectFeatures } from '../Features';
 
 
@@ -12,25 +12,15 @@ export function addPredicateBinaryList(dialect: Dialect)
       out.dialect.requireSupport(DialectFeatures.PREDICATE_LIST);
 
       const { value, type, pass, test } = expr;
+      const params: Partial<DialectParamsPredicateBinaryList> = {};
 
-      let x = '';
+      params.first = out.wrap(value);
+      params.pass = pass;
+      params.second = isArray(test)
+        ? test.map( e => transform(e, out) ).join(', ')
+        : transform(test, out);
 
-      x += out.wrap(value);
-      x += ' ';
-      x += out.dialect.getAlias(out.dialect.predicateBinaryListAlias, type);
-      x += ' ';
-      x += out.dialect.getAlias(out.dialect.predicateBinaryListPassAlias, pass);
-      x += ' (';
-
-      if (isArray(test)) {
-        x += test.map( e => transform(e, out) ).join(', ');
-      } else {
-        x += transform(test, out);
-      }
-
-      x += ')';
-
-      return x;
+      return out.dialect.predicateBinaryList.get(type, params);
     }
   );
 }

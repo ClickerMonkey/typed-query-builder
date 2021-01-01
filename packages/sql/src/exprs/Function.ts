@@ -1,5 +1,5 @@
 import { ExprFunction } from '@typed-query-builder/builder';
-import { Dialect } from '../Dialect';
+import { Dialect, DialectParamsFunction } from '../Dialect';
 
 
 export function addFunction(dialect: Dialect)
@@ -9,8 +9,18 @@ export function addFunction(dialect: Dialect)
     (expr, transform, out) => 
     {
       const args: string[] = expr.args.map( a => transform(a, out) );
+      const params: Partial<DialectParamsFunction> = {};
 
-      return out.dialect.getFunctionString(expr.func, args);
+      params.args = args.join(', ');
+      params.argCount = args.length;
+      params.argList = args;
+
+      for (let i = 0; i < args.length; i++)
+      {
+        params[i] = args[i];
+      }
+
+      return out.dialect.functions.get(expr.func, params);
     }
   );
 }

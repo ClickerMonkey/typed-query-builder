@@ -172,7 +172,7 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     {
       if (source.kind !== SourceKind.WITH)
       {
-        all.push(...source.source.getSource().getSelects());
+        all.push(...source.source.getSelects());
       }
     }
 

@@ -55,3 +55,17 @@ export type ExprScalarTuple<T> = {
 export type ExprInputTuple<T> = {
   [I in keyof T]: ExprInput<T[I]>
 };
+
+export type ExprInputDeep<T> = 
+  T extends object
+    ? { [K in keyof T]: ExprInputDeep<T[K]> }
+    : ExprInput<T>
+;
+
+export type ExprTypeDeep<T> = 
+  T extends Expr<any>
+    ? T
+    : T extends (Record<string, any> | any[])
+      ? { [K in keyof T]: ExprTypeDeep<T[K]> }
+      : Expr<T> | T
+;

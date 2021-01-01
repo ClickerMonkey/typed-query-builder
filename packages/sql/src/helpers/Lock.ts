@@ -12,7 +12,7 @@ export function getLock(lock: Lock, out: DialectOutput): string
   let x = '';
 
   x += 'FOR ';
-  x += out.dialect.getAlias(out.dialect.lockStrengthAlias, strength);
+  x += out.dialect.lockStrength.get(strength);
 
   if (sources.length > 0)
   {
@@ -27,7 +27,7 @@ export function getLock(lock: Lock, out: DialectOutput): string
     out.dialect.requireSupport(DialectFeatures.LOCK_ROW);
 
     x += ' ';
-    x += out.dialect.getAlias(out.dialect.lockRowAlias, rowLock);
+    x += out.dialect.lockRow.get(rowLock);
   }
   
   return x;

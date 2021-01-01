@@ -8,7 +8,7 @@ export class ExprCast<I extends DataTypeInputs> extends ExprScalar<DataTypeInput
 
   public constructor(
     public type: I,
-    public value: ExprScalar<any>
+    public value: Expr<any>
   ) {
     super();
   }

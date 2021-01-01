@@ -11,7 +11,7 @@ export class SourceVirtual<N extends Name, S extends Selects> extends NamedSourc
     super( 
       isName(name) ? name : name.getName(),
       isName(name) ? source as Source<S> : name.getSource()
-    )
+    );
   }
 
   public isVirtual(): boolean

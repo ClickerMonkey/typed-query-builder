@@ -101,11 +101,11 @@ describe('table', () =>
     expectExprType<string>(all.fields.ah);
     expectExprType<Date>(all.fields.ai);
     expectExprType<Date>(all.fields.aj);
-    expectExprType<string>(all.fields.ak);
+    expectExprType<Date>(all.fields.ak);
     expectExprType<Date>(all.fields.al);
     expectExprType<Date>(all.fields.am);
     expectExprType<Date>(all.fields.an);
-    expectExprType<string>(all.fields.ao);
+    expectExprType<Date>(all.fields.ao);
     expectExprType<string>(all.fields.ap);
   });
 

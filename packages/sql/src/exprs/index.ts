@@ -4,6 +4,7 @@ import { addBetween } from './Between';
 import { addCase } from './Case';
 import { addCast } from './Cast';
 import { addConstant } from './Constant';
+import { addDeep } from './Deep';
 import { addDefault } from './Default';
 import { addExists } from './Exists';
 import { addField } from './Field';
@@ -30,6 +31,7 @@ export function addExprs(dialect: Dialect)
   addCase(dialect);
   addCast(dialect);
   addConstant(dialect);
+  addDeep(dialect);
   addDefault(dialect);
   addExists(dialect);
   addField(dialect);
@@ -52,5 +54,5 @@ export function addExprs(dialect: Dialect)
 export { 
   addAggregate, addBetween, addCase, addCast, addConstant, addDefault, addField, addFunction, addIn, addNot, addNull, 
   addOperationBinary, addOperationUnary, addParam, addPredicateBinary, addPredicateBinaryList, addPredicateRow,
-  addPredicates, addPredicateUnary, addRaw, addRow
+  addPredicates, addPredicateUnary, addRaw, addRow, addDeep
 };

@@ -7,7 +7,7 @@ export class ExprParam<T> extends ExprScalar<T>
   public static readonly id = ExprKind.PARAM;
 
   public constructor(
-    public param: string
+    public param: string,
   ) {
     super();
   }

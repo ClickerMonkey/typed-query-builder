@@ -11,7 +11,7 @@ export function addWithRecursiveFeature(dialect: Dialect)
     x += 'WITH RECURSIVE ';
     x += value.getName();
     x += ' (';
-    x += (value.getSource().getSelects() as Selects).map( s => s.alias ).join(', ');
+    x += (value.getSelects() as Selects).map( s => s.alias ).join(', ');
     x += ') AS (';
     x += out.modify({ excludeSelectAlias: true }, () => transform(value.source, out));
     x += ' UNION ';

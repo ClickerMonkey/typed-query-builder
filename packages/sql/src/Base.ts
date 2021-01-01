@@ -9,13 +9,19 @@ import { addSources } from './sources';
 export const DialectBase = new Dialect();
 
 DialectBase.addReservedWords(ReservedWords);
-DialectBase.predicateBinaryAlias['!='] = '<>';
-DialectBase.predicateBinaryListAlias['!='] = '<>';
-DialectBase.predicateRowAlias['!='] = '<>';
-DialectBase.joinTypeAlias['INNER'] = 'INNER JOIN';
-DialectBase.joinTypeAlias['LEFT'] = 'LEFT JOIN';
-DialectBase.joinTypeAlias['RIGHT'] = 'RIGHT JOIN';
-DialectBase.joinTypeAlias['FULL'] = 'FULL JOIN';
+DialectBase.predicateBinary.alias('!=', '<>');
+DialectBase.predicateBinary.alias('DISTINCT', '<>');
+DialectBase.predicateBinary.alias('NOT DISTINCT', '=');
+DialectBase.predicateBinaryList.alias('!=', '<>');
+DialectBase.predicateRow.alias('!=', '<>');
+DialectBase.predicateRow.alias('DISTINCT', 'IS DISTINCT FROM');
+DialectBase.predicateRow.alias('NOT DISTINCT', 'IS NOT DISTINCT FROM');
+DialectBase.joinType.aliases({
+  INNER: 'INNER JOIN',
+  LEFT: 'LEFT JOIN',
+  RIGHT: 'RIGHT JOIN',
+  FULL: 'FULL JOIN',
+});
 DialectBase.valueFormatter.push(
   Dialect.FormatBoolean,
   Dialect.FormatDate,
