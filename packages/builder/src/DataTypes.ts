@@ -212,8 +212,13 @@ export interface DataTypeMeta
   arrayLength?: number;
 }
 
-export function getDataTypeMeta(input: DataTypeInputs): DataTypeMeta 
+export function getDataTypeMeta(input?: DataTypeInputs): DataTypeMeta 
 {
+  if (!input)
+  {
+    return {};
+  }
+
   switch (getDataTypeFromInput(input))
   {
     case 'BITS':
