@@ -49,7 +49,7 @@ export type DialectParamsPaging = Record<'limit' | 'offset', number>;
 
 export type DialectParamsInsert = Record<'with' | 'priority' | 'table' | 'columns' | 'values' | 'duplicate' | 'returning' | 'INSERT' | 'INTO', string>;
 
-export type DialectParamsDelete = Record<'with' | 'table' | 'using' | 'where' | 'returning' | 'DELETE', string>;
+export type DialectParamsDelete = Record<'with' | 'table' | 'using' | 'where' | 'returning' | 'DELETE' | 'FROM', string>;
 
 export type DialectParamsUpdate = Record<'with' | 'table' | 'set' | 'from' | 'where' | 'returning' | 'UPDATE' | 'ONLY', string>;
 
@@ -164,7 +164,7 @@ export class Dialect
     this.selectOffsetOnly = compileFormat('LIMIT ALL OFFSET {offset}');
     this.selectLimitOnly = compileFormat('LIMIT {limit}');
     this.insertOrder = ['with', 'INSERT', 'priority', 'INTO', 'table', 'columns', 'values', 'duplicate', 'returning'];
-    this.deleteOrder = ['with', 'DELETE', 'table', 'using', 'where', 'returning'];
+    this.deleteOrder = ['with', 'DELETE', 'FROM', 'table', 'using', 'where', 'returning'];
     this.updateOrder = ['with', 'UPDATE', 'ONLY', 'table', 'set', 'from', 'where', 'returning'];
     this.supports = DialectFeatures.ALL;
   }

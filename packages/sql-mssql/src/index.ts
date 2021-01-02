@@ -1,7 +1,9 @@
 
+import { NamedSource } from '@typed-query-builder/builder';
 import { Selects } from '@typed-query-builder/builder';
 import { getDataTypeMeta, DataTypeInputs, isNumber, isString, OrderBy, compileFormat } from '@typed-query-builder/builder';
 import { getSelects } from '@typed-query-builder/sql';
+import { getNamedSource } from '@typed-query-builder/sql';
 import { Dialect, addExprs, addFeatures, addQuery, ReservedWords, addSources, DialectFeatures, getOrder } from '@typed-query-builder/sql';
 
 import './types';
@@ -25,9 +27,9 @@ DialectMssql.selectLimitOnly = compileFormat('OFFSET 0 ROWS FETCH FIRST {limit} 
 DialectMssql.selectOffsetOnly = compileFormat('OFFSET {offset} ROWS');
 DialectMssql.selectOffsetLimit = compileFormat('OFFSET {offset} ROWS FETCH NEXT {limit} ROWS ONLY');
 
-DialectMssql.insertOrder = ['with', 'INSERT', 'INTO', 'table', 'columns', 'returning', 'values'];
-DialectMssql.deleteOrder = ['with', 'DELETE', 'table', 'returning', 'using', 'where'];
-DialectMssql.updateOrder = ['with', 'UPDATE', 'ONLY', 'table', 'set', 'returning', 'from', 'where'];
+DialectMssql.insertOrder = ['with', 'INSERT', 'top', 'INTO', 'table', 'columns', 'returning', 'values', 'option'] as any;
+DialectMssql.deleteOrder = ['with', 'DELETE', 'top', 'FROM', 'table', 'returning', 'using', 'where', 'option'] as any;
+DialectMssql.updateOrder = ['with', 'UPDATE', 'top', 'ONLY', 'table', 'set', 'returning', 'from', 'where', 'option'] as any;
 
 DialectMssql.trueIdentifier = '1';
 DialectMssql.falseIdentifier = '0';
@@ -392,4 +394,16 @@ DialectMssql.featureFormatter[DialectFeatures.UPDATE_RETURNING] = ([table, selec
 DialectMssql.featureFormatter[DialectFeatures.DELETE_RETURNING] = ([table, selects]: [string, Selects], transform, out) => 
 {
   return 'OUTPUT ' + out.modify({ tableOverrides: { [table]: 'DELETED' }}, () => getSelects(selects, out));
+};
+
+DialectMssql.featureFormatter[DialectFeatures.DELETE_USING] = (froms: NamedSource<any, any>[], transform, out) => 
+{
+  return 'FROM ' + froms.map( f => 
+  {
+    const s = getNamedSource(f, out);
+
+    out.sources.push(f);
+
+    return s;
+  }).join(', ');
 };

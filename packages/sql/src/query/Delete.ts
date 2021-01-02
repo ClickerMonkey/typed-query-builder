@@ -10,11 +10,12 @@ export function addDelete(dialect: Dialect)
     StatementDelete,
     (expr, transform, out) => 
     {
-      const { _sources, _from, _where, _returning } = expr;
+      const { _sources, _from, _where, _returning, _clauses } = expr;
       const params: DialectOrderedFormatter<DialectParamsDelete> = {};
       const saved = out.saveSources();
 
-      params.DELETE = () => 'DELETE FROM';
+      params.DELETE = () => 'DELETE';
+      params.FROM = () => 'FROM';
 
       const withs = _sources
         .filter( s => s.kind === SourceKind.WITH )
@@ -49,14 +50,7 @@ export function addDelete(dialect: Dialect)
 
       if (usings.length > 0) 
       {
-        params.using = () => usings.map( u => 
-        {
-          const s = out.dialect.getFeatureOutput(DialectFeatures.DELETE_USING, u, out );
-
-          out.sources.push(u);
-
-          return s;
-        }).join(' ');
+        params.using = () => out.dialect.getFeatureOutput(DialectFeatures.DELETE_USING, usings, out );
       }
 
       if (_where.length > 0) 
@@ -67,6 +61,11 @@ export function addDelete(dialect: Dialect)
       if (_returning.length > 0) 
       {
         params.returning = () => out.dialect.getFeatureOutput(DialectFeatures.DELETE_RETURNING, [_from.table, _returning], out );
+      }
+
+      for (const clause in _clauses)
+      {
+        params[clause] = () => _clauses[clause];
       }
 
       const sql = out.dialect.formatOrdered(out.dialect.deleteOrder, params);

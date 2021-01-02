@@ -11,7 +11,7 @@ export function addUpdate(dialect: Dialect)
     StatementUpdate,
     (expr, transform, out) => 
     {
-      const { _sources, _returning, _target, _sets, _where } = expr;
+      const { _sources, _returning, _target, _sets, _where, _clauses } = expr;
       const params: DialectOrderedFormatter<DialectParamsUpdate> = {};
       const saved = out.saveSources();
 
@@ -73,6 +73,11 @@ export function addUpdate(dialect: Dialect)
       if (_returning.length > 0) 
       {
         params.returning = () => out.dialect.getFeatureOutput(DialectFeatures.UPDATE_RETURNING, [_target.table, _returning], out );
+      }
+
+      for (const clause in _clauses)
+      {
+        params[clause] = () => _clauses[clause];
       }
 
       const sql = out.dialect.formatOrdered(out.dialect.updateOrder, params);

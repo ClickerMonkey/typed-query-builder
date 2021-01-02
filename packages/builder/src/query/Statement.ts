@@ -33,6 +33,7 @@ export abstract class Statement<
   public _sources: SourceKindPair<keyof T, any>[];
   public _sourceFields: SourcesFieldsFactory<T>;
   public _returning: R;
+  public _clauses: Record<string, string>;
 
   public constructor() 
   {
@@ -42,6 +43,7 @@ export abstract class Statement<
     this._sourceFields = Object.create(null);
     this._returning = [] as any;
     this._exprs = createExprFactory(this._sourceFields as any, [] as any);
+    this._clauses = {};
   }
 
   public getSelects(): R 
@@ -137,6 +139,13 @@ export abstract class Statement<
     this._returning = [] as any;
 
     return this as any;
+  }
+
+  public setClause(clause: string, override: string): this
+  {
+    this._clauses[clause] = override;
+
+    return this;
   }
 
   public traverse<R>(traverse: Traverser<Expr<any>, R>): R 

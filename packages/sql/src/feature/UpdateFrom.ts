@@ -8,10 +8,7 @@ export function addUpdateFromFeature(dialect: Dialect)
 {
   dialect.featureFormatter[DialectFeatures.UPDATE_FROM] = (froms: NamedSource<any, any>[], transform, out) => 
   {
-    let x = '';
-
-    x += 'FROM ';
-    x += froms.map( f => 
+    return 'FROM ' + froms.map( f => 
     {
       const s = getNamedSource(f, out);
 
@@ -19,8 +16,5 @@ export function addUpdateFromFeature(dialect: Dialect)
 
       return s;
     }).join(', ');
-    
-    return x;
   };
-
 }

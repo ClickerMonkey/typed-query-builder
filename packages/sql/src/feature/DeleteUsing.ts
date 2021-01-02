@@ -6,14 +6,15 @@ import { getNamedSource } from '../helpers/NamedSource';
 
 export function addDeleteUsingFeature(dialect: Dialect)
 {
-  dialect.featureFormatter[DialectFeatures.DELETE_USING] = (value: NamedSource<any, any>, transform, out) => 
+  dialect.featureFormatter[DialectFeatures.DELETE_USING] = (usings: NamedSource<any, any>[], transform, out) => 
   {
-    let x = '';
+    return 'USING ' + usings.map( f => 
+    {
+      const s = getNamedSource(f, out);
 
-    x += 'USING ';
-    x += getNamedSource(value, out);
-    
-    return x;
+      out.sources.push(f);
+
+      return s;
+    }).join(', ');
   };
-
 }

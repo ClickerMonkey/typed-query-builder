@@ -631,6 +631,22 @@ describe('index', () =>
     `);
   });
 
+  it('delete top', () =>
+  {
+    const x = deletes(Task)
+      .setClause('top', 'TOP (2)')
+      .where(({ task }) => task.done)
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      DELETE TOP (2) 
+      FROM task
+      WHERE 
+        done = 1
+    `);
+  });
+
   it('complex geom', () =>
   {
     const Party = table({

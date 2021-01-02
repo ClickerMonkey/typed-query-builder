@@ -48,7 +48,7 @@ export function addInsert(dialect: Dialect)
     StatementInsert,
     (expr, transform, out) => 
     {
-      const { _sources, _returning, _into, _columns, _values, _sets, _setsWhere, _ignoreDuplicate, _priority } = expr;
+      const { _sources, _returning, _into, _columns, _values, _sets, _setsWhere, _ignoreDuplicate, _priority, _clauses } = expr;
       const params: DialectOrderedFormatter<DialectParamsInsert> = {};
 
       params.INSERT = () => 'INSERT';
@@ -141,6 +141,11 @@ export function addInsert(dialect: Dialect)
       if (_returning.length > 0) 
       {
         params.returning = () => out.dialect.getFeatureOutput(DialectFeatures.INSERT_RETURNING, [_into.table, _returning], out );
+      }
+
+      for (const clause in _clauses)
+      {
+        params[clause] = () => _clauses[clause];
       }
 
       const sql = out.dialect.formatOrdered(out.dialect.insertOrder, params);
