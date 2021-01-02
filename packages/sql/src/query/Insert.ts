@@ -1,5 +1,5 @@
 import { ExprInput, isArray, StatementInsertValuesResolved, Source, SourceKind, StatementInsert, ExprConstant, isObject, Expr } from '@typed-query-builder/builder';
-import { Dialect } from '../Dialect';
+import { Dialect, DialectParamsInsert, DialectOrderedFormatter } from '../Dialect';
 import { DialectFeatures } from '../Features';
 
 
@@ -49,47 +49,52 @@ export function addInsert(dialect: Dialect)
     (expr, transform, out) => 
     {
       const { _sources, _returning, _into, _columns, _values, _sets, _setsWhere, _ignoreDuplicate, _priority } = expr;
+      const params: DialectOrderedFormatter<DialectParamsInsert> = {};
+
+      params.INSERT = () => 'INSERT';
+      params.INTO = () => 'INTO';
 
       const saved = out.saveSources();
-
-      let x = '';
 
       const withs = _sources
         .filter( s => s.kind === SourceKind.WITH )
         .map( s => s.source )
       ;
 
-      x += withs.map( w => 
+      if (withs.length > 0)
       {
-        const s = out.dialect.getFeatureOutput(DialectFeatures.WITH, w, out);
-
-        out.sources.push(w);
-
-        return s;
-      }).join(' ');
-
-      x += 'INSERT ';
+        params.with = () => withs.map( w => 
+        {
+          const s = out.dialect.getFeatureOutput(DialectFeatures.WITH, w, out);
+  
+          out.sources.push(w);
+  
+          return s;
+        }).join(' ');
+      }
 
       if (_priority)
       {
-        x += out.dialect.getFeatureOutput(DialectFeatures.INSERT_PRIORITY, _priority, out);
-        x += ' ';
+        params.priority = () => out.dialect.getFeatureOutput(DialectFeatures.INSERT_PRIORITY, _priority, out) + ' ';
       }
 
-      x += 'INTO ';
-      x += out.dialect.quoteName(String(_into.table));
-      x += ' (';
-      x += _columns.map( (c: string) => out.dialect.quoteName(c) ).join(', ');
-      x += ') ';
+      params.table = () => 
+      {
+        const table = out.dialect.quoteName(String(_into.table));
 
-      out.sources.push(_into as any);
+        out.sources.push(_into as any);
+
+        return table;
+      };
+
+      params.columns = () => '(' + _columns.map( (c: string) => out.dialect.quoteName(c) ).join(', ') + ')';
 
       const hasSources = _values.some( v => v instanceof Source );
 
       if (hasSources)
       {
-        x += '(';
-        x += _values
+        params.values = () => '(' + 
+          _values
           .map( v => valuesOrSource(v as any, _columns) )
           .map( tuples => 
             tuples instanceof Source
@@ -103,13 +108,13 @@ export function addInsert(dialect: Dialect)
                   ).join(', ')
                 )
             .join(' UNION ALL ') )
-          .join(' UNION ALL ');
-        x += ')';
+          .join(' UNION ALL ') + 
+        ')';
       }
       else
       {
-        x += ' VALUES ';
-        x += _values
+        params.values = () => 'VALUES ' +
+          _values
           .map( v => valuesOrSource(v as any, _columns) )
           .map( tuples => 
             (tuples as any[][])
@@ -126,24 +131,23 @@ export function addInsert(dialect: Dialect)
 
       if (_ignoreDuplicate)
       {
-        x += ' ';
-        x += out.dialect.getFeatureOutput(DialectFeatures.INSERT_IGNORE_DUPLICATE, null, out);
+        params.duplicate = () => out.dialect.getFeatureOutput(DialectFeatures.INSERT_IGNORE_DUPLICATE, null, out);
       }
       else if (_sets.length > 0)
       {
-        x += ' ';
-        x += out.dialect.getFeatureOutput(DialectFeatures.INSERT_SET_ON_DUPLICATE, { sets: _sets, where: _setsWhere }, out);
+        params.duplicate = () => out.dialect.getFeatureOutput(DialectFeatures.INSERT_SET_ON_DUPLICATE, { sets: _sets, where: _setsWhere }, out);
       }
 
       if (_returning.length > 0) 
       {
-        x += ' ';
-        x += out.dialect.getFeatureOutput(DialectFeatures.INSERT_RETURNING, _returning, out );
+        params.returning = () => out.dialect.getFeatureOutput(DialectFeatures.INSERT_RETURNING, [_into.table, _returning], out );
       }
+
+      const sql = out.dialect.formatOrdered(out.dialect.insertOrder, params);
 
       out.restoreSources(saved);
 
-      return x;
+      return sql;
     }
   );
 }

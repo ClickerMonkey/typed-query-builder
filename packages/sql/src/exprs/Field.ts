@@ -10,25 +10,30 @@ export function addField(dialect: Dialect)
     {
       const { source, alias } = expr;
       const namedSource = source.getSource();
+      const tableName = namedSource instanceof SourceTable && namedSource === source
+        ? String(namedSource.table)
+        : source.getName();
+      const fieldName = namedSource instanceof SourceTable
+        ? namedSource.fieldColumn[alias] || alias
+        : alias;
 
       let x = '';
 
-      if (!out.options.excludeSource && (!out.options.simplifyReferences || !out.isUnique(alias, source)))
+      const includeSource = !out.options.excludeSource;
+      const fieldIsNotUnique = (!out.options.simplifyReferences || !out.isUnique(alias, source));
+
+      if (out.options.tableOverrides && out.options.tableOverrides[tableName])
       {
-        x += namedSource instanceof SourceTable && namedSource === source
-          ? out.dialect.quoteName(String(namedSource.table))
-          : out.dialect.quoteName(source.getName());
+        x += out.dialect.quoteName(out.options.tableOverrides[tableName]);
+        x += '.';
+      }
+      else if (includeSource && fieldIsNotUnique)
+      {
+        x += out.dialect.quoteName(tableName);
         x += '.';
       }
 
-      if (namedSource instanceof SourceTable)
-      {
-        x += out.dialect.quoteName(namedSource.fieldColumn[alias] || alias);
-      }
-      else
-      {
-        x += out.dialect.quoteName(alias);
-      }
+      x += out.dialect.quoteName(fieldName);
 
       return x;
     }

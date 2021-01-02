@@ -11,6 +11,7 @@ export interface DialectOutputOptions
   excludeSource?: boolean;
   excludeSelectAlias?: boolean;
   simplifyReferences?: boolean;
+  tableOverrides?: Record<string, string>;
 }
 
 export class DialectOutput

@@ -6,14 +6,8 @@ import { getSelects } from '../helpers/Selects';
 
 export function addDeleteReturningFeature(dialect: Dialect)
 {
-  dialect.featureFormatter[DialectFeatures.DELETE_RETURNING] = (value: Selects, transform, out) => 
+  dialect.featureFormatter[DialectFeatures.DELETE_RETURNING] = ([table, selects]: [string, Selects], transform, out) => 
   {
-    let x = '';
-
-    x += 'RETURNING ';
-    x += getSelects(value, out);
-    
-    return x;
+    return 'RETURNING ' + getSelects(selects, out);
   };
-
 }

@@ -2,11 +2,11 @@ import {
   Transformer, Expr, isString, isFunction, DataTypeTypes, DataTypeInputs, OperationUnaryType, GroupingSetType, InsertPriority, 
   JoinType, LockRowLock, LockStrength, OperationBinaryType, OrderDirection, PredicateBinaryListType, 
   PredicateBinaryType, PredicateRowType, PredicatesType, PredicateUnaryType, SetOperation, WindowFrameExclusion, WindowFrameMode, 
-  isArray, isBoolean, compileFormat, isNumber, AggregateFunctions, getDataTypeFromValue, getDataTypeFromInput, Functions
+  isArray, isBoolean, compileFormat, isNumber, AggregateFunctions, getDataTypeFromValue, getDataTypeFromInput, Functions, isValue
 } from '@typed-query-builder/builder';
 
 import { DialectFeatures, DialectFeaturesDescription } from './Features';
-import { DialectFormatter } from './Formatter';
+import { DialectFormatter, DialectFormatterFunction } from './Formatter';
 import { DialectOutput, DialectOutputOptions } from './Output';
 
 
@@ -45,6 +45,18 @@ export type DialectParamsFunction = Record<'name' | 'args' | number, string> & R
 
 export type DialectParamsNamed = Record<'name', string>;
 
+export type DialectParamsPaging = Record<'limit' | 'offset', number>;
+
+export type DialectParamsInsert = Record<'with' | 'priority' | 'table' | 'columns' | 'values' | 'duplicate' | 'returning' | 'INSERT' | 'INTO', string>;
+
+export type DialectParamsDelete = Record<'with' | 'table' | 'using' | 'where' | 'returning' | 'DELETE', string>;
+
+export type DialectParamsUpdate = Record<'with' | 'table' | 'set' | 'from' | 'where' | 'returning' | 'UPDATE' | 'ONLY', string>;
+
+export type DialectOrderedFormatter<P> = Partial<Record<keyof P, () => string>>;
+
+export type DialectOrderedOrder<P> = Array<keyof P>;
+
 
 export class Dialect
 {
@@ -74,10 +86,13 @@ export class Dialect
   public defaultOptions: DialectOutputOptions;
   public aggregateRequiresArgument: DialectMap<keyof AggregateFunctions, string>;
   public implicitPredicates: boolean;
-  public selectOffsetOnly: (params: { offset: number }) => string;
-  public selectLimitOnly: (params: { limit: number }) => string;
-  public selectOffsetLimit: (params: { offset: number, limit: number }) => string;
-  
+  public selectOffsetOnly: DialectFormatterFunction<DialectParamsPaging>;
+  public selectLimitOnly: DialectFormatterFunction<DialectParamsPaging>;
+  public selectOffsetLimit: DialectFormatterFunction<DialectParamsPaging>;
+  public insertOrder: DialectOrderedOrder<DialectParamsInsert>;
+  public deleteOrder: DialectOrderedOrder<DialectParamsDelete>;
+  public updateOrder: DialectOrderedOrder<DialectParamsUpdate>;
+
   public functionsUpper: boolean;
   public functions: DialectFormatter<keyof Functions, DialectParamsFunction>;
   public aggregates: DialectFormatter<keyof AggregateFunctions, DialectParamsAggregate>;
@@ -148,6 +163,9 @@ export class Dialect
     this.selectOffsetLimit = compileFormat('LIMIT {limit} OFFSET {offset}');
     this.selectOffsetOnly = compileFormat('LIMIT ALL OFFSET {offset}');
     this.selectLimitOnly = compileFormat('LIMIT {limit}');
+    this.insertOrder = ['with', 'INSERT', 'priority', 'INTO', 'table', 'columns', 'values', 'duplicate', 'returning'];
+    this.deleteOrder = ['with', 'DELETE', 'table', 'using', 'where', 'returning'];
+    this.updateOrder = ['with', 'UPDATE', 'ONLY', 'table', 'set', 'from', 'where', 'returning'];
     this.supports = DialectFeatures.ALL;
   }
 
@@ -183,6 +201,23 @@ export class Dialect
 
       return out;
     };
+  }
+
+  public formatOrdered<P>(order: DialectOrderedOrder<P>, formatters: DialectOrderedFormatter<P>): string
+  {
+    let sections: string[] = [];
+
+    for (const param of order)
+    {
+      let formatter = formatters[param];
+
+      if (formatter)
+      {
+        sections.push(formatter());
+      }
+    }
+
+    return sections.filter( s => isValue(s) ).join(' ');
   }
 
   public getFeatureOutput(feature: DialectFeatures, value: any, out: DialectOutput): string

@@ -15,7 +15,7 @@ export function addWithFeature(dialect: Dialect)
     // x += ') AS (';
     x += ' AS (';
     x += transform(value.getSource(), out);
-    x += ') '
+    x += ')'
 
     return x;
   };

@@ -1,5 +1,7 @@
 
+import { Selects } from '@typed-query-builder/builder';
 import { getDataTypeMeta, DataTypeInputs, isNumber, isString, OrderBy, compileFormat } from '@typed-query-builder/builder';
+import { getSelects } from '@typed-query-builder/sql';
 import { Dialect, addExprs, addFeatures, addQuery, ReservedWords, addSources, DialectFeatures, getOrder } from '@typed-query-builder/sql';
 
 import './types';
@@ -11,7 +13,10 @@ DialectMssql.removeSupport(
   DialectFeatures.UNSIGNED | 
   DialectFeatures.AGGREGATE_FILTER | 
   DialectFeatures.SELECT_DISTINCT_ON |
-  DialectFeatures.ROW_CONSTRUCTOR
+  DialectFeatures.ROW_CONSTRUCTOR | 
+  DialectFeatures.INSERT_PRIORITY | 
+  DialectFeatures.INSERT_IGNORE_DUPLICATE | 
+  DialectFeatures.INSERT_SET_ON_DUPLICATE
 );
 
 DialectMssql.addReservedWords(ReservedWords);
@@ -19,6 +24,10 @@ DialectMssql.addReservedWords(ReservedWords);
 DialectMssql.selectLimitOnly = compileFormat('OFFSET 0 ROWS FETCH FIRST {limit} ROWS ONLY');
 DialectMssql.selectOffsetOnly = compileFormat('OFFSET {offset} ROWS');
 DialectMssql.selectOffsetLimit = compileFormat('OFFSET {offset} ROWS FETCH NEXT {limit} ROWS ONLY');
+
+DialectMssql.insertOrder = ['with', 'INSERT', 'INTO', 'table', 'columns', 'returning', 'values'];
+DialectMssql.deleteOrder = ['with', 'DELETE', 'table', 'returning', 'using', 'where'];
+DialectMssql.updateOrder = ['with', 'UPDATE', 'ONLY', 'table', 'set', 'returning', 'from', 'where'];
 
 DialectMssql.trueIdentifier = '1';
 DialectMssql.falseIdentifier = '0';
@@ -368,4 +377,19 @@ addSources(DialectMssql);
 DialectMssql.featureFormatter[DialectFeatures.AGGREGATE_ORDER] = (_order: OrderBy[], transform, out) =>
 {
   return 'WITHIN GROUP (ORDER BY ' + _order.map( (o) => getOrder(o, out) ).join(', ') + ')';
+};
+
+DialectMssql.featureFormatter[DialectFeatures.INSERT_RETURNING] = ([table, selects]: [string, Selects], transform, out) => 
+{
+  return 'OUTPUT ' + out.modify({ tableOverrides: { [table]: 'INSERTED' }}, () => getSelects(selects, out));
+};
+
+DialectMssql.featureFormatter[DialectFeatures.UPDATE_RETURNING] = ([table, selects]: [string, Selects], transform, out) => 
+{
+  return 'OUTPUT ' + out.modify({ tableOverrides: { [table]: 'INSERTED' }}, () => getSelects(selects, out));
+};
+
+DialectMssql.featureFormatter[DialectFeatures.DELETE_RETURNING] = ([table, selects]: [string, Selects], transform, out) => 
+{
+  return 'OUTPUT ' + out.modify({ tableOverrides: { [table]: 'DELETED' }}, () => getSelects(selects, out));
 };

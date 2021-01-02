@@ -1,4 +1,4 @@
-import { exprs, table, from, DataTypePoint } from '@typed-query-builder/builder';
+import { exprs, table, from, DataTypePoint, insert, deletes, update } from '@typed-query-builder/builder';
 import { expectText, sql, sqlWithOptions } from './helper';
 
 
@@ -514,6 +514,120 @@ describe('index', () =>
         ROUND(id, 0) AS roundToNearestWhole,
         ROUND(id, 2) AS roundTo2
       FROM task
+    `);
+  });
+
+  it('padLeft', () =>
+  {
+    const x = from(Task)
+      .select(({ task }, {}, { padLeft }) => [
+        padLeft(task.name, 10).as('padLeftSpaces'),
+        padLeft(task.name, 8, '_').as('padLeftScores')
+      ])
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      SELECT
+        CONCAT(REPLICATE(' ', LEN(name) - (10)), name) AS padLeftSpaces,
+        CONCAT(REPLICATE('_', LEN(name) - (8)), name) AS padLeftScores
+      FROM task
+    `);
+  });
+
+  it('padRight', () =>
+  {
+    const x = from(Task)
+      .select(({ task }, {}, { padRight }) => [
+        padRight(task.name, 10).as('padRightSpaces'),
+        padRight(task.name, 8, '_').as('padRightScores')
+      ])
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      SELECT
+        CONCAT(name, REPLICATE(' ', LEN(name) - (10))) AS padRightSpaces,
+        CONCAT(name, REPLICATE('_', LEN(name) - (8))) AS padRightScores
+      FROM task
+    `);
+  });
+
+  it('random', () =>
+  {
+    const x = from(Task)
+      .select(({}, {}, { random }) => [
+        random().as('defaultSpan'),
+        random(5).as('zeroToFivish'),
+        random(6, 3).as('threeToSixish')
+      ])
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      SELECT
+        RAND() AS defaultSpan,
+        (RAND() * (5)) AS zeroToFivish,
+        (RAND() * ((6) - (3)) + (3)) AS threeToSixish
+      FROM task
+    `);
+  });
+
+  it('insert output', () =>
+  {
+    const x = insert(Task, ['name'])
+      .returning(({ task }) => [task.id, task.done])
+      .values([{ name: 'Task 1' }, { name: 'Task 2' }])
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      INSERT INTO task (name)
+      OUTPUT 
+        INSERTED.id AS id, 
+        INSERTED.done AS done
+      VALUES 
+        ('Task 1'),
+        ('Task 2')
+    `);
+  });
+
+  it('delete output', () =>
+  {
+    const x = deletes(Task)
+      .returning(({ task }) => [task.id, task.doneAt])
+      .where(({ task }) => task.done)
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      DELETE FROM task
+      OUTPUT 
+        DELETED.id AS id, 
+        DELETED.doneAt AS doneAt
+      WHERE 
+        done = 1
+    `);
+  });
+
+  it('update output', () =>
+  {
+    const x = update(Task)
+      .returning(({ task }) => [task.id, task.doneAt])
+      .set('done', false)
+      .where(({ task }) => task.done)
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      UPDATE task
+      SET
+        done = 0
+      OUTPUT 
+        INSERTED.id AS id, 
+        INSERTED.doneAt AS doneAt
+      WHERE 
+        done = 1
     `);
   });
 
