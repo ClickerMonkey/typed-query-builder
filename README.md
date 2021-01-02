@@ -157,7 +157,8 @@ const results = from(Task)
 
 ## SQL Implementations
 
-- `@typed-query-builder/sql-mssql` contains the dialect for converting expressions into SQL Server query strings.
+- `@typed-query-builder/sql-mssql` [README](packages/sql-mssql/README.md) contains the dialect for converting expressions into SQL Server query strings.
+- `@typed-query-builder/mssql` given an mssql connection, process an expression and return a result.
 
 
 ### `SELECT`
