@@ -27,31 +27,133 @@ export type DialectMap<T extends string, V = string> = Partial<Record<T, V>>;
 
 export type DialectFeatureFormatter = (value: any, transform: DialectTransformTransformer, out: DialectOutput) => string
 
-export type DialectParamsOperationUnary = Record<'op' | 'value', string>;
+export interface DialectParamsOperationUnary
+{
+  op: string;
+  value: string;
+}
 
-export type DialectParamsOperationBinary = Record<'first' | 'op' | 'second', string>;
+export interface DialectParamsOperationBinary
+{
+  first: string;
+  op: string;
+  second: string;
+}
 
-export type DialectParamsPredicateUnary = Record<'op' | 'value', string>;
+export interface DialectParamsPredicateUnary
+{
+  op: string;
+  value: string;
+}
 
-export type DialectParamsPredicateBinary = Record<'first' | 'op' | 'second', string>;
+export interface DialectParamsPredicateBinary
+{
+  first: string;
+  op: string;
+  second: string;
+}
 
-export type DialectParamsPredicateBinaryList = Record<'first' | 'op' | 'pass' | 'second', string>;
+export interface DialectParamsPredicateBinaryList
+{
+  first: string;
+  op: string;
+  pass: string;
+  second: string;
+}
 
-export type DialectParamsPredicateRow = Record<'first' | 'op' | 'second' | number, string>;
+export interface DialectParamsPredicateRow
+{
+  first: string;
+  op: string;
+  second: string;
+  [index: number]: string;
+}
 
-export type DialectParamsAggregate = Record<'name' | 'args' | 'distinct' | 'order' | 'over' | 'filter' | number, string> & Record<'argCount', number> & Record<'argList', string[]>;
+export interface DialectParamsAggregate
+{
+  name: string;
+  args: string;
+  distinct: string;
+  order: string;
+  over: string;
+  filter: string;
+  [argIndex: number]: string;
+  argCount: number;
+  argList: string[];
+}
 
-export type DialectParamsFunction = Record<'name' | 'args' | number, string> & Record<'argCount', number> & Record<'argList', string[]>;
+export interface DialectParamsFunction
+{
+  name: string;
+  args: string;
+  [argIndex: number]: string;
+  argCount: number;
+  argList: string[];
+}
 
-export type DialectParamsNamed = Record<'name', string>;
+export interface DialectParamsNamed
+{
+  name: string;
+}
 
-export type DialectParamsPaging = Record<'limit' | 'offset', number>;
+export interface DialectParamsPaging
+{
+  limit: number;
+  offset: number;
+}
 
-export type DialectParamsInsert = Record<'with' | 'priority' | 'table' | 'columns' | 'values' | 'duplicate' | 'returning' | 'INSERT' | 'INTO', string>;
+export interface DialectParamsInsert
+{
+  with: string;
+  INSERT: string;
+  priority: string;
+  INTO: string;
+  table: string;
+  columns: string;
+  values: string;
+  duplicate: string;
+  returning: string;
+}
 
-export type DialectParamsDelete = Record<'with' | 'table' | 'using' | 'where' | 'returning' | 'DELETE' | 'FROM', string>;
+export interface DialectParamsDelete
+{
+  with: string;
+  DELETE: string;
+  FROM: string;
+  table: string;
+  using: string;
+  where: string;
+  returning: string;
+}
 
-export type DialectParamsUpdate = Record<'with' | 'table' | 'set' | 'from' | 'where' | 'returning' | 'UPDATE' | 'ONLY', string>;
+export interface DialectParamsUpdate
+{
+  with: string;
+  UPDATE: string;
+  ONLY: string;
+  table: string;
+  set: string;
+  from: string;
+  where: string;
+  returning: string;
+}
+
+export interface DialectParamsSelect
+{
+  with: string;
+  SELECT: string;
+  distinct: string;
+  selects: string;
+  froms: string;
+  joins: string;
+  where: string;
+  group: string;
+  having: string;
+  windows: string;
+  order: string;
+  paging: string;
+  locks: string;
+}
 
 export type DialectOrderedFormatter<P> = Partial<Record<keyof P, () => string>>;
 
