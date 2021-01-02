@@ -371,7 +371,7 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     return this.aggregate('max', [value]);
   }
 
-  public first(): Expr<S> 
+  public first(): QueryFirst<T, S, W> 
   {
     return new QueryFirst<T, S, W>(this._criteria.extend());
   }

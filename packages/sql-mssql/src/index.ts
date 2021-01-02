@@ -1,10 +1,6 @@
 
-import { NamedSource } from '@typed-query-builder/builder';
-import { Selects } from '@typed-query-builder/builder';
-import { getDataTypeMeta, DataTypeInputs, isNumber, isString, OrderBy, compileFormat } from '@typed-query-builder/builder';
-import { getSelects } from '@typed-query-builder/sql';
-import { getNamedSource } from '@typed-query-builder/sql';
-import { Dialect, addExprs, addFeatures, addQuery, ReservedWords, addSources, DialectFeatures, getOrder } from '@typed-query-builder/sql';
+import { getDataTypeMeta, DataTypeInputs, isNumber, isString, OrderBy, compileFormat, QueryJson, NamedSource, Selects, QueryFirst, QuerySelect, QueryList } from '@typed-query-builder/builder';
+import { Dialect, addExprs, addFeatures, addQuery, ReservedWords, addSources, DialectFeatures, getOrder, getSelects, getNamedSource } from '@typed-query-builder/sql';
 
 import './types';
 
@@ -297,6 +293,7 @@ DialectMssql.functions.setFormats({
   geomRandomPoint: '({0}).STPointOnSurface()',
   geomSymmetricDifference: '({0}).STSymDifference({1})',
   geomWithin: '({0}).STWithin({1})',
+  geomWithinDistance: '(({0}).STDistance({1}) <= {2})'
 })
 
 DialectMssql.aggregates.aliases({
@@ -407,3 +404,30 @@ DialectMssql.featureFormatter[DialectFeatures.DELETE_USING] = (froms: NamedSourc
     return s;
   }).join(', ');
 };
+
+DialectMssql.transformer.setTransformer<QueryJson<any, any>>(
+  QueryJson,
+  (expr, transform, out) => 
+  {
+    const { json } = expr;
+
+    const subquery = out.modify({ includeSelectAlias: true }, () => transform(json, out));
+
+    if (json instanceof QueryFirst)
+    {
+      return subquery + ' FOR JSON PATH, WITHOUT_ARRAY_WRAPPER';
+    }
+    else if (json instanceof QuerySelect)
+    {
+      return subquery + ' FOR JSON PATH';
+    }
+    else if (json instanceof QueryList)
+    {
+      return `REPLACE( REPLACE( (${subquery} FOR JSON PATH),'{"item":','' ), '"}','"' )`
+    }
+    else
+    {
+      throw new Error('Converting the request operation to JSON is not supported.');
+    }
+  }
+);

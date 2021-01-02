@@ -15,6 +15,14 @@ describe('index', () =>
     },
   });
 
+  const SubTask = table({
+    name: 'subtask',
+    fields: {
+      id: 'INT',
+      name: 'TEXT',
+      parentId: 'INT'
+    },
+  });
 
   it('param', () => 
   {
@@ -647,6 +655,84 @@ describe('index', () =>
     `);
   });
 
+  it('nested json list', () =>
+  {
+    const x = from(Task)
+      .select(({ task }, { count }) => [
+        task.id,
+        task.name,
+        task.done,
+        from(SubTask)
+          .select('*')
+          .where(({ subtask }) => subtask.parentId.eq(task.id))
+          .list('name')
+          .json()
+          .as('subtasks'),
+      ])
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+
+    expectText({ condenseSpace: true }, x, `
+      SELECT 
+        id, 
+        name, 
+        done, 
+        (REPLACE( REPLACE( (SELECT subtask.name AS item FROM subtask WHERE parentId = task.id FOR JSON PATH),'{\"item\":','' ), '\"}','\"' )) AS subtasks 
+      FROM task
+    `);
+  });
+
+  it('nested json rows', () =>
+  {
+    const x = from(Task)
+      .select(({ task }, { count }) => [
+        task.id,
+        task.name,
+        task.done,
+        from(SubTask)
+          .select('*')
+          .where(({ subtask }) => subtask.parentId.eq(task.id))
+          .json()
+          .as('subtasks'),
+      ])
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+
+    expectText({ condenseSpace: true }, x, `
+      SELECT 
+        id, 
+        name, 
+        done, 
+        (SELECT subtask.id AS id, subtask.name AS name, parentId FROM subtask WHERE parentId = task.id FOR JSON PATH) AS subtasks 
+      FROM task
+    `);
+  });
+
+  it('nested json object', () =>
+  {
+    const x = from(SubTask)
+      .select(({ subtask }, { count }) => [
+        subtask.id,
+        subtask.name,
+        from(Task)
+          .select(({ task }) => task.only(['id', 'name', 'done', 'doneAt']))
+          .where(({ task }) => task.id.eq(subtask.parentId))
+          .first()
+          .json()
+          .as('parent'),
+      ])
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+
+    expectText({ condenseSpace: true }, x, `
+      SELECT 
+        id, 
+        name, 
+        (SELECT task.id AS id, task.name AS name, done, doneAt FROM task WHERE task.id = parentId OFFSET 0 ROWS FETCH FIRST 1 ROWS ONLY FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) AS parent
+      FROM subtask
+    `);
+  });
+
   it('complex geom', () =>
   {
     const Party = table({
@@ -772,7 +858,7 @@ describe('index', () =>
           SUM((status + 1)) AS scoreRaw, 
           (MIN(search_location)).STDistance(geometry::Point(@lng, @lat, 0)) AS distance 
         FROM party_interest 
-        WHERE geomWithinDistance(search_location, geometry::Point(@lng, @lat, 0), @radius) = 1 
+        WHERE ((search_location).STDistance(geometry::Point(@lng, @lat, 0)) <= @radius) = 1
           AND interest_id IN (1, 2, 3, 4) 
           AND party_id <> @partyId GROUP BY party_id) AS neighbor 
       INNER JOIN party 

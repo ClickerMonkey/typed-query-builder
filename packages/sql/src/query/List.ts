@@ -18,7 +18,7 @@ export function addList(dialect: Dialect)
       x += 'SELECT ';
       x += out.addSources(allSources, () => out.wrap(item));
 
-      if (!out.options.excludeSelectAlias && expr === out.expr)
+      if ((!out.options.excludeSelectAlias && expr === out.expr) || out.options.includeSelectAlias)
       {
         x += ' AS ';
         x += out.dialect.quoteAlias('item');

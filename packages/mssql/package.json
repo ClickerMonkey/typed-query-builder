@@ -1,0 +1,49 @@
+{
+  "name": "@typed-query-builder/mssql",
+  "license": "GPL-3.0-or-later",
+  "version": "1.0.0",
+  "description": "An SQL Server query builder",
+  "main": "dist/index.js",
+  "typings": "typings/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "https://www.github.com/ClickerMonkey/typed-query-builder"
+  },
+  "authors": [
+    "Philip Diffenderfer <pdiffenderfer@gmail.com>"
+  ],
+  "engines": {
+    "node": ">=6.9"
+  },
+  "scripts": {
+    "build": "yarn run clean && yarn run compile",
+    "clean": "rimraf -rf ./dist tsconfig.build.tsbuildinfo typings",
+    "compile": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "yarn run build",
+    "test": "jest",
+    "test:debug": "node --inspect-brk ../../node_modules/jest/bin/jest.js --runInBand",
+    "test:watch": "npm test -- --watch",
+    "test:coverage": "npm test -- --coverage",
+    "test:only-changed": "npm test -- --bail --onlyChanged",
+    "prebuild": "npm run verify",
+    "verify": "npm test",
+    "circular": "madge --circular --extensions ts,tsx ./src",
+    "cz": "git-cz",
+    "release:npm": "npm publish",
+    "release:preflight": "irish-pub",
+    "release:preflight:package": "npm pack",
+    "size": "shx echo \"Gzipped Size:\" && cross-var strip-json-comments --no-whitespace $npm_package_main | gzip-size"
+  },
+  "tslint": {
+    "extends": "../../tslint.json"
+  },
+  "dependencies": {
+    "@typed-query-builder/builder": "*",
+    "@typed-query-builder/sql": "*",
+    "@typed-query-builder/sql-mssql": "*"
+  }
+}

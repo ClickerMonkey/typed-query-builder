@@ -10,6 +10,7 @@ export interface DialectOutputOptions
   raw?: boolean;
   excludeSource?: boolean;
   excludeSelectAlias?: boolean;
+  includeSelectAlias?: boolean;
   simplifyReferences?: boolean;
   tableOverrides?: Record<string, string>;
 }
