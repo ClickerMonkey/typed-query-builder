@@ -74,6 +74,17 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     {
       this._criteria.addSource(this._criteria.exprs.provide(source) as any, only ? SourceKind.ONLY : SourceKind.FROM);
     }
+    else
+    {
+      const sourceNamed = this._criteria.sources.find( s => s.source.getName() === source );
+
+      if (!sourceNamed)
+      {
+        throw new Error(`A source with the name ${source} does not exist.`);
+      }
+
+      this._criteria.addSource(new SourceVirtual(sourceNamed.source), only ? SourceKind.ONLY : SourceKind.FROM);
+    }
 
     return this as never;
   }

@@ -3,6 +3,7 @@ import {
   SourceRecursive, createExprFactory, JoinedInner, Source, QuerySelect, Simplify, StatementInsert, Cast, SourceTable, SelectsKeys,
   SelectsKey, Tuple, SelectsFromKeys, StatementDelete, StatementUpdate, SourceVirtual
 } from '../internal';
+import { MergeObjects } from '../types/Core';
 
 
 export class WithBuilder<T extends Sources = {}>
@@ -47,16 +48,20 @@ export class WithBuilder<T extends Sources = {}>
     this.addSource(source, kind);
   }
 
-  public from<FN extends Name, FS extends Selects>(source: ExprProvider<{}, [], never, NamedSource<FN, FS>>): QuerySelect<JoinedInner<T, FN, FS>, [], never> 
+  public from<FN extends keyof T>(source: FN, only?: boolean): QuerySelect<T, [], never>
+  public from<FN extends Name, FS extends Selects>(source: ExprProvider<T, [], never, NamedSource<FN, FS>>, only?: boolean): QuerySelect<Simplify<MergeObjects<T, Record<FN, FS>>>, [], never> 
+  public from<FN extends Name, FS extends Selects>(source: keyof T | ExprProvider<T, [], never, NamedSource<FN, FS>>, only: boolean = false): never
   {
-    const query = new QuerySelect<Simplify<Record<FN, FS>>, [], never>().from(source) as any;
+    const query = new QuerySelect<Simplify<Record<FN, FS>>, [], never>() as any;
 
     for (const source of this._sources)
     {
       query._criteria.addSource(source.source, source.kind);
     }
 
-    return query;
+    query.from(source as any, only);
+
+    return query as never;
   }
 
   public insert(): StatementInsert<T, never, [], never, []> 

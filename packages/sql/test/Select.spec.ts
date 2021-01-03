@@ -384,7 +384,7 @@ describe('Select', () =>
         WHERE done = TRUE
       )
       SELECT 
-        task.id as id, 
+        id, 
         name
       FROM task
       WHERE id IN (SELECT tasksDone.id FROM tasksDone)
@@ -427,18 +427,81 @@ describe('Select', () =>
         SELECT id
         FROM task
         WHERE done = TRUE
-      )
-      WITH tasksDoneNames AS (
+      ), tasksDoneNames AS (
         SELECT name
         FROM task
-        WHERE task.id IN (SELECT tasksDone.id FROM tasksDone)
+        WHERE id IN (SELECT tasksDone.id FROM tasksDone)
       )
       SELECT 
-        task.id as id, 
-        task.name as name
+        id, 
+        name
       FROM task
       WHERE id IN (SELECT tasksDone.id FROM tasksDone) 
          OR name IN (SELECT tasksDoneNames.name FROM tasksDoneNames)
+    `);
+  });
+  
+  it('with recursive', () =>
+  {
+    const x = 
+      withs(
+        from(Task)
+          .select(({ task }, { constant }) => [
+            constant(0).as('depth'),
+            task.id,
+            task.name
+          ])
+          .where(({ task }, { param }) => [
+            task.id.eq(param('rootId'))
+          ])
+          .as('tasksTree')
+        , ({ tasksTree }) =>
+          from(Task)
+          .select(({ task }) => [
+            tasksTree.depth.add(1).as('depth'),
+            task.id,
+            task.name
+          ])
+          .where(({ task }) => [
+            task.parentId.eq(tasksTree.id)
+          ])
+      )
+      .with(
+        from(Task)
+          .select(({ task }) => [
+            task.id,
+          ])
+          .where(({ task }) => task.done)
+          .as('tasksDone')
+      )
+      .from('tasksTree')
+      .select(({ tasksTree }) => tasksTree.all())
+      .where(({ tasksDone, tasksTree }) => [
+        tasksTree.id.in(tasksDone.id.list())
+      ])
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreSpace: true, ignoreCase: true }, x, `
+      WITH RECURSIVE tasksTree (depth, id, name) AS (
+        SELECT 0, id, name
+        FROM task
+        WHERE id = $rootId
+        UNION
+        SELECT (tasksTree.depth + 1), task.id, task.name
+        FROM task
+        WHERE parentId = tasksTree.id
+      ), tasksDone AS (
+        SELECT id
+        FROM task
+        WHERE done = true
+      )
+      SELECT 
+        depth,
+        id, 
+        name
+      FROM tasksTree
+      WHERE id IN (SELECT tasksDone.id FROM tasksDone)
     `);
   });
 

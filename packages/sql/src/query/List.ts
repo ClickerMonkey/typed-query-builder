@@ -1,4 +1,4 @@
-import { QueryList } from '@typed-query-builder/builder';
+import { QueryList, SourceKind } from '@typed-query-builder/builder';
 import { Dialect } from '../Dialect';
 import { getCriteria } from '../helpers/Criteria';
 
@@ -11,23 +11,32 @@ export function addList(dialect: Dialect)
     {
       const { criteria, item } = expr;
 
-      const allSources = criteria.sources.map( s => s.source );
+      const params = getCriteria(criteria, transform, out, false);
 
-      let x = '';
-      
-      x += 'SELECT ';
-      x += out.addSources(allSources, () => out.wrap(item));
-
-      if ((!out.options.excludeSelectAlias && expr === out.expr) || out.options.includeSelectAlias)
+      params.selects = () => 
       {
-        x += ' AS ';
-        x += out.dialect.quoteAlias('item');
-      }
-      
-      x += ' ';
-      x += getCriteria(criteria, transform, out, false, false, true, true, true);
+        const allSources = criteria.sources.filter( s => s.kind !== SourceKind.WITH ).map( s => s.source );
 
-      return x;
+        let x = '';
+
+        x += out.addSources(allSources, () => out.wrap(item));
+  
+        if ((!out.options.excludeSelectAlias && expr === out.expr) || out.options.includeSelectAlias)
+        {
+          x += ' AS ';
+          x += out.dialect.quoteAlias('item');
+        }
+
+        return x;
+      }
+
+      const saved = out.saveSources();
+
+      const sql = out.dialect.formatOrdered(out.dialect.selectOrder, params);
+
+      out.restoreSources(saved);
+
+      return sql;
     }
   );
 }

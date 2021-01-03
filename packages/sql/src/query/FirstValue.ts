@@ -1,4 +1,4 @@
-import { ExprAggregate, QueryFirstValue } from '@typed-query-builder/builder';
+import { ExprAggregate, QueryFirstValue, SourceKind } from '@typed-query-builder/builder';
 import { Dialect } from '../Dialect';
 import { getCriteria } from '../helpers/Criteria';
 
@@ -11,37 +11,33 @@ export function addFirstValue(dialect: Dialect)
     {
       const { criteria, value, defaultValue } = expr;
 
+      const params = getCriteria(criteria, transform, out, false);
+
       if (!(value instanceof ExprAggregate))
       {
-        criteria.limit = 1;
+        params.paging = () => out.dialect.selectLimitOnly({ limit: 1 });
       }
 
-      const allSources = criteria.sources.map( s => s.source );
+      const allSources = criteria.sources.filter( s => s.kind !== SourceKind.WITH ).map( s => s.source );
 
-      let x = '';
-
-      x += 'SELECT ';
-
-      out.addSources(allSources, () =>
+      if (defaultValue)
       {
-        if (defaultValue)
-        {
-          x += 'COALESCE(';
-          x += transform(value, out);
-          x += ', ';
-          x += transform(defaultValue, out);
-          x += ')';
-        } 
-        else 
-        {
-          x += out.wrap(value);
-        }
-      });
+        params.selects = () => out.addSources(allSources, () =>
+          `COALESCE(${transform(value, out)}, ${transform(defaultValue, out)})`
+        );
+      }
+      else
+      {
+        params.selects = () => out.addSources(allSources, () => out.wrap(value));
+      }
 
-      x += ' ';
-      x += getCriteria(criteria, transform, out, false, false, true, true, true);
+      const saved = out.saveSources();
 
-      return x;
+      const sql = out.dialect.formatOrdered(out.dialect.selectOrder, params);
+
+      out.restoreSources(saved);
+
+      return sql;
     }
   );
 }

@@ -8,17 +8,16 @@ export function addWithRecursiveFeature(dialect: Dialect)
   {
     let x = '';
 
-    x += 'WITH RECURSIVE ';
-    x += value.getName();
+    x += out.dialect.quoteName(value.getName());
     x += ' (';
-    x += (value.getSelects() as Selects).map( s => s.alias ).join(', ');
+    x += (value.getSelects() as Selects).map( s => out.dialect.quoteName(String(s.alias)) ).join(', ');
     x += ') AS (';
     x += out.modify({ excludeSelectAlias: true }, () => transform(value.source, out));
     x += ' UNION ';
     if (value.all) {
       x += 'ALL ';
     }
-    x += transform(value.recursive, out);
+    x += out.modify({ excludeSelectAlias: true }, () => out.addSources([value], () => transform(value.recursive, out)));
     x += ') '
 
     return x;

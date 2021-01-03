@@ -69,3 +69,33 @@ declare module "@typed-query-builder/builder"
   }
 
 }
+
+declare module "@typed-query-builder/sql"
+{
+
+  export interface DialectParamsInsert
+  {
+    top: string;
+    option: string;
+  }
+
+  export interface DialectParamsUpdate
+  {
+    top: string;
+    option: string;
+  }
+
+  export interface DialectParamsDelete
+  {
+    top: string;
+    option: string;
+  }
+
+  export interface DialectParamsSelect
+  {
+    top: string;
+    into: string;
+    option: string;
+  }
+  
+}

@@ -144,7 +144,7 @@ export interface DialectParamsSelect
   SELECT: string;
   distinct: string;
   selects: string;
-  froms: string;
+  from: string;
   joins: string;
   where: string;
   group: string;
@@ -188,12 +188,14 @@ export class Dialect
   public defaultOptions: DialectOutputOptions;
   public aggregateRequiresArgument: DialectMap<keyof AggregateFunctions, string>;
   public implicitPredicates: boolean;
+  public recursiveKeyword: boolean;
   public selectOffsetOnly: DialectFormatterFunction<DialectParamsPaging>;
   public selectLimitOnly: DialectFormatterFunction<DialectParamsPaging>;
   public selectOffsetLimit: DialectFormatterFunction<DialectParamsPaging>;
   public insertOrder: DialectOrderedOrder<DialectParamsInsert>;
   public deleteOrder: DialectOrderedOrder<DialectParamsDelete>;
   public updateOrder: DialectOrderedOrder<DialectParamsUpdate>;
+  public selectOrder: DialectOrderedOrder<DialectParamsSelect>;
 
   public functionsUpper: boolean;
   public functions: DialectFormatter<keyof Functions, DialectParamsFunction>;
@@ -228,6 +230,7 @@ export class Dialect
     this.dataTypeArrayFormatter = (element, length) => `${element} ARRAY[${length || ''}]`;
     this.dataTypeFormatter = {};
     this.reservedWords = {};
+    this.recursiveKeyword = true;
 
     this.functionsUpper = true;
     this.functions = new DialectFormatter('{name}({args})', ['name', 'args'], 'name');
@@ -261,13 +264,17 @@ export class Dialect
     this.defaultOptions = {};
     this.aggregateRequiresArgument = { count: '*' };
     this.implicitPredicates = false;
+
     this.selectExpression = (expr) => `SELECT ${expr}`;
     this.selectOffsetLimit = compileFormat('LIMIT {limit} OFFSET {offset}');
     this.selectOffsetOnly = compileFormat('LIMIT ALL OFFSET {offset}');
     this.selectLimitOnly = compileFormat('LIMIT {limit}');
+
     this.insertOrder = ['with', 'INSERT', 'priority', 'INTO', 'table', 'columns', 'values', 'duplicate', 'returning'];
     this.deleteOrder = ['with', 'DELETE', 'FROM', 'table', 'using', 'where', 'returning'];
     this.updateOrder = ['with', 'UPDATE', 'ONLY', 'table', 'set', 'from', 'where', 'returning'];
+    this.selectOrder = ['with', 'SELECT', 'distinct', 'selects', 'from', 'joins', 'where', 'group', 'having', 'windows', 'order', 'paging', 'locks'];
+
     this.supports = DialectFeatures.ALL;
   }
 

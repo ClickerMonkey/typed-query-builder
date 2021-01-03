@@ -8,11 +8,7 @@ export function addWithFeature(dialect: Dialect)
   {
     let x = '';
 
-    x += 'WITH ';
     x += out.dialect.quoteName(value.getName());
-    // x += ' (';
-    // x += (value.getSelects() as Selects).map( s => s.alias ).join(', ');
-    // x += ') AS (';
     x += ' AS (';
     x += transform(value.getSource(), out);
     x += ')'

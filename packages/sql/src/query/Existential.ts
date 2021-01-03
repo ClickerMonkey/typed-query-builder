@@ -11,17 +11,21 @@ export function addExistential(dialect: Dialect)
     {
       const { criteria } = expr;
 
-      criteria.limit = 1;
+      const params = getCriteria(criteria, transform, out, false);
 
-      return out.addSources(criteria.sources.map( s => s.source ), () =>
-      {
-        let x = '';
-  
-        x += 'SELECT 1 ';
-        x += getCriteria(criteria, transform, out, false, false, false, false, true);
+      params.selects = () => '1';
+      params.paging = () => out.dialect.selectLimitOnly({ limit: 1 });
+      
+      delete params.order;
+      delete params.windows;
 
-        return x;
-      });
+      const saved = out.saveSources();
+
+      const sql = out.dialect.formatOrdered(out.dialect.selectOrder, params);
+
+      out.restoreSources(saved);
+
+      return sql;
     }
   );
 }

@@ -11,14 +11,17 @@ export function addFirst(dialect: Dialect)
     {
       const { criteria } = expr;
 
-      criteria.limit = 1;
+      const params = getCriteria(criteria, transform, out, true);
 
-      let x = '';
+      params.paging = () => out.dialect.selectLimitOnly({ limit: 1 });
 
-      x += 'SELECT ';
-      x += getCriteria(criteria, transform, out, true, true, true, true, true);
+      const saved = out.saveSources();
 
-      return x;
+      const sql = out.dialect.formatOrdered(out.dialect.selectOrder, params);
+
+      out.restoreSources(saved);
+
+      return sql;
     }
   );
 }

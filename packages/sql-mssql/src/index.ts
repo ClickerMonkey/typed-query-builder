@@ -23,10 +23,12 @@ DialectMssql.selectLimitOnly = compileFormat('OFFSET 0 ROWS FETCH FIRST {limit} 
 DialectMssql.selectOffsetOnly = compileFormat('OFFSET {offset} ROWS');
 DialectMssql.selectOffsetLimit = compileFormat('OFFSET {offset} ROWS FETCH NEXT {limit} ROWS ONLY');
 
-DialectMssql.insertOrder = ['with', 'INSERT', 'top', 'INTO', 'table', 'columns', 'returning', 'values', 'option'] as any;
-DialectMssql.deleteOrder = ['with', 'DELETE', 'top', 'FROM', 'table', 'returning', 'using', 'where', 'option'] as any;
-DialectMssql.updateOrder = ['with', 'UPDATE', 'top', 'ONLY', 'table', 'set', 'returning', 'from', 'where', 'option'] as any;
+DialectMssql.insertOrder = ['with', 'INSERT', 'top', 'INTO', 'table', 'columns', 'returning', 'values', 'option'];
+DialectMssql.deleteOrder = ['with', 'DELETE', 'top', 'FROM', 'table', 'returning', 'using', 'where', 'option'];
+DialectMssql.updateOrder = ['with', 'UPDATE', 'top', 'ONLY', 'table', 'set', 'returning', 'from', 'where', 'option'];
+DialectMssql.selectOrder = ['with', 'SELECT', 'top', 'distinct', 'selects', 'into', 'from', 'joins', 'where', 'group', 'having', 'windows', 'order', 'paging', 'locks', 'option'];
 
+DialectMssql.recursiveKeyword = false;
 DialectMssql.trueIdentifier = '1';
 DialectMssql.falseIdentifier = '0';
 DialectMssql.paramPrefix = '@';
