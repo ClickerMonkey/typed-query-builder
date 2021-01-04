@@ -41,9 +41,13 @@
   "tslint": {
     "extends": "../../tslint.json"
   },
+  "devDependencies": {
+    "@types/mssql": "6.0.7"
+  },
   "dependencies": {
     "@typed-query-builder/builder": "*",
     "@typed-query-builder/sql": "*",
-    "@typed-query-builder/sql-mssql": "*"
+    "@typed-query-builder/sql-mssql": "*",
+    "mssql": "6.3.1"
   }
 }

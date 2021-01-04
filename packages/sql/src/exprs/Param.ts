@@ -8,7 +8,7 @@ export function addParam(dialect: Dialect)
     ExprParam,
     (expr, transform, out) => 
     {
-      return out.addParam(expr.param);
+      return out.addParam(expr.param, expr.dataType, expr.defaultValue);
     }
   );
 }

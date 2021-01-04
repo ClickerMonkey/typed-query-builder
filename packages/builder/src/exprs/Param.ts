@@ -1,4 +1,4 @@
-import { ExprKind, ExprScalar } from '../internal';
+import { DataTypeInputs, ExprKind, ExprScalar } from '../internal';
 
 
 export class ExprParam<T> extends ExprScalar<T> 
@@ -8,15 +8,19 @@ export class ExprParam<T> extends ExprScalar<T>
 
   public constructor(
     public param: string,
+    public dataType?: DataTypeInputs,
+    public defaultValue?: T,
   ) {
     super();
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.PARAM;
   }
 
-  public isSimple(): boolean {
+  public isSimple(): boolean 
+  {
     return true;
   }
 

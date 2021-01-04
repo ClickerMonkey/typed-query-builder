@@ -43,7 +43,7 @@ export class DialectOutput
     this.sources = [];
   }
 
-  public addParam(param: string): string
+  public addParam(param: string, paramType?: DataTypeInputs, defaultValue?: any): string
   {
     const paramIndex = param in this.paramIndices
       ? this.paramIndices[param]
@@ -53,6 +53,9 @@ export class DialectOutput
       ? param
       : paramIndex;
 
+    this.params[this.paramCount] = defaultValue;
+    this.paramTypes[this.paramCount] = paramType;
+
     return `${this.dialect.paramPrefix}${paramKey}${this.dialect.paramSuffix}`;
   }
 
@@ -60,10 +63,7 @@ export class DialectOutput
   {
     if (this.options.constantsAsParams)
     {
-      this.params[this.paramCount] = value;
-      this.paramTypes[this.paramCount] = dataType;
-
-      return this.addParam(String(this.paramCount + this.dialect.paramOffset));
+      return this.addParam(String(this.paramCount + this.dialect.paramOffset), dataType, value);
     }
     else
     {

@@ -20,7 +20,7 @@ export interface ExprFactory<T extends Sources, S extends Selects, W extends Nam
   raw<V>(raw: any): ExprScalar<V>;
   defaults<V>(): Expr<V>;
   nulls<V>(): Expr<V>;
-  param<V>(param: string): ExprScalar<V>;
+  param<V>(param: string, dataType?: DataTypeInputs, defaultValue?: V): ExprScalar<V>;
   row<E extends ExprInput<any | any[]>[]>(...elements: E): ExprRow<Cast<ExprTypeMap<TuplesJoin<E>>, any[]>>;
   deep<V>(input: ExprInputDeep<V>): ExprScalar<V>;
   inspect<R>(): ExprCase<boolean, R>;
@@ -120,8 +120,8 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
       return new ExprNull();
     },
 
-    param<V>(param: string): ExprScalar<V> {
-      return new ExprParam<V>(param);
+    param<V>(param: string, dataType?: DataTypeInputs, defaultValue?: V): ExprScalar<V> {
+      return new ExprParam<V>(param, dataType, defaultValue);
     },
 
     row<E extends ExprInput<any | any[]>[]>(...elements: E): ExprRow<Cast<ExprTypeMap<TuplesJoin<E>>, any[]>> {
