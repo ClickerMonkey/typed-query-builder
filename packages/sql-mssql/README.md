@@ -1,5 +1,7 @@
 # @typed-query-builder/sql-mssql
 
+See [typed-query-builder README](https://github.com/ClickerMonkey/typed-query-builder/blob/master/README.md) for more details.  
+
 Features: functions, operations, clauses, data types, etc.
 
 The following query builder features are non-natively supported through this library:

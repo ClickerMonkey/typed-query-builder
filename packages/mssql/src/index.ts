@@ -1,7 +1,7 @@
 import { DataTypeInputs, Expr, ExprValueObjects, getDataTypeFromInput, getDataTypeFromValue, getDataTypeMeta, QueryFirst, QueryFirstValue, QueryList } from '@typed-query-builder/builder';
 import { DialectOutput } from '@typed-query-builder/sql';
 import { DialectMssql } from '@typed-query-builder/sql-mssql';
-import { ConnectionPool, IResult, ISqlType, MAX, PreparedStatement, Request, TYPES } from 'mssql';
+import { ConnectionPool, IResult, ISqlType, MAX, PreparedStatement, Request, Transaction, TYPES } from 'mssql';
 
 
 
@@ -51,13 +51,13 @@ export interface PreparedQuery<R, P = any>
   release(): Promise<void>;
 }
 
-export function prepare<P = any>(conn: ConnectionPool, options: MssqlOptions<P> & { affectedCount: true }): (expr: Expr<any>) => Promise<PreparedQuery<number, P>>
-export function prepare<P = any>(conn: ConnectionPool, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => Promise<PreparedQuery<R, P>>
-export function prepare<P = any>(conn: ConnectionPool, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => Promise<PreparedQuery<R, P>>
+export function prepare<P = any>(conn: ConnectionPool | Transaction, options: MssqlOptions<P> & { affectedCount: true }): (expr: Expr<any>) => Promise<PreparedQuery<number, P>>
+export function prepare<P = any>(conn?: ConnectionPool | Transaction, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => Promise<PreparedQuery<R, P>>
+export function prepare<P = any>(conn?: ConnectionPool | Transaction, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => Promise<PreparedQuery<R, P>>
 {
   return async <R>(e: Expr<R>) =>
   {
-    const prepared = new PreparedStatement(conn);
+    const prepared = new PreparedStatement(conn as any);
     const outputFactory = DialectMssql.output(options);
     const output = outputFactory(e);
     const defaults: Partial<P> = {};

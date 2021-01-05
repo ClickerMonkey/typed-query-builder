@@ -11,12 +11,9 @@
         "pub": "lerna publish",
         "test": "lerna run test",
         "builder": "yarn workspace @typed-query-builder/builder",
-        "runtime": "yarn workspace @typed-query-builder/run",
         "sql": "yarn workspace @typed-query-builder/sql",
-        "sql-mysql": "yarn workspace @typed-query-builder/sql-mysql",
-        "mssql": "yarn workspace @typed-query-builder/mssql",
-        "pgsql": "yarn workspace @typed-query-builder/pgsql",
-        "mysql": "yarn workspace @typed-query-builder/mysql"
+        "sql-mssql": "yarn workspace @typed-query-builder/sql-mssql",
+        "mssql": "yarn workspace @typed-query-builder/mssql"
     },
     "devDependencies": {
         "@types/jest": "25.2.1",
