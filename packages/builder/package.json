@@ -1,7 +1,7 @@
 {
   "name": "@typed-query-builder/builder",
   "license": "GPL-3.0-or-later",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A fully-featured fully-typed single-interface query builder for any database.",
   "main": "dist/index.js",
   "typings": "typings/index.d.ts",
@@ -44,5 +44,5 @@
   "tslint": {
     "extends": "../../tslint.json"
   },
-  "gitHead": "de0b2025f52e528d38dd7215e117318340a197b7"
+  "gitHead": "987cb5583a0b1278e5898006cd25913f62cb127e"
 }
