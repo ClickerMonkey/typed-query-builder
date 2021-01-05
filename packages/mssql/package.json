@@ -1,10 +1,13 @@
 {
   "name": "@typed-query-builder/mssql",
   "license": "GPL-3.0-or-later",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "An SQL Server query builder",
   "main": "dist/index.js",
   "typings": "typings/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "dist"
   ],
@@ -42,10 +45,11 @@
     "extends": "../../tslint.json"
   },
   "dependencies": {
-    "@typed-query-builder/builder": "^0.1.1",
-    "@typed-query-builder/sql": "^0.1.1",
-    "@typed-query-builder/sql-mssql": "^0.1.1",
+    "@typed-query-builder/builder": "^0.1.2",
+    "@typed-query-builder/sql": "^0.1.2",
+    "@typed-query-builder/sql-mssql": "^0.1.2",
     "@types/mssql": "6.0.7",
     "mssql": "6.3.1"
-  }
+  },
+  "gitHead": "de0b2025f52e528d38dd7215e117318340a197b7"
 }
