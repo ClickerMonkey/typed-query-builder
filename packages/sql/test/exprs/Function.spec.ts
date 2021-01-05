@@ -41,7 +41,7 @@ describe('Function', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
-        upper(name) AS upper
+        upper("name") AS "upper"
       FROM task
     `);
   });
@@ -57,7 +57,7 @@ describe('Function', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
-        substring(name, 1, 2) AS sub
+        substring("name", 1, 2) AS sub
       FROM task
     `);
   });

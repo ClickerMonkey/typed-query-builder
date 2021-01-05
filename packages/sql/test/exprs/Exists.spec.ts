@@ -35,7 +35,7 @@ describe('Exists', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
-        name
+        "name"
       FROM task
       WHERE EXISTS (SELECT 1 FROM task AS child WHERE child.parentId = task.id LIMIT 1)
     `);
@@ -59,7 +59,7 @@ describe('Exists', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
-        name
+        "name"
       FROM task
       WHERE NOT EXISTS (SELECT 1 FROM task AS child WHERE child.parentId = task.id LIMIT 1)
     `);

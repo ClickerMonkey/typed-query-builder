@@ -44,7 +44,7 @@ describe('OperationBinary', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
-        (id % assignee) AS mod
+        (id % assignee) AS "mod"
       FROM task
     `);
   });

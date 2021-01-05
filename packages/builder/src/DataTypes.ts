@@ -51,6 +51,7 @@ export interface DataTypeInputRegistry
   path: 'PATH';
   polygon: 'POLYGON';
   circle: 'CIRCLE';
+  geometry: 'GEOMETRY';
   geography: [ geography: 'POINT' | 'SEGMENT' | 'LINE' | 'BOX' | 'PATH' | 'POLYGON' | 'CIRCLE', srid: number ];
   world: { world: 'POINT' | 'SEGMENT' | 'LINE' | 'BOX' | 'PATH' | 'POLYGON' | 'CIRCLE' };
   any: 'ANY';
@@ -191,6 +192,7 @@ export interface DataTypeTypes {
   POLYGON: DataTypePolygon;
   PATH: DataTypePath;
   CIRCLE: DataTypeCircle;
+  GEOMETRY: DataTypeGeometry;
 
   ANY: any;
   ARRAY: any[];
@@ -277,6 +279,7 @@ export function getDataTypeMeta(input?: DataTypeInputs): DataTypeMeta
     case 'POLYGON':
     case 'PATH':
     case 'CIRCLE':
+    case 'GEOMETRY':
       return {
         srid: isArray(input) ? input[1] as number : isObject(input) ? 4326 : 0
       };

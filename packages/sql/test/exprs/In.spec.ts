@@ -27,7 +27,7 @@ describe('In', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
-        name
+        "name"
       FROM task
       WHERE id IN (1, 2, 3)
     `);
@@ -43,7 +43,7 @@ describe('In', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
-        name
+        "name"
       FROM task
       WHERE id IN (1, 2, (SELECT MAX(id) FROM task))
     `);
@@ -61,7 +61,7 @@ describe('In', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
-        name
+        "name"
       FROM task
       WHERE id IN (SELECT parentId FROM task)
     `);
@@ -79,7 +79,7 @@ describe('In', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
-        name
+        "name"
       FROM task
       WHERE id IN (SELECT parentId FROM task)
     `);

@@ -24,7 +24,7 @@
     "clean": "rimraf -rf ./dist tsconfig.build.tsbuildinfo typings",
     "compile": "tsc -p tsconfig.build.json",
     "prepublishOnly": "yarn run build",
-    "test": "jest",
+    "test": "jest --runInBand --detectOpenHandles",
     "test:debug": "node --inspect-brk ../../node_modules/jest/bin/jest.js --runInBand",
     "test:watch": "npm test -- --watch",
     "test:coverage": "npm test -- --coverage",
@@ -41,13 +41,11 @@
   "tslint": {
     "extends": "../../tslint.json"
   },
-  "devDependencies": {
-    "@types/mssql": "6.0.7"
-  },
   "dependencies": {
     "@typed-query-builder/builder": "*",
     "@typed-query-builder/sql": "*",
     "@typed-query-builder/sql-mssql": "*",
+    "@types/mssql": "6.0.7",
     "mssql": "6.3.1"
   }
 }

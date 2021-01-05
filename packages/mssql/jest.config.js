@@ -24,4 +24,7 @@ module.exports = {
   },
   preset: 'ts-jest',
   testMatch: null,
+  setupFilesAfterEnv: [
+    '<rootDir>/test/setup.ts'
+  ]
 };

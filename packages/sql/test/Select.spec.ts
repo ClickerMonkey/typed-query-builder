@@ -44,7 +44,7 @@ describe('Select', () =>
     expectText({ condenseSpace: true }, x, `
       SELECT 
         task.id AS id, 
-        task.name AS name,
+        task."name" AS "name",
         task.done AS done, 
         task.doneAt AS doneAt, 
         task.parentId AS parentId, 
@@ -76,7 +76,7 @@ describe('Select', () =>
     expectText({ condenseSpace: true }, x, `
       SELECT 
         projects.ProjectID AS id, 
-        projects.ProjectName AS name
+        projects.ProjectName AS "name"
       FROM projects
     `);
   });
@@ -104,7 +104,7 @@ describe('Select', () =>
     expectText({ condenseSpace: true }, x, `
       SELECT 
         ProjectID AS id, 
-        ProjectName AS name
+        ProjectName AS "name"
       FROM projects
     `);
   });
@@ -135,7 +135,7 @@ describe('Select', () =>
     expectText({ condenseSpace: true }, x, `
       SELECT 
         ProjectID, 
-        ProjectName AS name
+        ProjectName AS "name"
       FROM projects
     `);
   });
@@ -150,7 +150,7 @@ describe('Select', () =>
     expectText({ condenseSpace: true }, x, `
       SELECT 
         id, 
-        name,
+        "name",
         done, 
         doneAt, 
         parentId, 
@@ -171,13 +171,13 @@ describe('Select', () =>
     expectText({ condenseSpace: true }, x, `
       SELECT 
         task.id AS id, 
-        task.name AS name,
+        task."name" AS "name",
         done, 
         doneAt, 
         parentId, 
         assignee,
         people.id AS assigneeId,
-        people.name AS assigneeName
+        people."name" AS assigneeName
       FROM task
       INNER JOIN people ON assignee = people.id
     `);
@@ -208,7 +208,7 @@ describe('Select', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT 
-        COUNT(*) AS count
+        COUNT(*) AS "count"
       FROM task
     `);
   });
@@ -225,7 +225,7 @@ describe('Select', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT 
-        UPPER(task.name) AS item
+        UPPER(task."name") AS item
       FROM task
     `);
   });
@@ -241,7 +241,7 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT 
         my_tasks.id AS "my_task.id",
-        my_tasks.name AS "my_task.name"
+        my_tasks."name" AS "my_task.name"
       FROM task AS my_tasks
       WHERE my_tasks.assignee = 10
     `);
@@ -261,7 +261,7 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT 
         task.id AS id,
-        task.name AS name
+        task."name" AS "name"
       FROM task
       WHERE task.assignee = $1
         AND task.done = true
@@ -281,7 +281,7 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT 
         task.id AS id,
-        task.name AS name
+        task."name" AS "name"
       FROM task
       WHERE task.assignee = $myid
     `);
@@ -321,12 +321,12 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT 
         task.id AS id, 
-        task.name AS name,
+        task."name" AS "name",
         task.done AS done, 
         task.doneAt AS doneAt, 
         task.parentId AS parentId, 
         task.assignee AS assignee,
-        RANK() OVER w AS rank
+        RANK() OVER w AS "rank"
       FROM task
       WINDOW w AS (PARTITION BY task.done ORDER BY task.doneAt)
     `);
@@ -345,12 +345,12 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT 
         task.id AS id, 
-        task.name AS name,
+        task."name" AS "name",
         task.done AS done, 
         task.doneAt AS doneAt, 
         task.parentId AS parentId, 
         task.assignee AS assignee,
-        RANK() OVER (PARTITION BY task.done ORDER BY task.doneAt) AS rank
+        RANK() OVER (PARTITION BY task.done ORDER BY task.doneAt) AS "rank"
       FROM task
     `);
   });
@@ -385,7 +385,7 @@ describe('Select', () =>
       )
       SELECT 
         id, 
-        name
+        "name"
       FROM task
       WHERE id IN (SELECT tasksDone.id FROM tasksDone)
     `);
@@ -428,16 +428,16 @@ describe('Select', () =>
         FROM task
         WHERE done = TRUE
       ), tasksDoneNames AS (
-        SELECT name
+        SELECT "name"
         FROM task
         WHERE id IN (SELECT tasksDone.id FROM tasksDone)
       )
       SELECT 
         id, 
-        name
+        "name"
       FROM task
       WHERE id IN (SELECT tasksDone.id FROM tasksDone) 
-         OR name IN (SELECT tasksDoneNames.name FROM tasksDoneNames)
+         OR "name" IN (SELECT tasksDoneNames."name" FROM tasksDoneNames)
     `);
   });
   
@@ -483,12 +483,12 @@ describe('Select', () =>
     ;
     
     expectText({ ignoreSpace: true, ignoreCase: true }, x, `
-      WITH RECURSIVE tasksTree (depth, id, name) AS (
-        SELECT 0, id, name
+      WITH RECURSIVE tasksTree ("depth", id, "name") AS (
+        SELECT 0, id, "name"
         FROM task
         WHERE id = $rootId
         UNION
-        SELECT (tasksTree.depth + 1), task.id, task.name
+        SELECT (tasksTree."depth" + 1), task.id, task."name"
         FROM task
         WHERE parentId = tasksTree.id
       ), tasksDone AS (
@@ -497,9 +497,9 @@ describe('Select', () =>
         WHERE done = true
       )
       SELECT 
-        depth,
+        "depth",
         id, 
-        name
+        "name"
       FROM tasksTree
       WHERE id IN (SELECT tasksDone.id FROM tasksDone)
     `);
@@ -516,7 +516,7 @@ describe('Select', () =>
     ;
     
     expectText({ ignoreSpace: true, ignoreCase: true }, x, `
-      SELECT DISTINCT name
+      SELECT DISTINCT "name"
       FROM task
     `);
   });
@@ -533,9 +533,9 @@ describe('Select', () =>
     ;
     
     expectText({ ignoreSpace: true, ignoreCase: true }, x, `
-      SELECT DISTINCT ON (name) 
+      SELECT DISTINCT ON ("name") 
         id, 
-        name
+        "name"
       FROM task
     `);
   });
@@ -555,8 +555,8 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
         task.id AS id, 
-        task.name AS name,
-        people.name AS assigneeeName
+        task."name" AS "name",
+        people."name" AS assigneeeName
       FROM task
       INNER JOIN people ON people.id = assignee
     `);
@@ -577,8 +577,8 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
         task.id AS id, 
-        task.name AS name,
-        people.name AS assigneeeName
+        task."name" AS "name",
+        people."name" AS assigneeeName
       FROM task
       LEFT JOIN people ON people.id = assignee
     `);
@@ -599,8 +599,8 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
         task.id AS id, 
-        task.name AS name,
-        people.name AS assigneeeName
+        task."name" AS "name",
+        people."name" AS assigneeeName
       FROM task
       RIGHT JOIN people ON people.id = assignee
     `);
@@ -621,8 +621,8 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
         task.id AS id, 
-        task.name AS name,
-        people.name AS assigneeeName
+        task."name" AS "name",
+        people."name" AS assigneeeName
       FROM task
       FULL JOIN people ON people.id = assignee
     `);
@@ -640,13 +640,13 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
         task.id AS id, 
-        task.name AS name,
+        task."name" AS "name",
         done, 
         doneAt, 
         parentId, 
         assignee,
         people.id as assigneeId,
-        people.name as assigneeName
+        people."name" as assigneeName
       FROM task
       INNER JOIN people ON people.id = assignee
     `);
@@ -683,7 +683,7 @@ describe('Select', () =>
         b_id,
         b_name,
         a_id_ref
-      FROM a
+      FROM "a"
       INNER JOIN b ON a_id_ref = a_id
     `);
   });
@@ -707,7 +707,7 @@ describe('Select', () =>
     
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
-        dateGet('dayOfWeek', doneAt) AS dayOfWeek,
+        dateGet('dayOfWeek', doneAt) AS "dayOfWeek",
         COUNT(*) AS tasksOnDay
       FROM task
       WHERE doneAt IS NOT NULL
@@ -727,9 +727,9 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
         id,
-        name
+        "name"
       FROM task
-      ORDER BY name
+      ORDER BY "name"
     `);
   });
 
@@ -744,9 +744,9 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
         id,
-        name
+        "name"
       FROM task
-      ORDER BY name ASC
+      ORDER BY "name" ASC
     `);
   });
 
@@ -761,9 +761,9 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
         id,
-        name
+        "name"
       FROM task
-      ORDER BY name DESC
+      ORDER BY "name" DESC
     `);
   });
 
@@ -778,9 +778,9 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
         id,
-        name
+        "name"
       FROM task
-      ORDER BY name ASC NULLS LAST
+      ORDER BY "name" ASC NULLS LAST
     `);
   });
 
@@ -795,9 +795,9 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
         id,
-        name
+        "name"
       FROM task
-      ORDER BY name ASC NULLS FIRST
+      ORDER BY "name" ASC NULLS FIRST
     `);
   });
 
@@ -812,7 +812,7 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
         id,
-        name
+        "name"
       FROM task
       LIMIT 10
     `);
@@ -830,7 +830,7 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
         id,
-        name
+        "name"
       FROM task
       LIMIT 10
       OFFSET 5
@@ -848,7 +848,7 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
         id,
-        name
+        "name"
       FROM task
       LIMIT ALL
       OFFSET 5
@@ -979,7 +979,7 @@ describe('Select', () =>
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT 
         id,
-        name,
+        "name",
         (SELECT COUNT(*) FROM task AS child WHERE child.parentId = task.id) AS childCount
       FROM task
     `);
@@ -1003,14 +1003,14 @@ describe('Select', () =>
     expectText({ ignoreSpace: true, ignoreCase: true }, x, `
       (
         SELECT 
-          id, name
+          id, "name"
         FROM task
         WHERE done = TRUE
       )
       UNION
       (
         SELECT 
-          id, name
+          id, "name"
         FROM task
         WHERE doneAt IS NOT NULL
       )

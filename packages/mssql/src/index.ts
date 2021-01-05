@@ -17,9 +17,12 @@ export interface MssqlOptions
   constantsAsParams?: boolean;
   raw?: boolean;
   simplifyReferences?: boolean;
+  affectedCount?: boolean;
 }
 
-export function run<R>(requestProvider: RequestProvider, options?: MssqlOptions): (expr: Expr<R>) => Promise<ExprValueObjects<R>>
+export function exec(requestProvider: RequestProvider, options: MssqlOptions & { affectedCount: true }): (expr: Expr<any>) => Promise<number>
+export function exec(requestProvider: RequestProvider, options?: MssqlOptions): <R>(expr: Expr<R>) => Promise<ExprValueObjects<R>>
+export function exec<R>(requestProvider: RequestProvider, options?: MssqlOptions): (expr: Expr<R>) => Promise<ExprValueObjects<R>>
 {
   return async (e) =>
   {
@@ -29,9 +32,16 @@ export function run<R>(requestProvider: RequestProvider, options?: MssqlOptions)
     
     addParams(request, output, options?.params);
     
-    const results = await request.query<ExprValueObjects<R>>(output.query);
+    try
+    {
+      const results = await request.query<ExprValueObjects<R>>(output.query);
 
-    return handleResult(e, results) as any;
+      return handleResult(e, results, options) as any;
+    }
+    catch (e)
+    {
+      throw new Error(e + '\n\nQuery: ' + output.query);
+    }
   };
 }
 
@@ -65,7 +75,7 @@ export function prepare<R>(conn: ConnectionPool, options?: MssqlOptions): (expr:
       { 
         const result = await prepared.execute(params);
 
-        return handleResult(e, result) as any;
+        return handleResult(e, result, options) as any;
       },
       async release(): Promise<void> 
       {
@@ -77,27 +87,32 @@ export function prepare<R>(conn: ConnectionPool, options?: MssqlOptions): (expr:
   };
 }
 
-export function handleResult<R>(expr: Expr<R>, result: IResult<ExprValueObjects<R>>)
+export function handleResult<R>(expr: Expr<R>, result: IResult<ExprValueObjects<R>>, options?: MssqlOptions)
 {
+  if (options && options.affectedCount)
+  {
+    return result.rowsAffected[0];
+  }
+
   if (expr instanceof QueryFirst)
   {
-    return result.recordset;
+    return result.recordset[0] || null;
   }
 
   if (expr instanceof QueryFirstValue)
   {
-    for (const prop in result.recordset)
+    for (const prop in result.recordset[0])
     {
-      return result.recordset[prop];
+      return result.recordset[0][prop];
     }
   }
 
   if (expr instanceof QueryList)
   {
-    return result.recordsets.map( r => (r as any).item );
+    return result.recordset.map( r => (r as any).item );
   }
 
-  return result.recordsets;
+  return result.recordset;
 }
 
 export function addParams(request: Request, out: DialectOutput, params: any)
@@ -204,6 +219,7 @@ export function getDataType(value: any, givenType?: DataTypeInputs): ISqlType | 
     case 'PATH':
     case 'POLYGON':
     case 'POINT':
+    case 'GEOMETRY':
       return meta.srid === 0 ? TYPES.Geometry : TYPES.Geography;
   }
   

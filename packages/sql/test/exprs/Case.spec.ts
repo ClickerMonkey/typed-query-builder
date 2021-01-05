@@ -31,7 +31,7 @@ describe('Case', () =>
         (CASE done
           WHEN TRUE THEN 'Done'
           ELSE 'Not Done'
-        END) AS status
+        END) AS "status"
       FROM task
     `);
   });
@@ -50,7 +50,7 @@ describe('Case', () =>
         (CASE
           WHEN done = TRUE THEN 'Done'
           ELSE 'Not Done'
-        END) AS status
+        END) AS "status"
       FROM task
     `);
   });

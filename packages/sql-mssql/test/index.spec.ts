@@ -116,7 +116,7 @@ describe('index', () =>
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT 
-        STRING_AGG(name, ',') WITHIN GROUP (ORDER BY name ASC) AS names
+        STRING_AGG("name", ',') WITHIN GROUP (ORDER BY "name" ASC) AS "names"
       FROM task
     `);
   });
@@ -371,8 +371,8 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        CEILING(id) AS ceil,
-        LTRIM(name) AS trimmedName
+        CEILING(id) AS "ceil",
+        LTRIM("name") AS trimmedName
       FROM task
     `);
   });
@@ -404,7 +404,7 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        MIN(name) AS firstName
+        MIN("name") AS firstName
       FROM task
     `);
   });
@@ -461,9 +461,9 @@ describe('index', () =>
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
         id,
-        name
+        "name"
       FROM task
-      ORDER BY name
+      ORDER BY "name"
       OFFSET 0 ROWS FETCH FIRST 10 ROWS ONLY
     `);
   });
@@ -481,9 +481,9 @@ describe('index', () =>
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
         id,
-        name
+        "name"
       FROM task
-      ORDER BY name
+      ORDER BY "name"
       OFFSET 5 ROWS FETCH NEXT 10 ROWS ONLY
     `);
   });
@@ -500,9 +500,9 @@ describe('index', () =>
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
         id,
-        name
+        "name"
       FROM task
-      ORDER BY name
+      ORDER BY "name"
       OFFSET 5 ROWS
     `);
   });
@@ -537,8 +537,8 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        CONCAT(REPLICATE(' ', LEN(name) - (10)), name) AS padLeftSpaces,
-        CONCAT(REPLICATE('_', LEN(name) - (8)), name) AS padLeftScores
+        CONCAT(REPLICATE(' ', LEN("name") - (10)), "name") AS padLeftSpaces,
+        CONCAT(REPLICATE('_', LEN("name") - (8)), "name") AS padLeftScores
       FROM task
     `);
   });
@@ -555,8 +555,8 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        CONCAT(name, REPLICATE(' ', LEN(name) - (10))) AS padRightSpaces,
-        CONCAT(name, REPLICATE('_', LEN(name) - (8))) AS padRightScores
+        CONCAT("name", REPLICATE(' ', LEN("name") - (10))) AS padRightSpaces,
+        CONCAT("name", REPLICATE('_', LEN("name") - (8))) AS padRightScores
       FROM task
     `);
   });
@@ -590,7 +590,7 @@ describe('index', () =>
     ;
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      INSERT INTO task (name)
+      INSERT INTO task ("name")
       OUTPUT 
         INSERTED.id AS id, 
         INSERTED.done AS done
@@ -675,9 +675,9 @@ describe('index', () =>
     expectText({ condenseSpace: true }, x, `
       SELECT 
         id, 
-        name, 
+        "name", 
         done, 
-        (REPLACE( REPLACE( (SELECT subtask.name AS item FROM subtask WHERE parentId = task.id FOR JSON PATH),'{\"item\":','' ), '\"}','\"' )) AS subtasks 
+        (REPLACE( REPLACE( (SELECT subtask."name" AS item FROM subtask WHERE parentId = task.id FOR JSON PATH),'{\"item\":','' ), '\"}','\"' )) AS subtasks 
       FROM task
     `);
   });
@@ -701,9 +701,9 @@ describe('index', () =>
     expectText({ condenseSpace: true }, x, `
       SELECT 
         id, 
-        name, 
+        "name", 
         done, 
-        (SELECT subtask.id AS id, subtask.name AS name, parentId FROM subtask WHERE parentId = task.id FOR JSON PATH) AS subtasks 
+        (SELECT subtask.id AS id, subtask."name" AS "name", parentId FROM subtask WHERE parentId = task.id FOR JSON PATH) AS subtasks 
       FROM task
     `);
   });
@@ -727,8 +727,8 @@ describe('index', () =>
     expectText({ condenseSpace: true }, x, `
       SELECT 
         id, 
-        name, 
-        (SELECT task.id AS id, task.name AS name, done, doneAt FROM task WHERE task.id = parentId OFFSET 0 ROWS FETCH FIRST 1 ROWS ONLY FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) AS parent
+        "name", 
+        (SELECT task.id AS id, task."name" AS "name", done, doneAt FROM task WHERE task.id = parentId ORDER BY (SELECT NULL) OFFSET 0 ROWS FETCH FIRST 1 ROWS ONLY FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) AS parent
       FROM subtask
     `);
   });
@@ -854,8 +854,8 @@ describe('index', () =>
       FROM (SELECT 
           party_id AS relatedId, 
           COUNT(*) AS interestCount, 
-          COUNT(CASE WHEN ((status = @interestPrimary)) = 1 THEN 1 ELSE NULL END) AS primaryCount, 
-          SUM((status + 1)) AS scoreRaw, 
+          COUNT(CASE WHEN (("status" = @interestPrimary)) = 1 THEN 1 ELSE NULL END) AS primaryCount, 
+          SUM(("status" + 1)) AS scoreRaw, 
           (MIN(search_location)).STDistance(geometry::Point(@lng, @lat, 0)) AS distance 
         FROM party_interest 
         WHERE ((search_location).STDistance(geometry::Point(@lng, @lat, 0)) <= @radius) = 1
@@ -866,10 +866,10 @@ describe('index', () =>
       LEFT JOIN party_relation 
         ON party_relation.relatedId = neighbor.relatedId 
       WHERE partyId = @partyId 
-        AND (party_relation.status IS NULL OR (party_relation.status & @visibleStatuses) <> 0) 
+        AND (party_relation."status" IS NULL OR (party_relation."status" & @visibleStatuses) <> 0) 
         AND visibility > @visibleHidden 
         AND (visibility <> @visiblePrimary OR primaryCount > 0) 
-        AND party.status <= @statusValid 
+        AND party."status" <= @statusValid 
       ORDER BY (scoreRaw * (SELECT MAX(i) FROM (VALUES (1), ((CASE WHEN boostExpires > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * @searchBoost)) AS T(i)))
     `);
   });

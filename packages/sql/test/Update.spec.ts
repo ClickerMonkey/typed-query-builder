@@ -17,23 +17,6 @@ describe('Update', () =>
     },
   });
 
-  // const Book = table({
-  //   name: 'book',
-  //   fields: {
-  //     isbn: 'TEXT',
-  //     title: 'TEXT',
-  //     price: ['DECIMAL', 6],
-  //   },
-  // });
-
-  // const People = table({
-  //   name: 'people',
-  //   fields: {
-  //     id: 'INT',
-  //     name: ['VARCHAR', 64],
-  //   },
-  // });
-
   it('update with target', () =>
   {
     const x = update(Task)

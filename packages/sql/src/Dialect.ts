@@ -395,7 +395,7 @@ export class Dialect
   {
     for (const word of words)
     {
-      this.reservedWords[word] = true;
+      this.reservedWords[word.toLowerCase()] = true;
     }
 
     return this;
@@ -611,9 +611,6 @@ export class Dialect
 
     return (value) => quote + value.replace(new RegExp(escape, 'g'), quote) + quote;
   }
-
-
-
 
   public static FormatString: DialectValueFormatter = (value, dialect) => 
   {

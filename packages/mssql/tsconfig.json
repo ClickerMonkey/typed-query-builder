@@ -5,6 +5,7 @@
     "resolveJsonModule": true,
     "declaration": true,
     "declarationMap": true,
+    "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "composite": true,
     "outDir": "dist",

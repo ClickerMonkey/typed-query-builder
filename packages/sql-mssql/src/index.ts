@@ -1,6 +1,6 @@
 
-import { getDataTypeMeta, DataTypeInputs, isNumber, isString, OrderBy, compileFormat, QueryJson, NamedSource, Selects, QueryFirst, QuerySelect, QueryList } from '@typed-query-builder/builder';
-import { Dialect, addExprs, addFeatures, addQuery, ReservedWords, addSources, DialectFeatures, getOrder, getSelects, getNamedSource } from '@typed-query-builder/sql';
+import { getDataTypeMeta, DataTypeInputs, isNumber, isString, OrderBy, compileFormat, QueryJson, NamedSource, Selects, QueryFirst, QuerySelect, QueryList, QueryFirstValue, ExprAggregate, SourceKind } from '@typed-query-builder/builder';
+import { Dialect, addExprs, addFeatures, addQuery, ReservedWords, addSources, DialectFeatures, getOrder, getSelects, getNamedSource, getCriteria } from '@typed-query-builder/sql';
 
 import './types';
 
@@ -133,6 +133,8 @@ DialectMssql.valueFormatterMap.JSON = (v) => JSON.stringify(v);
 
 DialectMssql.setDataTypeFormat('XML', { constant: 'NVARCHAR(MAX)' });
 DialectMssql.valueFormatterMap.XML = Dialect.FormatString;
+
+DialectMssql.setDataTypeFormat('GEOMETRY', { constant: 'GEOMETRY' });
 
 DialectMssql.setDataTypeFormat('POINT', { constant: 'GEOMETRY' });
 DialectMssql.valueFormatterMap.POINT = ({x, y}, d, t) => `geometry::Point(${x}, ${y}, ${getDataTypeMeta(t).srid})`;
@@ -431,5 +433,71 @@ DialectMssql.transformer.setTransformer<QueryJson<any, any>>(
     {
       throw new Error('Converting the request operation to JSON is not supported.');
     }
+  }
+);
+
+DialectMssql.transformer.setTransformer<QueryFirst<any, any, any>>(
+  QueryFirst,
+  (expr, transform, out) => 
+  {
+    const { criteria } = expr;
+
+    const params = getCriteria(criteria, transform, out, true);
+
+    params.paging = () => out.dialect.selectLimitOnly({ limit: 1 });
+
+    if (!params.order)
+    {
+      params.order = () => 'ORDER BY (SELECT NULL)';
+    }
+
+    const saved = out.saveSources();
+
+    const sql = out.dialect.formatOrdered(out.dialect.selectOrder, params);
+
+    out.restoreSources(saved);
+
+    return sql;
+  }
+);
+
+DialectMssql.transformer.setTransformer<QueryFirstValue<any, any, any, any>>(
+  QueryFirstValue,
+  (expr, transform, out) => 
+  {
+    const { criteria, value, defaultValue } = expr;
+
+    const params = getCriteria(criteria, transform, out, false);
+
+    if (!(value instanceof ExprAggregate))
+    {
+      params.paging = () => out.dialect.selectLimitOnly({ limit: 1 });
+
+      if (!params.order)
+      {
+        params.order = () => 'ORDER BY (SELECT NULL)';
+      }
+    }
+
+    const allSources = criteria.sources.filter( s => s.kind !== SourceKind.WITH ).map( s => s.source );
+
+    if (defaultValue)
+    {
+      params.selects = () => out.addSources(allSources, () =>
+        `COALESCE(${transform(value, out)}, ${transform(defaultValue, out)})`
+      );
+    }
+    else
+    {
+      params.selects = () => out.addSources(allSources, () => out.wrap(value));
+    }
+
+    const saved = out.saveSources();
+
+    const sql = out.dialect.formatOrdered(out.dialect.selectOrder, params);
+
+    out.restoreSources(saved);
+
+    return sql;
   }
 );

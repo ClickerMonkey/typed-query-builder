@@ -28,7 +28,7 @@ describe('Aggregate', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT 
-        COUNT(*) AS count
+        COUNT(*) AS "count"
       FROM task
     `);
   });
@@ -92,7 +92,7 @@ describe('Aggregate', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT 
-        string(task.name, ',' ORDER BY task.name) AS ordered_tasks
+        string(task."name", ',' ORDER BY task."name") AS ordered_tasks
       FROM task
     `);
   });

@@ -51,7 +51,7 @@ describe('Insert', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       INSERT INTO task 
-        (id, name, done, doneAt, parentId, assignee) 
+        (id, "name", done, doneAt, parentId, assignee) 
       VALUES
         (DEFAULT, 'Hello World', FALSE, NULL, NULL, 10)
     `);
@@ -72,7 +72,7 @@ describe('Insert', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       INSERT INTO task 
-        (name, assignee) 
+        ("name", assignee) 
       VALUES
         ('Hello World', 10)
     `);
@@ -93,7 +93,7 @@ describe('Insert', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       INSERT INTO task 
-        (id, name, done, doneAt, parentId, assignee) 
+        (id, "name", done, doneAt, parentId, assignee) 
       VALUES
         (DEFAULT, 'Hello World', FALSE, NULL, NULL, 10)
     `);
@@ -116,7 +116,7 @@ describe('Insert', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       INSERT INTO task 
-        (id, name, done, doneAt, parentId, assignee) 
+        (id, "name", done, doneAt, parentId, assignee) 
       VALUES
         (DEFAULT, 'Hello World', FALSE, NULL, NULL, 10)
     `);
@@ -146,7 +146,7 @@ describe('Insert', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       INSERT INTO task 
-        (id, name, done, doneAt, parentId, assignee) 
+        (id, "name", done, doneAt, parentId, assignee) 
       VALUES
         (DEFAULT, 'Hello World 1', FALSE, NULL, NULL, 10),
         (DEFAULT, 'Hello World 2', FALSE, NULL, NULL, 11)
@@ -170,7 +170,7 @@ describe('Insert', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       INSERT INTO task 
-        (id, name, done, doneAt, parentId, assignee) 
+        (id, "name", done, doneAt, parentId, assignee) 
       VALUES
         (DEFAULT, 'Hello World', FALSE, NULL, NULL, 10)
     `);
@@ -200,7 +200,7 @@ describe('Insert', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       INSERT INTO task 
-        (id, name, done, doneAt, parentId, assignee) 
+        (id, "name", done, doneAt, parentId, assignee) 
       VALUES
         (DEFAULT, 'Hello World 1', FALSE, NULL, NULL, 10),
         (DEFAULT, 'Hello World 2', FALSE, NULL, NULL, 11)
@@ -216,7 +216,7 @@ describe('Insert', () =>
 
     expectText({ condenseSpace: true }, x, `
       INSERT INTO task 
-        (id, name, done, doneAt, parentId, assignee) 
+        (id, "name", done, doneAt, parentId, assignee) 
       VALUES
         ($id, $name, $done, $doneAt, $parentId, $assignee)
     `);
@@ -234,10 +234,10 @@ describe('Insert', () =>
 
     expectText({ condenseSpace: true }, x, `
       INSERT INTO task 
-        (id, name, done, doneAt, parentId, assignee) 
+        (id, "name", done, doneAt, parentId, assignee) 
       VALUES
         ($id, $name, $done, $doneAt, $parentId, $assignee)
-      ON CONFLICT DO UPDATE SET name = 'New Name'
+      ON CONFLICT DO UPDATE SET "name" = 'New Name'
     `);
   });
 
@@ -254,10 +254,10 @@ describe('Insert', () =>
 
     expectText({ condenseSpace: true }, x, `
       INSERT INTO task 
-        (id, name, done, doneAt, parentId, assignee) 
+        (id, "name", done, doneAt, parentId, assignee) 
       VALUES
         ($id, $name, $done, $doneAt, $parentId, $assignee)
-      ON CONFLICT DO UPDATE SET name = 'New Name' WHERE done IS FALSE
+      ON CONFLICT DO UPDATE SET "name" = 'New Name' WHERE done IS FALSE
     `);
   });
 
@@ -271,7 +271,7 @@ describe('Insert', () =>
 
     expectText({ condenseSpace: true }, x, `
       INSERT INTO task 
-        (name) 
+        ("name") 
       VALUES
         ('Task 1'),
         ('Task 2'),
