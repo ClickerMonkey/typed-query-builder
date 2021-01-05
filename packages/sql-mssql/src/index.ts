@@ -1,5 +1,5 @@
 
-import { getDataTypeMeta, DataTypeInputs, isNumber, isString, OrderBy, compileFormat, QueryJson, NamedSource, Selects, QueryFirst, QuerySelect, QueryList, QueryFirstValue, ExprAggregate, SourceKind } from '@typed-query-builder/builder';
+import { getDataTypeMeta, DataTypeInputs, isNumber, isString, OrderBy, compileFormat, QueryJson, NamedSource, Selects, QueryFirst, QuerySelect, QueryList, QueryFirstValue, ExprAggregate, SourceKind, SourceRecursive } from '@typed-query-builder/builder';
 import { Dialect, addExprs, addFeatures, addQuery, ReservedWords, addSources, DialectFeatures, getOrder, getSelects, getNamedSource, getCriteria } from '@typed-query-builder/sql';
 
 import './types';
@@ -407,6 +407,15 @@ DialectMssql.featureFormatter[DialectFeatures.DELETE_USING] = (froms: NamedSourc
 
     return s;
   }).join(', ');
+};
+
+const withRecursive = DialectMssql.featureFormatter[DialectFeatures.WITH_RECURSIVE];
+
+DialectMssql.featureFormatter[DialectFeatures.WITH_RECURSIVE] = (value: SourceRecursive<any, any>, transform, out) => 
+{
+  value.all = true;
+
+  return withRecursive(value, transform, out);
 };
 
 DialectMssql.transformer.setTransformer<QueryJson<any, any>>(

@@ -31,6 +31,10 @@ export type SourcesCast<S> =
     : never
 ;
 
+export type SourcesNamedMap<T extends Sources> =  {
+  [K in keyof T]: NamedSource<K, T[K]>
+};
+
 export type SourcesFieldsFactory<S extends Sources> = {
   [P in keyof S]: SourceFieldsFactory<S[P]>
 };

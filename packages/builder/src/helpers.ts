@@ -2,7 +2,7 @@ import {
   QuerySelect, StatementInsert, Name, Selects, SelectsFromTypeAndColumns, Sources, Simplify, SelectsKey, MergeObjects, Tuple, 
   DataTypeInputMap, DataTypeInputMapSelects, NamedSource, SourceTableInput, Source, SourceTable, SourceValues, ExprProvider, 
   StatementUpdate, StatementDelete, SourcesFieldsFactory, SelectsExprs, createExprFactory, JoinedInner, Cast, SelectsFromKeys,
-  SelectsKeys, WithBuilder
+  SelectsKeys, WithBuilder, WithProvider
 } from './internal';
 
 
@@ -140,8 +140,8 @@ export function withs<
   WN extends Name, 
   WS extends Selects
 >(
-  sourceProvider: ExprProvider<{}, [], never, NamedSource<WN, WS>>, 
-  recursive?: ExprProvider<Simplify<Record<WN, WS>>, [], never, Source<WS>>, 
+  sourceProvider: WithProvider<{}, NamedSource<WN, WS>>, 
+  recursive?: WithProvider<Simplify<Record<WN, WS>>, Source<WS>>, 
   all?: boolean
 ): WithBuilder<Simplify<Record<WN, WS>>>
 {

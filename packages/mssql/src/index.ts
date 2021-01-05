@@ -10,9 +10,9 @@ export interface RequestProvider
   request(): Request;
 }
 
-export interface MssqlOptions
+export interface MssqlOptions<P>
 {
-  params?: any;
+  params?: P;
   throwError?: boolean;
   constantsAsParams?: boolean;
   raw?: boolean;
@@ -20,11 +20,11 @@ export interface MssqlOptions
   affectedCount?: boolean;
 }
 
-export function exec(requestProvider: RequestProvider, options: MssqlOptions & { affectedCount: true }): (expr: Expr<any>) => Promise<number>
-export function exec(requestProvider: RequestProvider, options?: MssqlOptions): <R>(expr: Expr<R>) => Promise<ExprValueObjects<R>>
-export function exec<R>(requestProvider: RequestProvider, options?: MssqlOptions): (expr: Expr<R>) => Promise<ExprValueObjects<R>>
+export function exec<P = any>(requestProvider: RequestProvider, options: MssqlOptions<P> & { affectedCount: true }): (expr: Expr<any>) => Promise<number>
+export function exec<P = any>(requestProvider: RequestProvider, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => Promise<ExprValueObjects<R>>
+export function exec<P = any>(requestProvider: RequestProvider, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => Promise<ExprValueObjects<R>>
 {
-  return async (e) =>
+  return async <R>(e: Expr<R>) =>
   {
     const request = requestProvider.request();
     const outputFactory = DialectMssql.output(options);
@@ -45,19 +45,22 @@ export function exec<R>(requestProvider: RequestProvider, options?: MssqlOptions
   };
 }
 
-export interface PreparedQuery<R>
+export interface PreparedQuery<R, P = any>
 {
-  exec(params: any): Promise<ExprValueObjects<R>>;
+  exec(params: P): Promise<ExprValueObjects<R>>;
   release(): Promise<void>;
 }
 
-export function prepare<R>(conn: ConnectionPool, options?: MssqlOptions): (expr: Expr<R>) => PreparedQuery<R>
+export function prepare<P = any>(conn: ConnectionPool, options: MssqlOptions<P> & { affectedCount: true }): (expr: Expr<any>) => Promise<PreparedQuery<number, P>>
+export function prepare<P = any>(conn: ConnectionPool, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => Promise<PreparedQuery<R, P>>
+export function prepare<P = any>(conn: ConnectionPool, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => Promise<PreparedQuery<R, P>>
 {
-  return (e) =>
+  return async <R>(e: Expr<R>) =>
   {
     const prepared = new PreparedStatement(conn);
     const outputFactory = DialectMssql.output(options);
     const output = outputFactory(e);
+    const defaults: Partial<P> = {};
 
     for (const paramName in output.paramIndices) 
     {
@@ -65,15 +68,23 @@ export function prepare<R>(conn: ConnectionPool, options?: MssqlOptions): (expr:
       const paramTypeGiven = output.paramTypes[paramIndex];
       const paramValue = output.params[paramIndex];
       const paramType = getDataType(paramValue, paramTypeGiven);
+
+      defaults[paramName] = paramValue;
     
       prepared.input(paramName, paramType);
     }
 
-    const preparedQuery: PreparedQuery<R> = 
+    await prepared.prepare(output.query);
+
+    const preparedQuery: PreparedQuery<R, P> = 
     {
       async exec(params): Promise<ExprValueObjects<R>> 
       { 
-        const result = await prepared.execute(params);
+        const result = await prepared.execute({
+          ...defaults,
+          ...(options?.params || {}),
+          ...params
+        });
 
         return handleResult(e, result, options) as any;
       },
@@ -87,7 +98,7 @@ export function prepare<R>(conn: ConnectionPool, options?: MssqlOptions): (expr:
   };
 }
 
-export function handleResult<R>(expr: Expr<R>, result: IResult<ExprValueObjects<R>>, options?: MssqlOptions)
+export function handleResult<R, P>(expr: Expr<R>, result: IResult<ExprValueObjects<R>>, options?: MssqlOptions<P>)
 {
   if (options && options.affectedCount)
   {

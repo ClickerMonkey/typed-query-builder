@@ -2,7 +2,7 @@ import {
   Expr, SourceKind, isArray, isString, Name, Selects, Sources, SelectsKey, SelectsValuesExprs, StatementSet, SelectsFromKeys,
   ObjectExprFromSelects, Tuple, JoinedInner, SelectValueWithKey, ExprInput, ExprProvider, ExprScalar, NamedSource, 
   Source, SourceTable, ExprKind, Select, Statement, StatementReturningColumns, StatementReturningExpressions, toExpr,
-  SelectsNameless,
+  SelectsNameless, WithProvider
 } from '../internal';
 
 
@@ -39,7 +39,7 @@ export class StatementUpdate<
     return this._target;
   }
 
-  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, never, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, never, Source<WS>>, all?: boolean): StatementUpdate<JoinedInner<T, WN, WS>, N, S, R> 
+  public with<WN extends Name, WS extends Selects>(sourceProvider: WithProvider<T, NamedSource<WN, WS>>, recursive?: WithProvider<JoinedInner<T, WN, WS>, Source<WS>>, all?: boolean): StatementUpdate<JoinedInner<T, WN, WS>, N, S, R>
   {
     return super.with(sourceProvider, recursive, all) as any;
   }

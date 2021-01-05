@@ -68,7 +68,6 @@ export async function generate(conn: ConnectionPool, options: Partial<GeneratorO
     ...options,
   };
 
-
   const outTables: GeneratorTable[] = [];
 
   for (const inTable of inTables.recordset)
@@ -163,7 +162,7 @@ export async function generate(conn: ConnectionPool, options: Partial<GeneratorO
   return outTables;
 }
 
-function getColumnType(col: SysColumn): DataTypeInputs
+export function getColumnType(col: SysColumn): DataTypeInputs
 {
   const plain = getColumnTypePlain(col);
 
@@ -172,7 +171,7 @@ function getColumnType(col: SysColumn): DataTypeInputs
     : plain;
 }
 
-function getColumnTypePlain(col: SysColumn): DataTypeInputs
+export function getColumnTypePlain(col: SysColumn): DataTypeInputs
 {
   switch (col.type) {
     case 'bigint': return 'BIGINT';

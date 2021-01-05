@@ -26,5 +26,5 @@ module.exports = {
   testMatch: null,
   setupFilesAfterEnv: [
     '<rootDir>/test/setup.ts'
-  ]
+  ],
 };

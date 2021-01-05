@@ -266,6 +266,14 @@ describe('Select', () => {
     expectExprType<string | undefined>(q.value('parentName'));
   });
 
+  it('value', () => {
+    const names = from(Task)
+      .value(({ task }) => task.name)
+    ;
+
+    expectExprType<string>(names);
+  });
+
   it('constant select', () => {
     const q = from(Task)
       .select((sources, { count }) => [
@@ -303,8 +311,8 @@ describe('Select', () => {
         values([{ id: 43 }], ['id']).as('tasks'),
         ({ tasks }) =>
           from(Task)
+          .joinInner(tasks, ({ tasks, task }) => tasks.id.eq(task.parentId))
           .select([Task.fields.id])
-          .where([tasks.id.eq(Task.fields.parentId)])
       )
       .from('tasks')
       .select('*')

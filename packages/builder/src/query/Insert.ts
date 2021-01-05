@@ -3,7 +3,7 @@ import {
   SelectsRecordExprs, JoinedInner, Tuple, Expr, ExprInput, ExprProvider, NamedSource, Source, SourceTable, SelectValueWithKey,
   ExprKind, Statement, StatementReturningColumns, StatementReturningExpressions, Select, toExpr, StatementSet, SelectsNameless,
   ObjectExprFromSelects, isString, isArray, SelectsValuesExprs, SelectsFromKeys, InsertPriority, ExprScalar, 
-  QuerySelectScalarInput, SourceCompatible
+  QuerySelectScalarInput, SourceCompatible, WithProvider
 } from '../internal';
 
 
@@ -94,7 +94,7 @@ export class StatementInsert<
     return this;
   }
 
-  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, never, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, never, Source<WS>>, all?: boolean): StatementInsert<JoinedInner<T, WN, WS>, N, S, C, R> 
+  public with<WN extends Name, WS extends Selects>(sourceProvider: WithProvider<T, NamedSource<WN, WS>>, recursive?: WithProvider<JoinedInner<T, WN, WS>, Source<WS>>, all?: boolean): StatementInsert<JoinedInner<T, WN, WS>, N, S, C, R>
   {
     return super.with(sourceProvider, recursive, all) as any;
   }

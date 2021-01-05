@@ -1,9 +1,12 @@
 import {
   Sources, ExprProvider, Selects, NamedSource, Name, ExprFactory, SourceKindPair, SourcesFieldsFactory, SourceKind,
   SourceRecursive, createExprFactory, JoinedInner, Source, QuerySelect, Simplify, StatementInsert, Cast, SourceTable, SelectsKeys,
-  SelectsKey, Tuple, SelectsFromKeys, StatementDelete, StatementUpdate, SourceVirtual
+  SelectsKey, Tuple, SelectsFromKeys, StatementDelete, StatementUpdate, SourceVirtual, MergeObjects, SourcesNamedMap, isFunction
 } from '../internal';
-import { MergeObjects } from '../types/Core';
+
+
+export type WithProvider<T extends Sources, R> = R | ((map: SourcesNamedMap<T>) => R);
+
 
 
 export class WithBuilder<T extends Sources = {}>
@@ -11,24 +14,30 @@ export class WithBuilder<T extends Sources = {}>
 
   public _exprs: ExprFactory<T, [], never>;
   public _sources: SourceKindPair<keyof T, any>[];
+  public _sourceMap: SourcesNamedMap<T>;
   public _sourceFields: SourcesFieldsFactory<T>;
 
   public constructor() 
   {
     this._sources = [];
     this._sourceFields = Object.create(null);
+    this._sourceMap = Object.create(null);
     this._exprs = createExprFactory(this._sourceFields as any, [] as any);
   }
   
-  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, [], never, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, [], never, Source<WS>>, all?: boolean): WithBuilder<JoinedInner<T, WN, WS>>
+  public with<WN extends Name, WS extends Selects>(sourceProvider: WithProvider<T, NamedSource<WN, WS>>, recursive?: WithProvider<JoinedInner<T, WN, WS>, Source<WS>>, all?: boolean): WithBuilder<JoinedInner<T, WN, WS>>
   {
-    const source = this._exprs.provide(sourceProvider as any);
-
-    this.addSource(new SourceVirtual(source), SourceKind.WITH);
+    const source = isFunction(sourceProvider)
+      ? sourceProvider(this._sourceMap)
+      : sourceProvider;
+    
+    this.addSource(new SourceVirtual(source) as any, SourceKind.WITH);
 
     if (recursive)
     {
-      const recursiveSource = this._exprs.provide(recursive as any);
+      const recursiveSource = isFunction(recursive)
+        ? recursive(this._sourceMap as any)
+        : recursive;
 
       this.replaceSource(new SourceRecursive(source.getName(), source.getSource(), recursiveSource, all) as any, SourceKind.WITH);
     }
@@ -39,6 +48,7 @@ export class WithBuilder<T extends Sources = {}>
   protected addSource(source: NamedSource<any, any>, kind: SourceKind): void 
   {
     this._sources.push(new SourceKindPair(kind, source));
+    (this._sourceMap as any)[source.getName()] = source;
     (this._sourceFields as any)[source.getName()] = source.getFieldsFactory();
   }
 

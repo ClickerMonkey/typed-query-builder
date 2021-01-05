@@ -1,7 +1,8 @@
 import { 
-  createExprFactory, SourceKindPair, SourceKind, isArray, isString, Cast, Name, Selects, Sources, ArrayToTuple, 
+  createExprFactory, SourceKindPair, SourceKind, isArray, isString, Cast, Name, Selects, Sources, ArrayToTuple, isFunction,
   SourcesFieldsFactory, SelectsKey, SelectsWithKey, SelectsNormalize, TupleAppend, JoinedInner, Tuple, ExprFactory, 
-  ExprProvider, NamedSource, Source, SourceRecursive, SourceTable, Select, Traverser, Expr, SourceVirtual
+  ExprProvider, NamedSource, Source, SourceRecursive, SourceTable, Select, Traverser, Expr, SourceVirtual, WithProvider,
+  SourcesNamedMap
 } from '../internal';
 
 
@@ -31,6 +32,7 @@ export abstract class Statement<
 
   public _exprs: ExprFactory<T, R, never>;
   public _sources: SourceKindPair<keyof T, any>[];
+  public _sourceMap: SourcesNamedMap<T>;
   public _sourceFields: SourcesFieldsFactory<T>;
   public _returning: R;
   public _clauses: Record<string, string>;
@@ -40,6 +42,7 @@ export abstract class Statement<
     super();
 
     this._sources = [];
+    this._sourceMap = Object.create(null);
     this._sourceFields = Object.create(null);
     this._returning = [] as any;
     this._exprs = createExprFactory(this._sourceFields as any, [] as any);
@@ -58,15 +61,19 @@ export abstract class Statement<
 
   protected abstract getMainSource(): SourceTable<N, S, any>;
 
-  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, never, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, never, Source<WS>>, all?: boolean): Statement<JoinedInner<T, WN, WS>, N, S, R> 
+  public with<WN extends Name, WS extends Selects>(sourceProvider: WithProvider<T, NamedSource<WN, WS>>, recursive?: WithProvider<JoinedInner<T, WN, WS>, Source<WS>>, all?: boolean): Statement<JoinedInner<T, WN, WS>, N, S, R>
   {
-    const source = this._exprs.provide(sourceProvider as any);
-
-    this.addSource(new SourceVirtual(source), SourceKind.WITH);
+    const source = isFunction(sourceProvider)
+      ? sourceProvider(this._sourceMap)
+      : sourceProvider;
+    
+    this.addSource(new SourceVirtual(source) as any, SourceKind.WITH);
 
     if (recursive)
     {
-      const recursiveSource = this._exprs.provide(recursive as any);
+      const recursiveSource = isFunction(recursive)
+        ? recursive(this._sourceMap as any)
+        : recursive;
 
       this.replaceSource(new SourceRecursive(source.getName(), source.getSource(), recursiveSource, all) as any, SourceKind.WITH);
     }
@@ -77,6 +84,7 @@ export abstract class Statement<
   public addSource(source: NamedSource<any, any>, kind: SourceKind): void 
   {
     this._sources.push(new SourceKindPair(kind, source));
+    (this._sourceMap as any)[source.getName()] = source;
     (this._sourceFields as any)[source.getName()] = source.getFieldsFactory();
   }
 

@@ -8,6 +8,8 @@ export const pool = new sql.ConnectionPool({
   password: 'password#1',
   options: {
     enableArithAbort: true,
+    packetSize: 65536,
+    encrypt: true,
   },
 });
 

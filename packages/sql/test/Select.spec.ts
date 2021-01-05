@@ -407,7 +407,7 @@ describe('Select', () =>
           .select(({ task }) => [
             task.name,
           ])
-          .where(({ task }) => task.id.in(tasksDone.id.list()))
+          .where(({ task }) => task.id.in(from(tasksDone).list(({ tasksDone }) => tasksDone.id)))
           .as('tasksDoneNames')
       )
       .from(Task)
@@ -457,13 +457,11 @@ describe('Select', () =>
           .as('tasksTree')
         , ({ tasksTree }) =>
           from(Task)
-          .select(({ task }) => [
+          .joinInner(tasksTree, ({ tasksTree, task }) => task.parentId.eq(tasksTree.id))
+          .select(({ task, tasksTree }) => [
             tasksTree.depth.add(1).as('depth'),
             task.id,
             task.name
-          ])
-          .where(({ task }) => [
-            task.parentId.eq(tasksTree.id)
           ])
       )
       .with(
@@ -490,7 +488,7 @@ describe('Select', () =>
         UNION
         SELECT (tasksTree."depth" + 1), task.id, task."name"
         FROM task
-        WHERE parentId = tasksTree.id
+        INNER JOIN tasksTree ON parentId = tasksTree.id
       ), tasksDone AS (
         SELECT id
         FROM task

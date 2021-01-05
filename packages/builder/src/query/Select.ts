@@ -5,7 +5,8 @@ import {
   SelectGivenSelects, MaybeSources, MaybeSelects, AggregateFunctions, Tuple, SourceCompatible, ExprAggregate, ExprProvider, 
   ExprFactory, Expr, ExprType, QueryExistential, QueryFirst, QueryFirstValue, QueryList, Source, SourceTable, SourceVirtual,
   SourceJoin, OrderBy, Select, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions, QueryCriteria, ExprKind, 
-  NamedSource, SourceRecursive, ExprInput, ExprScalar, fns, QueryGroup, toExpr, GroupingSetType, LockRowLock, LockStrength
+  NamedSource, SourceRecursive, ExprInput, ExprScalar, fns, QueryGroup, toExpr, GroupingSetType, LockRowLock, LockStrength,
+  WithProvider
 } from '../internal';
 
 
@@ -50,15 +51,19 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     return new QuerySelect( this );
   }
 
-  public with<WN extends Name, WS extends Selects>(sourceProvider: ExprProvider<T, S, W, NamedSource<WN, WS>>, recursive?: ExprProvider<JoinedInner<T, WN, WS>, S, W, Source<WS>>, all?: boolean): QuerySelect<JoinedInner<T, WN, WS>, S, W> 
+  public with<WN extends Name, WS extends Selects>(sourceProvider: WithProvider<T, NamedSource<WN, WS>>, recursive?: WithProvider<JoinedInner<T, WN, WS>, Source<WS>>, all?: boolean): QuerySelect<JoinedInner<T, WN, WS>, S, W>
   {
-    const source = this._criteria.exprs.provide(sourceProvider);
-
+    const source = isFunction(sourceProvider)
+      ? sourceProvider(this._criteria.sourceMap)
+      : sourceProvider;
+    
     this._criteria.addSource(new SourceVirtual(source) as any, SourceKind.WITH);
 
-    if (recursive) 
+    if (recursive)
     {
-      const recursiveSource = this._criteria.exprs.provide(recursive as any);
+      const recursiveSource = isFunction(recursive)
+        ? recursive(this._criteria.sourceMap as any)
+        : recursive;
 
       this._criteria.replaceSource(new SourceRecursive(source.getName(), source.getSource(), recursiveSource, all) as any, SourceKind.WITH);
     }
@@ -405,7 +410,7 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
   }
 
   public value<V extends SelectsKey<S>, E = never>(select: V, defaultValue?: ExprProvider<T, S, W, ExprInput<E>>): ExprScalar<SelectValueWithKey<S, V> | E>
-  public value<E>(value: ExprProvider<T, S, W, ExprScalar<E>>, defaultValue?: ExprProvider<T, S, W, ExprInput<E>>): ExprScalar<E>
+  public value<E = never>(value: ExprProvider<T, S, W, Expr<E>>, defaultValue?: ExprProvider<T, S, W, ExprInput<E>>): ExprScalar<ExprType<E>>
   public value<V extends SelectsKey<S>, E>(value: V | ExprProvider<T, S, W, ExprScalar<E>>, defaultValue?: ExprProvider<T, S, W, ExprInput<E>>): ExprScalar<any> 
   {
     return new QueryFirstValue<T, S, W, E>(

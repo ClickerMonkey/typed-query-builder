@@ -1,10 +1,12 @@
-import { table, insert, update, from } from '@typed-query-builder/builder';
-import { exec } from '../src';
+import { table, insert, update, from, withs, deletes } from '@typed-query-builder/builder';
+import { exec, prepare } from '../src';
 import { getConnection } from './helper';
 
 
 describe('index', () =>
 {
+
+  jest.setTimeout(10 * 1000);
 
   const GroupTable = table({
     name: 'Group',
@@ -137,6 +139,195 @@ describe('index', () =>
     expect(reloaded.Done).toBe(true);
   });
 
+  it('select list', async () =>
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn);
+
+    const names = await from(TaskTable)
+      .list(({ Task }) => Task.Name)
+      .run( getResult )
+    ;
+
+    expect(names).toBeDefined();
+    expect(names.length).toBe(1);
+    expect(names).toStrictEqual(['Task 1']);
+  });
+
+  it('select value', async () =>
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn);
+
+    const name = await from(TaskTable)
+      .value(({ Task }) => Task.Name)
+      .run( getResult )
+    ;
+
+    expect(name).toBeDefined();
+    expect(name).toBe('Task 1');
+  });
+
+  it('select with param', async () =>
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn);
+
+    const first = await from(TaskTable)
+      .select('*')
+      .first()
+      .run( getResult )
+    ;
+
+    expect(first).toBeDefined();
+
+    const paramed = await from(TaskTable)
+      .select('*')
+      .where(({ Task }, { param }) => Task.ID.eq(param('id')))
+      .first()
+      .run( exec(conn, { params: { id: first.ID } }))
+    ;
+
+    expect(paramed).toBeDefined();
+    expect(paramed.ID).toBe(first.ID);
+  });
+
+  it('prepared select', async () =>
+  {
+    const conn = await getConnection();
+    const getPrepared = prepare(conn);
+
+    const findById = await from(TaskTable)
+      .select('*')
+      .where(({ Task }, { param }) => Task.Name.eq(param('name')))
+      .first()
+      .run( getPrepared )
+    ;
+    
+    try
+    {
+      const first = await findById.exec({ name: 'Task 1' });
+    
+      expect(first).toBeDefined();
+      expect(first.Name).toBe('Task 1');
+    }
+    finally
+    {
+      await findById.release();
+    }
+  });
+
+  it('prepared update', async () =>
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn);
+    const getPrepared = prepare(conn, { affectedCount: true });
+
+    const first = await from(TaskTable)
+      .select('*')
+      .first()
+      .run( getResult )
+    ;
+
+    expect(first).toBeDefined();
+    expect(first.Name).toBe('Task 1');
+    expect(first.DoneAt).toBeNull();
+
+    const findById = await update(TaskTable)
+      .set(({}, {}, { currentDate }) => ({ DoneAt: currentDate() }))
+      .where(({ Task }, { param }) => Task.Name.eq(param('name')))
+      .run( getPrepared )
+    ;
+    
+    try
+    {
+      const affected = await findById.exec({ name: 'Task 1' });
+    
+      expect(affected).toBe(1);
+    }
+    finally
+    {
+      await findById.release();
+    }
+
+    const reloaded = await from(TaskTable)
+      .select('*')
+      .first()
+      .run( getResult )
+    ;
+
+    expect(reloaded).toBeDefined();
+    expect(reloaded.Name).toBe('Task 1');
+    expect(reloaded.DoneAt).toBeTruthy();
+  });
+
+  it('prepared insert', async () =>
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn);
+    const getPrepared = prepare<{ GroupID: number, Name: string, Details: string }>(conn);
+
+    const group = await from(GroupTable)
+      .value(({ Group }) => Group.ID)
+      .run( getResult )
+    ;
+
+    const insertPrepared = await insert(TaskTable, ['GroupID', 'Name', 'Details'])
+      .returning(({ Task }) => [Task.ID, Task.CreatedAt])
+      .valuesFromParams()
+      .run( getPrepared )
+    ;
+    
+    try
+    {
+      const inserted = await insertPrepared.exec({
+        GroupID: group,
+        Name: 'Task 1b',
+        Details: 'Task 1b Details',
+      });
+    
+      expect(inserted).toBeDefined();
+      expect(inserted.length).toBe(1);
+      expect(inserted[0].ID).toBeDefined();
+      expect(inserted[0].CreatedAt).toBeDefined();
+    }
+    finally
+    {
+      await insertPrepared.release();
+    }
+  });
+
+  it('delete', async () =>
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn);
+    const getCount = exec(conn, { affectedCount: true });
+
+    const first = await from(TaskTable)
+      .select('*')
+      .first()
+      .run( getResult )
+    ;
+
+    expect(first).toBeDefined();
+
+    const deleted = await deletes(TaskTable)
+      .where(({ Task }) => Task.ID.eq(first.ID))
+      .run( getCount )
+    ;
+
+    expect(deleted).toBe(1);
+
+    const reloaded = await from(TaskTable)
+      .select('*')
+      .where(({ Task }) => Task.ID.eq(first.ID))
+      .first()
+      .run( getResult )
+    ;
+    
+    expect(reloaded).toBeNull();
+  });
+
   it('with recursive', async () =>
   {
     const conn = await getConnection();
@@ -209,7 +400,6 @@ describe('index', () =>
 
     expect(grandchildTasks).toBe(3);
     
-    /*
     const tasksTree = 
       await withs(
         from(TaskTable)
@@ -222,7 +412,7 @@ describe('index', () =>
           .as('TasksTree'),
         ({ TasksTree }) =>
           from(TaskTable)
-            .joinInner('TasksTree', ({ Task, TasksTree }) => Task.ParentID.eq(TasksTree.ID))
+            .joinInner(TasksTree, ({ Task, TasksTree }) => Task.ParentID.eq(TasksTree.ID))
             .select(({ Task, TasksTree }) => [
               Task.ID,
               Task.Name,
@@ -230,19 +420,21 @@ describe('index', () =>
             ])
       )
       .from('TasksTree')
-      .select('*')
+      .select(({ TasksTree }) => [
+        TasksTree.Name,
+        TasksTree.Depth
+      ])
       .run( getResult )
     ;
 
-    expect(tasksTree).toBe([
-      { ID: 2, Name: 'Task 2', Depth: 0 },
-      { ID: 3, Name: 'Task 3', Depth: 1 },
-      { ID: 5, Name: 'Task 5', Depth: 2 },
-      { ID: 6, Name: 'Task 6', Depth: 2 },
-      { ID: 4, Name: 'Task 4', Depth: 1 },
-      { ID: 7, Name: 'Task 7', Depth: 2 },
+    expect(tasksTree).toStrictEqual([
+      { Name: 'Task 2', Depth: 0 },
+      { Name: 'Task 3', Depth: 1 },
+      { Name: 'Task 4', Depth: 1 },
+      { Name: 'Task 7', Depth: 2 },
+      { Name: 'Task 5', Depth: 2 },
+      { Name: 'Task 6', Depth: 2 },
     ]);
-    */
   });
 
 });

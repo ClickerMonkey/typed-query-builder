@@ -3,6 +3,7 @@ import {
   OrderBy, Select, NamedSource, ExprScalar, QueryWindow, fns, FunctionProxy, Functions, QueryGroup, Expr, Traversable,
   Traverser, SelectsKey
 } from '../internal';
+import { SourcesNamedMap } from '../types/Source';
 
 
 
@@ -11,6 +12,7 @@ export class QueryCriteria<T extends Sources, S extends Selects, W extends Name>
 
   public exprs: ExprFactory<T, S, W>;
   public sources: SourceKindPair<keyof T, any>[];
+  public sourceMap: SourcesNamedMap<T>;
   public sourcesFields: SourcesFieldsFactory<T>;
   public selects: S;
   public selectsExpr: SelectsExprs<S>;
@@ -25,6 +27,7 @@ export class QueryCriteria<T extends Sources, S extends Selects, W extends Name>
   public constructor(base?: QueryCriteria<T, S, W>) 
   { 
     this.sources = base ? base.sources.slice() : [] as any;
+    this.sourceMap = base ? { ...base.sourceMap } : {} as any;
     this.sourcesFields = base ? { ...base.sourcesFields } : {} as any;
     this.windows = base ? { ...base.windows } : {} as any;
     this.selects = base ? base.selects.slice() : [] as any;
@@ -41,6 +44,7 @@ export class QueryCriteria<T extends Sources, S extends Selects, W extends Name>
   public addSource(source: NamedSource<any, any>, kind: SourceKind): void 
   {
     this.sources.push(new SourceKindPair(kind, source));
+    (this.sourceMap as any)[source.getName()] =  source;
     (this.sourcesFields as any)[source.getName()] = source.getFieldsFactory();
   }
 
