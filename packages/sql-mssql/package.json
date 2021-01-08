@@ -9,7 +9,8 @@
     "access": "public"
   },
   "files": [
-    "dist"
+    "dist",
+    "typings"
   ],
   "sideEffects": false,
   "repository": {
