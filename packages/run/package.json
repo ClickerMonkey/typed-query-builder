@@ -6,9 +6,6 @@
   "main": "dist/index.js",
   "typings": "typings/index.d.ts",
   "private": true,
-  "publishConfig": {
-    "access": "public"
-  },
   "files": [
     "dist"
   ],
