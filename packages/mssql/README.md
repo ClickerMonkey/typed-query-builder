@@ -21,7 +21,7 @@ const genFile =  gen.map(t => t.tableDefinition).join('\n\n');
 ```ts
 import mssql from 'mssql';
 import { from, update, insert, table } from '@typed-query-builder/builder';
-import { exec, prepare } from '@typed-query-builder/mssql';
+import { exec, prepare, stream } from '@typed-query-builder/mssql';
 import { generate } from '@typed-query-builder/mssql/generator';
 
 // Define tables
@@ -54,10 +54,12 @@ const TaskTable = table({
   },
 });
 
-// Reusable functions to process builders. Can pass transaction or connection.
+// Reusable functions to process builders. Can pass transaction or connection or nothing to use global connection.
 const getResult = exec(conn);
 const getCount = exec(conn, { affectedCount: true });
 const getPrepared = prepare(conn);
+const getStream = stream(conn);
+
 
 // Select first record in a table
 const first = await from(TaskTable)
@@ -67,7 +69,7 @@ const first = await from(TaskTable)
 ;
 
 // Update Done to true
-const updateCount = await update(TaskTable)
+const { affected } = await update(TaskTable)
   .set('Done', true)
   .where(({ Task }) => Task.ID.eq(first.ID))
   .run( getCount )
@@ -126,4 +128,14 @@ finally
 {
   await insertPrepared.release();
 }
+
+// Stream large dataset
+const streamer = from(TaskTable)
+  .select('*')
+  .run( getStream )
+;
+
+await streamer((task) => {
+  // do something with task, potentially async
+});
 ```

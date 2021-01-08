@@ -1,5 +1,5 @@
 import { table, insert, update, from, withs, deletes } from '@typed-query-builder/builder';
-import { exec, prepare } from '../src';
+import { exec, prepare, stream } from '../src';
 import { getConnection } from './helper';
 
 
@@ -88,7 +88,7 @@ describe('index', () =>
       .run( getCount )
     ;
 
-    expect(personGroupInserts).toEqual(2);
+    expect(personGroupInserts.affected).toEqual(2);
 
     const taskInserts = await insert(TaskTable, ['GroupID', 'Name', 'Details', 'CreatedBy', 'Done'])
       .values([{
@@ -101,7 +101,7 @@ describe('index', () =>
       .run( getCount )
     ;
 
-    expect(taskInserts).toBe(1);
+    expect(taskInserts.affected).toBe(1);
   });
 
   it('select first, update set column', async () =>
@@ -125,7 +125,7 @@ describe('index', () =>
       .run( getCount )
     ;
 
-    expect(updateCount).toBe(1);
+    expect(updateCount.affected).toBe(1);
 
     const reloaded = await from(TaskTable)
       .select('*')
@@ -243,7 +243,7 @@ describe('index', () =>
     {
       const affected = await findById.exec({ name: 'Task 1' });
     
-      expect(affected).toBe(1);
+      expect(affected.affected).toBe(1);
     }
     finally
     {
@@ -316,7 +316,7 @@ describe('index', () =>
       .run( getCount )
     ;
 
-    expect(deleted).toBe(1);
+    expect(deleted.affected).toBe(1);
 
     const reloaded = await from(TaskTable)
       .select('*')
@@ -398,7 +398,7 @@ describe('index', () =>
       .run( getCount )
     ;
 
-    expect(grandchildTasks).toBe(3);
+    expect(grandchildTasks.affected).toBe(3);
     
     const tasksTree = 
       await withs(
@@ -497,6 +497,79 @@ describe('index', () =>
         Name: 'Task 2', Done: false
       },
     });
+  });
+
+  it('update affected & result', async () =>
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn, { affectedCount: true });
+
+    const { affected, result } = await update(TaskTable)
+      .returning(({ Task }) => [
+        Task.Name
+      ])
+      .set({
+        Done: true,
+      })
+      .run( getResult )
+    ;
+
+    expect(affected).toBe(7);
+    expect(result).toStrictEqual([
+      { Name: 'Task 1b' },
+      { Name: 'Task 2' },
+      { Name: 'Task 3' },
+      { Name: 'Task 4' },
+      { Name: 'Task 5' },
+      { Name: 'Task 6' },
+      { Name: 'Task 7' },
+    ]);
+  });
+
+  it('select arrayMode', async () =>
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn, { arrayMode: true });
+
+    const result = await from(TaskTable)
+      .select(({ Task }) => [
+        Task.Name,
+        Task.Done
+      ])
+      .where(({ Task }) => [
+        Task.Name.gt('Task 4'),
+      ])
+      .run( getResult )
+    ;
+
+    expect(result).toStrictEqual([
+      ['Task 5', true],
+      ['Task 6', true],
+      ['Task 7', true],
+    ]);
+  });
+
+  it('stream', async () =>
+  {
+    const conn = await getConnection();
+    const getStream = stream(conn);
+
+    const streamer = from(TaskTable)
+      .select(({ Task }) => [
+        Task.Name,
+        Task.Done
+      ])
+      .orderBy('Name')
+      .run( getStream )
+    ;
+
+    const accum = await streamer((task) => {
+      return task.Name.substring(5);
+    });
+
+    expect(accum).toStrictEqual([
+      '1b', '2', '3', '4', '5', '6', '7'
+    ]);
   });
 
 });

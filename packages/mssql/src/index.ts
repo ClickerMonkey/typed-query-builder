@@ -1,4 +1,4 @@
-import { DataTypeInputs, Expr, ExprValueObjects, getDataTypeFromInput, getDataTypeFromValue, getDataTypeMeta, QueryFirst, QueryFirstValue, QueryList } from '@typed-query-builder/builder';
+import { ExprValueTuples, DataTypeInputs, Expr, ExprValueObjects, getDataTypeFromInput, getDataTypeFromValue, getDataTypeMeta, QueryFirst, QueryFirstValue, QueryList } from '@typed-query-builder/builder';
 import { DialectOutput } from '@typed-query-builder/sql';
 import { DialectMssql } from '@typed-query-builder/sql-mssql';
 import { ConnectionPool, IResult, ISqlType, MAX, PreparedStatement, Request, Transaction, TYPES } from 'mssql';
@@ -6,29 +6,81 @@ import { ConnectionPool, IResult, ISqlType, MAX, PreparedStatement, Request, Tra
 
 import './parsers';
 
-
-export interface RequestProvider
-{
-  request(): Request;
-}
-
+/**
+ * Options 
+ */
 export interface MssqlOptions<P>
 {
+  /**
+   * Named parameters to pass to the query.
+   */
   params?: P;
+
+  /**
+   * If errors should be thrown when building the SQL when an unsupported feature is being used.
+   */
   throwError?: boolean;
+
+  /**
+   * If constants should avoided being passed in SQL string and passed as parameters instead.
+   */
   constantsAsParams?: boolean;
+
+  /**
+   * If the raw expression should be executed, otherwise if it's not a SELECT, INSERT, DELETE, or UPDATE it will be wrapped as a SELECT.
+   */
   raw?: boolean;
+
+  /**
+   * If the SQL string generated should remove redudant table/source references to columns that are unique in their context.
+   */
   simplifyReferences?: boolean;
+
+  /**
+   * If the affected count should be returned, transforming the result into { affected: number, result: any }.
+   */
   affectedCount?: boolean;
+  
+  /**
+   * If any records to be returned should be arrays instead of objects.
+   */
+  arrayMode?: boolean;
+
+  /**
+   * When calling stream, if the stream should take pauses between batch sizes to process a batch at once.
+   */
+  streamBatchSize?: number;
 }
 
-export function exec<P = any>(requestProvider: RequestProvider, options: MssqlOptions<P> & { affectedCount: true }): (expr: Expr<any>) => Promise<number>
-export function exec<P = any>(requestProvider: RequestProvider, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => Promise<ExprValueObjects<R>>
-export function exec<P = any>(requestProvider: RequestProvider, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => Promise<ExprValueObjects<R>>
+
+export type AffectedResult<R> = { affected: number, result: R };
+
+/**
+ * Executes an expression and returns the result.
+ * 
+ * **Example:**
+ * ```ts
+ * const result = await expr.run( exec(conn) );
+ * ```
+ * 
+ * @param access The connection, transaction, or prepared statement to stream the expression results from.
+ * @param options Options that control how the query is built or the results returned.
+ */
+export function exec<P = any>(access: ConnectionPool | Transaction | PreparedStatement | undefined, options: MssqlOptions<P> & { affectedCount: true }): <R>(expr: Expr<R>) => Promise<AffectedResult<ExprValueObjects<R>>>
+export function exec<P = any>(access: ConnectionPool | Transaction | PreparedStatement | undefined, options: MssqlOptions<P> & { affectedCount: true, arrayMode: true }): <R>(expr: Expr<R>) => Promise<AffectedResult<ExprValueTuples<R>>>
+export function exec<P = any>(access: ConnectionPool | Transaction | PreparedStatement | undefined, options: MssqlOptions<P> & { arrayMode: true }): <R>(expr: Expr<R>) => Promise<ExprValueTuples<R>>
+export function exec<P = any>(access?: ConnectionPool | Transaction | PreparedStatement, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => Promise<ExprValueObjects<R>>
+export function exec<P = any>(access?: ConnectionPool | Transaction | PreparedStatement, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => Promise<any>
 {
   return async <R>(e: Expr<R>) =>
   {
-    const request = requestProvider.request();
+    const request = new Request(access as any);
+
+    if (options && options.arrayMode) 
+    {
+      (request as any).arrayRowMode = true;
+    }
+
     const outputFactory = DialectMssql.output(options);
     const output = outputFactory(e);
     
@@ -38,7 +90,7 @@ export function exec<P = any>(requestProvider: RequestProvider, options?: MssqlO
     {
       const results = await request.query<ExprValueObjects<R>>(output.query);
 
-      return DialectMssql.getResult(e, handleResult(e, results, options));
+      return parseResult(e, results, options);
     }
     catch (e)
     {
@@ -47,19 +99,184 @@ export function exec<P = any>(requestProvider: RequestProvider, options?: MssqlO
   };
 }
 
+/**
+ * The result passed to a stream listener.
+ */
+export type StreamListenerResult<R> = R extends Array<infer E> ? E : R;
+
+/**
+ * A listener to results.
+ */
+export type StreamListener<R, A> = (result: StreamListenerResult<R>, batchIndex: number, batchCount: number, batch: StreamListenerResult<R>[]) => A | Promise<A>;
+
+/**
+ * A handler that triggers the query and each result is passed to the listener.
+ */
+export type StreamHandler<R> = <A>(listener: StreamListener<R, A>) => Promise<A[]>;
+
+/**
+ * Generates a way to stream the results of a query for the processing of large datasets.
+ * When batch size is given > 1, the given number are collected in memory and once that size is 
+ * reached or there are no more results the request is paused to avoid memory exhaustion and calls 
+ * the function in quick succession with all collected results.
+ * 
+ * **Example:**
+ * ```ts
+ * const streamer = expr.run( stream(conn, { streamBatchSize: 100 }) );
+ * 
+ * const accumulated = await streamer(async (record) => {
+ *  // handle record, can be async, can return a value to be returned in accumulated array
+ * });
+ * ```
+ * 
+ * @param access The connection, transaction, or prepared statement to stream the expression results from.
+ * @param options Options that control how the query is built or the results returned.
+ * @returns A function which when invoked with another function will execute the expression and for each result returned will call the given function.
+ */
+export function stream<P = any>(access: ConnectionPool | Transaction | PreparedStatement | undefined, options: MssqlOptions<P> & { arrayMode: true }): <R>(expr: Expr<R>) => StreamHandler<ExprValueTuples<R>>
+export function stream<P = any>(access?: ConnectionPool | Transaction | PreparedStatement, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => StreamHandler<ExprValueObjects<R>>
+export function stream<P = any>(access?: ConnectionPool | Transaction | PreparedStatement, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => StreamHandler<any>
+{
+  return <R>(e: Expr<R>) =>
+  {
+    return async (listener: StreamListener<any, any>) =>
+    {
+      const batchSize = options?.streamBatchSize || 1;
+      const request = new Request(access as any);
+
+      request.stream = true;
+
+      if (options && options.arrayMode) 
+      {
+        (request as any).arrayRowMode = true;
+      }
+
+      const outputFactory = DialectMssql.output(options);
+      const output = outputFactory(e);
+      
+      addParams(request, output, options?.params);
+
+      try
+      {
+        request.query<ExprValueObjects<R>>(output.query);
+
+        const accumulated: any[] = [];
+        const batchOutside: any[] = [];
+        let batchCount = 0;
+
+        const processBatch = async (batch: any[]) =>
+        {
+          for (let batchIndex = 0; batchIndex < batch.length; batchIndex++)
+          {
+            const accumulateResult = await listener(batch[batchIndex], batchIndex, batchCount, batch);
+            
+            if (accumulateResult !== undefined)
+            {
+              accumulated.push(accumulateResult);
+            }
+          }
+
+          batchCount++;
+        };
+
+        request.on('row', async (raw: any) => 
+        {
+          const result = parseResult(e, { recordset: [raw] } as any, options);
+
+          batchOutside.push(e instanceof QueryFirst || e instanceof QueryFirstValue ? result : result[0]);
+
+          if (batchOutside.length === batchSize)
+          {
+            if (batchSize !== 1)
+            {
+              request.pause()
+            }
+
+            const batch = batchOutside.slice();
+
+            batchOutside.splice(0, batchOutside.length);
+
+            await processBatch(batch);
+
+            if (batchSize !== 1)
+            {
+              request.resume();
+            }
+          }
+        });
+
+        return new Promise((resolve, reject) => 
+        {
+          request.on('error', (err) => 
+          {
+            reject(err);
+          });
+      
+          request.on('done', async () => 
+          {
+            if (batchOutside.length > 0)
+            {
+              await processBatch(batchOutside.slice());
+            }
+
+            resolve(accumulated);
+          });
+        });
+      }
+      catch (e)
+      {
+        throw new Error(e + '\n\nQuery: ' + output.query);
+      }
+    };
+  };
+}
+
+
+
+/**
+ * A prepared query that can be executed multiple times. It MUST be released, ideally in a try-finally block.
+ */
 export interface PreparedQuery<R, P = any>
 {
-  exec(params: P): Promise<ExprValueObjects<R>>;
+  exec(params: P): Promise<R>;
   release(): Promise<void>;
 }
 
-export function prepare<P = any>(conn: ConnectionPool | Transaction, options: MssqlOptions<P> & { affectedCount: true }): (expr: Expr<any>) => Promise<PreparedQuery<number, P>>
-export function prepare<P = any>(conn?: ConnectionPool | Transaction, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => Promise<PreparedQuery<R, P>>
-export function prepare<P = any>(conn?: ConnectionPool | Transaction, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => Promise<PreparedQuery<R, P>>
+/**
+ * Creates a prepared statement for the given expression. This is useful when you need to invoke the same query over and over
+ * with different parameters. A prepared statement MUST be released, ideally in a try-finally block.
+ * 
+ * **Example:**
+ * ```ts
+ * const prepared = expr.run( prepare(conn) );
+ * 
+ * try {
+ *  await prepared.exec({ id: 12 });
+ *  await prepared.exec({ id: 34 });
+ * } finally {
+ *  await prepared.release();
+ * }
+ * ```
+ * 
+ * @param access The connection, transaction, or prepared statement to stream the expression results from.
+ * @param options Options that control how the query is built or the results returned.
+ * @returns An object that can be executed multiple times, once finished it must be released.
+ */
+export function prepare<P = any>(access: ConnectionPool | Transaction | undefined, options: MssqlOptions<P> & { affectedCount: true }): <R>(expr: Expr<any>) => Promise<PreparedQuery<AffectedResult<ExprValueObjects<R>>, P>>
+export function prepare<P = any>(access: ConnectionPool | Transaction | undefined, options: MssqlOptions<P> & { affectedCount: true, arrayMode: true }): <R>(expr: Expr<any>) => Promise<PreparedQuery<AffectedResult<ExprValueTuples<R>>, P>>
+export function prepare<P = any>(access: ConnectionPool | Transaction | undefined, options: MssqlOptions<P> & { arrayMode: true }): <R>(expr: Expr<R>) => Promise<PreparedQuery<ExprValueTuples<R>, P>>
+export function prepare<P = any>(access?: ConnectionPool | Transaction, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => Promise<PreparedQuery<ExprValueObjects<R>, P>>
+export function prepare<P = any>(access?: ConnectionPool | Transaction, options?: MssqlOptions<P>): <R>(expr: Expr<R>) => Promise<PreparedQuery<any, P>>
 {
   return async <R>(e: Expr<R>) =>
   {
-    const prepared = new PreparedStatement(conn as any);
+    const prepared = new PreparedStatement(access as any);
+
+    if (options && options.arrayMode) 
+    {
+      (prepared as any).arrayRowMode = true;
+    }
+
     const outputFactory = DialectMssql.output(options);
     const output = outputFactory(e);
     const defaults: Partial<P> = {};
@@ -78,9 +295,9 @@ export function prepare<P = any>(conn?: ConnectionPool | Transaction, options?: 
 
     await prepared.prepare(output.query);
 
-    const preparedQuery: PreparedQuery<R, P> = 
+    const preparedQuery: PreparedQuery<any, P> = 
     {
-      async exec(params): Promise<ExprValueObjects<R>> 
+      async exec(params): Promise<any> 
       { 
         const result = await prepared.execute({
           ...defaults,
@@ -88,7 +305,7 @@ export function prepare<P = any>(conn?: ConnectionPool | Transaction, options?: 
           ...params
         });
 
-        return DialectMssql.getResult(e, handleResult(e, result, options));
+        return parseResult(e, result, options);
       },
       async release(): Promise<void> 
       {
@@ -100,13 +317,17 @@ export function prepare<P = any>(conn?: ConnectionPool | Transaction, options?: 
   };
 }
 
+export function parseResult<R, P>(expr: Expr<R>, iresult: IResult<ExprValueObjects<R>>, options?: MssqlOptions<P>)
+{
+  const result = DialectMssql.getResult(expr, handleResult(expr, iresult, options));
+
+  return options?.affectedCount
+    ? { affected: iresult.rowsAffected[0], result }
+    : result;
+}
+
 export function handleResult<R, P>(expr: Expr<R>, result: IResult<ExprValueObjects<R>>, options?: MssqlOptions<P>)
 {
-  if (options && options.affectedCount)
-  {
-    return result.rowsAffected[0];
-  }
-
   if (expr instanceof QueryFirst)
   {
     return result.recordset[0] || null;
