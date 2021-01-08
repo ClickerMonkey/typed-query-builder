@@ -5,13 +5,7 @@ import { DateField } from '../../builder/src/Functions';
  * Interval
  */
 
-export class Value<I> {
-  public constructor(
-    public input: I
-  ) {
 
-  }
-}
 
 export abstract class ValueDateLike<I> extends Value<I> {
   

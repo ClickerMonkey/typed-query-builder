@@ -58,8 +58,8 @@ export interface Functions
   floor(x: number): number;
   exp(x: number): number;
   ln(x: number): number;
-  mod(x: number): number;
-  power(x: number): number;
+  mod(x: number, y: number): number;
+  power(x: number, y: number): number;
   sqrt(x: number): number;
   cbrt(x: number): number;
   degrees(x: number): number;

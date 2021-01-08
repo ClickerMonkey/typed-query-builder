@@ -435,6 +435,68 @@ describe('index', () =>
       { Name: 'Task 5', Depth: 2 },
       { Name: 'Task 6', Depth: 2 },
     ]);
+
+    // JSON test
+    
+    const allTasks = await from(TaskTable)
+      .select(({ Task  }) => [
+        Task.Name,
+        // string[]
+        from(TaskTable.as('Children'))
+          .using((sub, { Children }) => sub
+            .where(Children.ParentID.eq(Task.ID))
+            .orderBy(Children.Name)
+            .list(Children.Name)
+            .json()
+          )
+          .as('ChildrenNames'),
+        // { Name: string, Done: boolean }[]
+        from(TaskTable.as('Children'))
+          .using((sub, { Children }) => sub
+            .select([
+              Children.Name,
+              Children.Done,
+            ])
+            .where(Children.ParentID.eq(Task.ID))
+            .orderBy(Children.Name)
+            .json()
+          )
+          .as('Children'),
+        // { Name: string, Done: boolean }
+        from(TaskTable.as('Parent'))
+          .using((sub, { Parent }) => sub
+            .select([
+              Parent.Name,
+              Parent.Done,
+            ])
+            .where([
+              Task.ParentID.isNotNull(),
+              Task.ParentID.eq(Parent.ID)
+            ])
+            .first()
+            .json()
+          )
+          .as('Parent')
+      ])
+      .where(({ Task }) => [
+        Task.ID.eq(childTasks[0].ID)
+      ])
+      .first()
+      .run( getResult )
+    ;
+
+    expect(allTasks).toStrictEqual({
+      Name: 'Task 3',
+      ChildrenNames: ['Task 5', 'Task 6'],
+      Children: [{ 
+        Name: 'Task 5', Done: false 
+      }, { 
+        Name: 'Task 6', Done: false 
+      }],
+      Parent: {
+        Name: 'Task 2', Done: false
+      },
+    });
   });
 
 });

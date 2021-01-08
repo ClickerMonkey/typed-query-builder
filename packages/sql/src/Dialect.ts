@@ -2,7 +2,7 @@ import {
   Transformer, Expr, isString, isFunction, DataTypeTypes, DataTypeInputs, OperationUnaryType, GroupingSetType, InsertPriority, 
   JoinType, LockRowLock, LockStrength, OperationBinaryType, OrderDirection, PredicateBinaryListType, 
   PredicateBinaryType, PredicateRowType, PredicatesType, PredicateUnaryType, SetOperation, WindowFrameExclusion, WindowFrameMode, 
-  isArray, isBoolean, compileFormat, isNumber, AggregateFunctions, getDataTypeFromValue, getDataTypeFromInput, Functions, isValue
+  isArray, isBoolean, compileFormat, isNumber, AggregateFunctions, getDataTypeFromValue, getDataTypeFromInput, Functions, isValue, ExprKind, ExprClass
 } from '@typed-query-builder/builder';
 
 import { DialectFeatures, DialectFeaturesDescription } from './Features';
@@ -196,6 +196,7 @@ export class Dialect
   public deleteOrder: DialectOrderedOrder<DialectParamsDelete>;
   public updateOrder: DialectOrderedOrder<DialectParamsUpdate>;
   public selectOrder: DialectOrderedOrder<DialectParamsSelect>;
+  public resultParser: DialectMap<ExprKind, (value: any, expr: Expr<any>) => any>;
 
   public functionsUpper: boolean;
   public functions: DialectFormatter<keyof Functions, DialectParamsFunction>;
@@ -231,6 +232,7 @@ export class Dialect
     this.dataTypeFormatter = {};
     this.reservedWords = {};
     this.recursiveKeyword = true;
+    this.resultParser = {};
 
     this.functionsUpper = true;
     this.functions = new DialectFormatter('{name}({args})', ['name', 'args'], 'name');
@@ -389,6 +391,30 @@ export class Dialect
   public hasSupport(features: number): boolean
   {
     return (this.supports & features) === features;
+  }
+
+  public setResultParser<E extends Expr<any>>(type: ExprClass<E>, parser: (value: any, expr: E) => any): this
+  {
+    this.resultParser[type.id] = parser as any;
+
+    return this;
+  }
+
+  public getResultParser<E extends Expr<any>>(expr: E): ((value: any) => any)
+  {
+    const parser = this.resultParser[expr.getKind()];
+
+    if (!parser)
+    {
+      return (v) => v;
+    }
+
+    return (v) => parser(v, expr);
+  }
+
+  public getResult<E extends Expr<any>>(expr: E, result: any): any
+  {
+    return this.getResultParser(expr)(result);
   }
 
   public addReservedWords(words: string[]): this

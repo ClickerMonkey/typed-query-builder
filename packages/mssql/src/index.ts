@@ -4,6 +4,8 @@ import { DialectMssql } from '@typed-query-builder/sql-mssql';
 import { ConnectionPool, IResult, ISqlType, MAX, PreparedStatement, Request, Transaction, TYPES } from 'mssql';
 
 
+import './parsers';
+
 
 export interface RequestProvider
 {
@@ -36,7 +38,7 @@ export function exec<P = any>(requestProvider: RequestProvider, options?: MssqlO
     {
       const results = await request.query<ExprValueObjects<R>>(output.query);
 
-      return handleResult(e, results, options) as any;
+      return DialectMssql.getResult(e, handleResult(e, results, options));
     }
     catch (e)
     {
@@ -86,7 +88,7 @@ export function prepare<P = any>(conn?: ConnectionPool | Transaction, options?: 
           ...params
         });
 
-        return handleResult(e, result, options) as any;
+        return DialectMssql.getResult(e, handleResult(e, result, options));
       },
       async release(): Promise<void> 
       {

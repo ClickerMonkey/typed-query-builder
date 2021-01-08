@@ -150,53 +150,98 @@ export type DataTypeGeometry =
   DataTypeBox |
   DataTypeLine;
 
-export interface DataTypeTypes {
-  BOOLEAN: boolean;
-  BIT: boolean;
 
-  BITS: number;
-  TINYINT: number;
-  SMALLINT: number;
-  MEDIUMINT: number; 
-  INT: number;
-  BIGINT: number;
-  NUMERIC: number;
-  DECIMAL: number;
-  FLOAT: number;
-  DOUBLE: number;
-  MONEY: number;
+export interface DataTypeBooleanTypes { base: boolean; }
+export interface DataTypeBitTypes { base: boolean; }
+export interface DataTypeBitsTypes { base: number; }
+export interface DataTypeTinyIntTypes { base: number; }
+export interface DataTypeSmallIntTypes { base: number; }
+export interface DataTypeMediumIntTypes { base: number; }
+export interface DataTypeIntTypes { base: number; }
+export interface DataTypeBigIntTypes { base: number; }
+export interface DataTypeNumericTypes { base: number; }
+export interface DataTypeDecimalTypes { base: number; }
+export interface DataTypeFloatTypes { base: number; }
+export interface DataTypeDoubleTypes { base: number; }
+export interface DataTypeMoneyTypes { base: number; }
+export interface DataTypeDateTypes { base: Date; }
+export interface DataTypeTimeTypes { base: Date; }
+export interface DataTypeTimestampTypes { base: Date; }
+export interface DataTypeCharTypes { base: string; }
+export interface DataTypeVarcharTypes { base: string; }
+export interface DataTypeTextTypes { base: string; }
+export interface DataTypeUuidTypes { base: string; }
+export interface DataTypeInetTypes { base: string; }
+export interface DataTypeCidrTypes { base: string; }
+export interface DataTypeMacaddrTypes { base: string; }
+export interface DataTypeBinaryTypes { base: string; }
+export interface DataTypeVarbinaryTypes { base: string; }
+export interface DataTypeBlobTypes { base: string; }
+export interface DataTypeXmlTypes { base: string; }
+export interface DataTypeJsonTypes { base: Json; }
+export interface DataTypePointTypes { base: DataTypePoint; }
+export interface DataTypeLineTypes { base: DataTypeLine; }
+export interface DataTypeSegmentTypes { base: DataTypeSegment; }
+export interface DataTypePathTypes { base: DataTypePath; }
+export interface DataTypePolygonTypes { base: DataTypePolygon; }
+export interface DataTypeBoxTypes { base: DataTypeBox; }
+export interface DataTypeCircleTypes { base: DataTypeCircle; }
+export interface DataTypeGeometryTypes { base: DataTypeGeometry; }
+export interface DataTypeArrayTypes { base: any[]; }
+export interface DataTypeNullTypes { base: null; }
+export interface DataTypeAnyTypes { base: any; }
 
-  DATE: Date;
-  TIME: Date;
-  TIMESTAMP: Date;
 
-  CHAR: string;
-  VARCHAR: string;
-  TEXT: string;
+export interface DataTypeTypes 
+{
+  BOOLEAN: DataTypeBooleanTypes[keyof DataTypeBooleanTypes];
+  BIT: DataTypeBitTypes[keyof DataTypeBitTypes];
 
-  UUID: string;
-  INET: string;
-  CIDR: string;
-  MACADDR: string;
+  BITS: DataTypeBitsTypes[keyof DataTypeBitsTypes];
+  TINYINT: DataTypeTinyIntTypes[keyof DataTypeTinyIntTypes];
+  SMALLINT: DataTypeSmallIntTypes[keyof DataTypeSmallIntTypes];
+  MEDIUMINT: DataTypeMediumIntTypes[keyof DataTypeMediumIntTypes]; 
+  INT: DataTypeIntTypes[keyof DataTypeIntTypes];
+  BIGINT: DataTypeBigIntTypes[keyof DataTypeBigIntTypes];
+  NUMERIC: DataTypeNumericTypes[keyof DataTypeNumericTypes];
+  DECIMAL: DataTypeDecimalTypes[keyof DataTypeDecimalTypes];
+  FLOAT: DataTypeFloatTypes[keyof DataTypeFloatTypes];
+  DOUBLE: DataTypeDoubleTypes[keyof DataTypeDoubleTypes];
+  MONEY: DataTypeMoneyTypes[keyof DataTypeMoneyTypes];
 
-  BINARY: string;
-  VARBINARY: string;
-  BLOB: string;
-  JSON: Json;
-  XML: string;
+  DATE: DataTypeDateTypes[keyof DataTypeDateTypes];
+  TIME: DataTypeTimeTypes[keyof DataTypeTimeTypes];
+  TIMESTAMP: DataTypeTimestampTypes[keyof DataTypeTimestampTypes];
 
-  POINT: DataTypePoint;
-  LINE: DataTypeLine;
-  SEGMENT: DataTypeSegment;
-  BOX: DataTypeBox;
-  POLYGON: DataTypePolygon;
-  PATH: DataTypePath;
-  CIRCLE: DataTypeCircle;
-  GEOMETRY: DataTypeGeometry;
+  CHAR: DataTypeCharTypes[keyof DataTypeCharTypes];
+  VARCHAR: DataTypeVarcharTypes[keyof DataTypeVarcharTypes];
+  TEXT: DataTypeTextTypes[keyof DataTypeTextTypes];
 
-  ANY: any;
-  ARRAY: any[];
-  NULL: null;
+  UUID: DataTypeUuidTypes[keyof DataTypeUuidTypes];
+  INET: DataTypeInetTypes[keyof DataTypeInetTypes];
+  CIDR: DataTypeCidrTypes[keyof DataTypeCidrTypes];
+  MACADDR: DataTypeMacaddrTypes[keyof DataTypeMacaddrTypes];
+
+  BINARY: DataTypeBinaryTypes[keyof DataTypeBinaryTypes];
+  VARBINARY: DataTypeVarbinaryTypes[keyof DataTypeVarbinaryTypes];
+  BLOB: DataTypeBlobTypes[keyof DataTypeBlobTypes];
+  JSON: DataTypeJsonTypes[keyof DataTypeJsonTypes];
+  XML: DataTypeXmlTypes[keyof DataTypeXmlTypes];
+
+  POINT: DataTypePointTypes[keyof DataTypePointTypes];
+  LINE: DataTypeLineTypes[keyof DataTypeLineTypes];
+  SEGMENT: DataTypeSegmentTypes[keyof DataTypeSegmentTypes];
+  BOX: DataTypeBoxTypes[keyof DataTypeBoxTypes];
+  POLYGON: DataTypePolygonTypes[keyof DataTypePolygonTypes];
+  PATH: DataTypePathTypes[keyof DataTypePathTypes];
+  CIRCLE: DataTypeCircleTypes[keyof DataTypeCircleTypes];
+  GEOMETRY: DataTypeGeometryTypes[keyof DataTypeGeometryTypes];
+
+  ARRAY: DataTypeArrayTypes[keyof DataTypeArrayTypes];
+
+  NULL: DataTypeNullTypes[keyof DataTypeNullTypes];
+  
+  ANY: DataTypeAnyTypes[keyof DataTypeAnyTypes];
 }
 
 export interface DataTypeMeta
