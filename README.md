@@ -229,7 +229,7 @@ const Task = table({
     doneAt: 'TIMESTAMP',
     parentId: ['NULL', 'INT'], // nullable
   },
-  fieldColumns: {
+  fieldColumn: {
     doneAt: 'finished_at', // optionally the real column name
   },
 });
