@@ -1,4 +1,4 @@
-import { ExprField, SourceTable } from '@typed-query-builder/builder';
+import { ExprField, SourceJoin, SourceTable } from '@typed-query-builder/builder';
 import { Dialect } from '../Dialect';
 
 
@@ -10,7 +10,7 @@ export function addField(dialect: Dialect)
     {
       const { source, alias } = expr;
       const namedSource = source.getSource();
-      const tableName = namedSource instanceof SourceTable && namedSource === source
+      const tableName = namedSource instanceof SourceTable && (source === namedSource || (source instanceof SourceJoin && source.source === namedSource && source.getName() === namedSource.getName()))
         ? String(namedSource.table)
         : source.getName();
       const fieldName = namedSource instanceof SourceTable
