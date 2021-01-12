@@ -112,6 +112,10 @@ export type SelectsFromObjectSimple<T> =
   }>[keyof T]>>
 ;
 
+export type SelectsFromObjectKeys<T, K extends keyof T> = 
+  SelectsFromObjectSimple<Pick<T, K>>
+;
+
 export type SelectsFromTypeAndColumns<T, C extends Tuple<keyof T>> = 
   Cast<{
     [I in keyof C]: C[I] extends keyof T ? Select<C[I], T[C[I]]> : never

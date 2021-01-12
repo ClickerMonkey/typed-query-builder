@@ -1,4 +1,4 @@
-import { DataTypeBox, DataTypeCircle, DataTypeLine, DataTypePath, DataTypePoint, DataTypePolygon, DataTypeSegment, Json, table } from '../src';
+import { DataTypeBox, DataTypeCircle, DataTypeLine, DataTypePath, DataTypePoint, DataTypePolygon, DataTypeSegment, Json, table, tableFromType } from '../src';
 import { expectExprType } from "./helper";
 
 
@@ -163,6 +163,41 @@ describe('table', () =>
 
     expectExprType<number>(opt.fields.id);
     expectExprType<string | undefined>(opt.fields.name);
+  });
+
+  it('tableFromType', () =>
+  {
+    interface Point { x: number, y: number, srid: string };
+
+    const PointTable = tableFromType<Point>()({
+      name: 'point',
+      fields: ['x', 'y']
+    });
+
+    expect(PointTable.table).toBe('point');
+    expect(PointTable.name).toBe('point');
+    expect(PointTable.fieldType.x).toBe('ANY');
+    expect(PointTable.fieldType.y).toBe('ANY');
+  });
+
+  it('tableFromType aliased', () =>
+  {
+    interface Point { x: number, y: number, srid: string };
+
+    const PointTable = tableFromType<Point>()({
+      name: 'point',
+      table: 'ThePoint',
+      fields: ['x', 'y', 'srid'],
+      fieldColumn: {
+        x: 'TheX',
+        y: 'TheY',
+      },
+    });
+
+    expect(PointTable.table).toBe('ThePoint');
+    expect(PointTable.name).toBe('point');
+    expect(PointTable.fieldType.x).toBe('ANY');
+    expect(PointTable.fieldType.y).toBe('ANY');
   });
 
 });
