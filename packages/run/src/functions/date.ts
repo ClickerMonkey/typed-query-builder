@@ -63,7 +63,7 @@ RunFunctions.currentDate = (): Date =>
   return startOfDay(new Date());
 }
 
-RunFunctions.dateGet = (field: DateField, source: Date): number | undefined =>
+RunFunctions.dateGet = (field: DateField, source: Date): number =>
 {
   const foy = startOfYear(copy(source));
   

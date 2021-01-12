@@ -19,7 +19,7 @@ DialectMssql.removeSupport(
 
 DialectMssql.addReservedWords(ReservedWords);
 
-DialectMssql.selectLimitOnly = compileFormat('OFFSET 0 ROWS FETCH FIRST {limit} ROWS ONLY');
+DialectMssql.selectLimitOnly = compileFormat('OFFSET 0 ROWS FETCH NEXT {limit} ROWS ONLY');
 DialectMssql.selectOffsetOnly = compileFormat('OFFSET {offset} ROWS');
 DialectMssql.selectOffsetLimit = compileFormat('OFFSET {offset} ROWS FETCH NEXT {limit} ROWS ONLY');
 
@@ -239,7 +239,7 @@ DialectMssql.functions.setUnsupported([
 ]);
 DialectMssql.aggregates.setUnsupported([
   'bitAnd', 'bitOr', 'nthValue'
-])
+]);
 
 DialectMssql.functions.aliases({
   ceil: 'CEILING',
@@ -298,7 +298,7 @@ DialectMssql.functions.setFormats({
   geomSymmetricDifference: '({0}).STSymDifference({1})',
   geomWithin: '({0}).STWithin({1})',
   geomWithinDistance: '(({0}).STDistance({1}) <= {2})'
-})
+});
 
 DialectMssql.aggregates.aliases({
   string: 'STRING_AGG',
@@ -318,7 +318,7 @@ DialectMssql.functions.setFormats({
   mod: '(({0}) % ({1}))',
   div: 'ROUND(({0}) / ({1}), 0, 1)',
   indexOf: 'PATINDEX({1}, {0})',
-  md5: `HASBYTES('MD5', {0})`,
+  md5: `HASHBYTES('MD5', {0})`,
   startsWith: '(LEFT({0}, LEN({1})) = {1})',
   dateParse: 'TRY_CAST({0} AS DATE)',
   timestampParse: 'TRY_CAST({0} AS DATETIME2)',
@@ -341,7 +341,7 @@ DialectMssql.aggregates.setFormats({
   boolAnd: '(1 - MIN({distinct}{0})){over}',
   boolOr: 'MAX({distinct}{0}){over}',
   countIf: 'COUNT({distinct}CASE WHEN ({0}) = 1 THEN 1 ELSE NULL END){over}',
-})
+});
 
 DialectMssql.functions.setCascadings({
   round: [

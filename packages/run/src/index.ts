@@ -1,33 +1,9 @@
 import { 
-  Expr, Transformer, isString, isNumber, isDate, isBoolean, isArray,
-  ExprConstant, ExprNot, ExprCase, ExprOperationBinary, ExprOperationUnary, ExprAggregate, ExprBetween, ExprCast,
-  ExprDeep, ExprExists, ExprDefault, ExprField, ExprFunction, ExprIn, ExprRow, ExprPredicateBinary, ExprPredicateBinaryList,
-  ExprPredicateRow, ExprPredicateUnary, ExprPredicates, QuerySelect, QueryFirstValue, QueryFirst, QueryWindow, QuerySet, 
-  QueryGroup, OrderBy, QueryExistential, QueryCriteria, QueryJson, QueryList, StatementInsert, StatementDelete, StatementUpdate,
-  AggregateFunctions, ExprParam, DataTypeTypes, getDataTypeFromInput, getDataTypeMeta, PredicateBinaryType, isPlainObject, 
-  mapRecord, Functions
+  JoinType, QuerySelect, QueryList, QueryFirstValue, QueryFirst, QuerySet, 
+  StatementDelete, StatementInsert, StatementUpdate,
 } from '@typed-query-builder/builder';
 
-import * as fns from './Functions';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+import { RunTransformerFunction, RunTransformers } from './Transformers';
 
 
 
@@ -143,6 +119,48 @@ RunTransformers.setTransformer(
   }
 );
 
+// withs
+// froms
+// joins
+// where
+// group by & having
+// calculate selects
+  // apply windows, for each aggregate with a custom window and each defined window - calculate those selects
+    // when order by is specified, window frame is by default from start to last row that has same value as current row based on orderBy
+    // when order is not specified, window frame is complete partition
+  // terms
+    // partition = rows with same partition by value
+    // window frame = window defines start and end of frame (default start=1, end=last peer of current)
+    // peers = rows with same order by value in partition, without order by no peers
+  // window functions
+    // rowNumber = number of current row within partition, starting at 1
+    // rank = rowNumber of first row in peer group (peer group is rows with same orderby value)
+    // denseRank = counts peer groups in partition (how many unique orderby values)
+    // percentRank = (rank - 1) / (total partition rows - 1)
+    // cumeDist = (number of partition rows preceding or peers with current row) / (total partition rows)
+    // ntile(buckets) = floor((rowNumber - 1) / buckets) + 1 ??????
+    // lag(value, offset=1, default=NULL) = value of row offset rows before in partition
+    // lead(value, offset=1, default=NULL) = value of row offset rows after in partition
+    // firstValue(value) = value of first row in window frame
+    // lastValue(value) = value of last row in window frame
+    // nthValue(value, n) = value of row that is the nth row of the window frame (start at 1), NULL if no row
+  // window without partition is full results (ie: count(*) over ())
+// distinct & distinct on
+// order by
+  // take order by exprs that are aggregates over windows, order by window name, compute results
+// limit & offset
+
+// ntile  2   3   4   5   6,7,8,9   10
+// 1      1   1   1   1   1         1
+// 2      1   1   1   1   1         2
+// 3      1   1   1   2   2         3
+// 4      1   1   2   2   2         4
+// 5      1   2   2   3   3         5
+// 6      2   2   2   3   3         6
+// 7      2   2   3   4   4         7
+// 8      2   2   3   4   4         8
+// 9      2   3   3   5   5         9
+// 10     2   3   4   5   5         10
 
 function buildSelection(sources: RunTransformerInput, params: Record<string, any> | undefined, state: RunTransformerState, selects: Record<string, RunTransformerFunction<any>>): any {
   const out: any = {};
@@ -162,9 +180,9 @@ function handleQuery(base: QuerySelectBase<any, any, any>, transform: RunTransfo
   const having = base._having ? transform(base._having) : undefined;
   
   const sources: {
-    source: QuerySource<any>,
+    source: NamedSource<any, any>,
     alias: string,
-    type: QueryJoinType,
+    type: JoinType,
     condition: RunTransformerFunction<boolean>,
     getRows: RunTransformerFunction<any[]>,
   }[] = [];
@@ -172,7 +190,7 @@ function handleQuery(base: QuerySelectBase<any, any, any>, transform: RunTransfo
   for (const sourceName in base._sources) {
     const source = base._sources[sourceName];
     const alias = source.alias;
-    let type: QueryJoinType = 'OUTER';
+    let type: JoinType = 'FULL';
     let condition: RunTransformerFunction<boolean> = () => true;
     let getRows: RunTransformerFunction<any> | undefined;
 
