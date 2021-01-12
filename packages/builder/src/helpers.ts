@@ -2,7 +2,7 @@ import {
   QuerySelect, StatementInsert, Name, Selects, SelectsFromTypeAndColumns, Sources, Simplify, SelectsKey, MergeObjects, Tuple, 
   DataTypeInputMap, DataTypeInputMapSelects, NamedSource, SourceTableInput, Source, SourceTable, SourceValues, ExprProvider, 
   StatementUpdate, StatementDelete, SourcesFieldsFactory, SelectsExprs, createExprFactory, JoinedInner, Cast, SelectsFromKeys,
-  SelectsKeys, WithBuilder, WithProvider, SelectsFromObjectKeys
+  SelectsKeys, WithBuilder, WithProvider
 } from './internal';
 
 
@@ -22,13 +22,13 @@ export function table<
   return new SourceTable(input);
 }
 
-export function tableFromType<T>(): <N extends Name, F extends keyof T>(options: {
+export function tableFromType<T>(): <N extends Name, F extends Tuple<keyof T>>(options: {
   name: N,
   table?: string,
-  primary?: Array<keyof T>;
-  fields: F[],
-  fieldColumn?: Partial<Record<F, string>>,
-}) => SourceTable<N, Cast<SelectsFromObjectKeys<T, F>, Selects>, { [I in F]: 'ANY' }> {
+  primary?: Array<F[number]>;
+  fields: F,
+  fieldColumn?: Partial<Record<F[number], string>>,
+}) => SourceTable<N, SelectsFromTypeAndColumns<T, F>, Simplify<Record<F[number], 'ANY'>>> {
   return <N extends Name>(options: any) => {
     return new SourceTable<N, any, any>({
       name: options.name,
