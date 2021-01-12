@@ -1,7 +1,7 @@
 {
   "name": "@typed-query-builder/sql-mssql",
   "license": "GPL-3.0-or-later",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "A SQL dialect for SQL Server",
   "main": "dist/index.js",
   "typings": "typings/index.d.ts",
@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@typed-query-builder/builder": "^0.2.5",
-    "@typed-query-builder/sql": "^0.2.5"
+    "@typed-query-builder/sql": "^0.2.6"
   },
   "gitHead": "d0445620a6188314a42e5d37e81d515708fd9ddd"
 }
