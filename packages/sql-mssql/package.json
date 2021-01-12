@@ -1,7 +1,7 @@
 {
   "name": "@typed-query-builder/sql-mssql",
   "license": "GPL-3.0-or-later",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "A SQL dialect for SQL Server",
   "main": "dist/index.js",
   "typings": "typings/index.d.ts",
