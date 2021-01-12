@@ -316,6 +316,7 @@ DialectMssql.functionsRawArguments.dateGet = { 0: true };
 DialectMssql.functionsRawArguments.dateTruncate = { 0: true };
 DialectMssql.functionsRawArguments.dateAdd = { 0: true };
 DialectMssql.functionsRawArguments.dateDiff = { 0: true };
+DialectMssql.functionsRawArguments.convert = { 0: true };
 
 DialectMssql.functions.setFormats({
   factorial: '(WITH factorial(num, ans) AS (SELECT {0}, {0} UNION ALL SELECT num - 1, ans * (num - 1) FROM factorial WHERE num > 1) SELECT TOP 1 ans FROM factorial ORDER BY ans DESC)',

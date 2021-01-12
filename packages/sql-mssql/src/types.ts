@@ -26,6 +26,8 @@ declare module "@typed-query-builder/builder"
   {
     // Number
     square(x: number): number;
+    // Convert
+    convert(dataType: string, expr: any, style?: number): any;
     // Operation
     choose<T>(i: number, ...options: T[]): T;
     // String
