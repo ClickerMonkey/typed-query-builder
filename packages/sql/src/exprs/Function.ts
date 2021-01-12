@@ -1,4 +1,4 @@
-import { ExprFunction } from '@typed-query-builder/builder';
+import { ExprConstant, ExprFunction } from '@typed-query-builder/builder';
 import { Dialect, DialectParamsFunction } from '../Dialect';
 
 
@@ -8,7 +8,13 @@ export function addFunction(dialect: Dialect)
     ExprFunction,
     (expr, transform, out) => 
     {
-      const args: string[] = expr.args.map( a => transform(a, out) );
+      const raws = out.dialect.functionsRawArguments[expr.func] || {};
+
+      const args: string[] = expr.args.map( (a, i) => 
+        raws[i] && a instanceof ExprConstant
+          ? a.value
+          : transform(a, out) 
+      );
       const params: Partial<DialectParamsFunction> = {};
 
       params.args = args.join(', ');

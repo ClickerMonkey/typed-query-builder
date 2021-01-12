@@ -199,7 +199,8 @@ export class Dialect
   public resultParser: DialectMap<ExprKind, (value: any, expr: Expr<any>) => any>;
 
   public functionsUpper: boolean;
-  public functions: DialectFormatter<keyof Functions, DialectParamsFunction>;
+  public functionsRawArguments: Partial<Record<keyof Functions, Record<number, true>>>;
+  public functions: DialectFormatter<keyof Functions, DialectParamsFunction>;  
   public aggregates: DialectFormatter<keyof AggregateFunctions, DialectParamsAggregate>;
   public operationUnary: DialectFormatter<OperationUnaryType, DialectParamsOperationUnary>;
   public operationBinary: DialectFormatter<OperationBinaryType, DialectParamsOperationBinary>;
@@ -233,6 +234,7 @@ export class Dialect
     this.reservedWords = {};
     this.recursiveKeyword = true;
     this.resultParser = {};
+    this.functionsRawArguments = {};
 
     this.functionsUpper = true;
     this.functions = new DialectFormatter('{name}({args})', ['name', 'args'], 'name');

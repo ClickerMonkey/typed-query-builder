@@ -377,6 +377,22 @@ describe('index', () =>
     `);
   });
 
+  it('dateAdd', () =>
+  {
+    const x = from(Task)
+      .select(({ task }, exprs, fns) => [
+        fns.dateAdd('year', 1, fns.currentDate()).as('yearFromNow')
+      ])
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      SELECT
+        DATEADD(year, 1, CONVERT(DATE, CURRENT_TIMESTAMP)) AS yearFromNow
+      FROM task
+    `);
+  });
+
   it('function geometry', () =>
   {
     const x = from(Task)
