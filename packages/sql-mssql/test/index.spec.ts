@@ -464,7 +464,7 @@ describe('index', () =>
         "name"
       FROM task
       ORDER BY "name"
-      OFFSET 0 ROWS FETCH FIRST 10 ROWS ONLY
+      OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY
     `);
   });
 
@@ -728,7 +728,7 @@ describe('index', () =>
       SELECT 
         id, 
         "name", 
-        (SELECT task.id AS id, task."name" AS "name", done, doneAt FROM task WHERE task.id = parentId ORDER BY (SELECT NULL) OFFSET 0 ROWS FETCH FIRST 1 ROWS ONLY FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) AS parent
+        (SELECT task.id AS id, task."name" AS "name", done, doneAt FROM task WHERE task.id = parentId ORDER BY (SELECT NULL) OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) AS parent
       FROM subtask
     `);
   });
