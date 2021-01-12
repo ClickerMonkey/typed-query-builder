@@ -12,6 +12,26 @@ export type ExprInputType<I> = I extends ExprInput<infer T> ? T : never;
 
 export abstract class ExprScalar<T> extends Expr<T>
 {
+
+  public required(): ExprScalar<Exclude<T, null | undefined>>
+  {
+    return this as any;
+  }
+
+  public optional(): ExprScalar<T | null | undefined>
+  {
+    return this as any;
+  }
+
+  public nullable(): ExprScalar<T | null>
+  {
+    return this as any;
+  }
+
+  public undefinable(): ExprScalar<T | undefined>
+  {
+    return this as any;
+  }
   
   public as<A extends string>(alias: A): Select<A, T> 
   {

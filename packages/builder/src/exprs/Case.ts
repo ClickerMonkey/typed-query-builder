@@ -26,6 +26,26 @@ export class ExprCase<I, O> extends ExprScalar<O>
     return this;
   }
 
+  public required(): ExprCase<I, Exclude<O, null | undefined>>
+  {
+    return this as any;
+  }
+
+  public optional(): ExprCase<I, O | null | undefined>
+  {
+    return this as any;
+  }
+
+  public nullable(): ExprCase<I, O | null>
+  {
+    return this as any;
+  }
+
+  public undefinable(): ExprCase<I, O | undefined>
+  {
+    return this as any;
+  }
+
   public traverse<R>(traverse: Traverser<Expr<any>, R>): R 
   {
     return traverse.enter(this, () => 

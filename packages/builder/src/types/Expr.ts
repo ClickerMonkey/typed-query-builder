@@ -1,4 +1,6 @@
-import { ExprInput, ExprScalar, Expr, Select, Selects, SelectsFromObject, SelectsValues, ObjectFromSelects } from '../internal';
+import { 
+  ExprInput, ExprScalar, Expr, Select, Selects, SelectsFromObject, SelectsValues, ObjectFromSelects
+} from '../internal';
 
 
 export type ExprValueToExpr<T> = 

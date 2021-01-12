@@ -93,6 +93,26 @@ export class ExprField<F extends Name, T> extends ExprScalar<T> implements Selec
     return this;
   }
 
+  public required(): ExprField<F, Exclude<T, null | undefined>>
+  {
+    return this as any;
+  }
+
+  public optional(): ExprField<F, T | null | undefined>
+  {
+    return this as any;
+  }
+
+  public nullable(): ExprField<F, T | null>
+  {
+    return this as any;
+  }
+
+  public undefinable(): ExprField<F, T | undefined>
+  {
+    return this as any;
+  }
+
   public count(conditions?: ExprScalar<boolean>[] | ExprScalar<boolean>, distinct: boolean = false): ExprScalar<number> 
   {
     return query().from(this.source).where(conditions || []).count(distinct, this);

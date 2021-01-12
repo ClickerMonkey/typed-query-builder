@@ -37,6 +37,26 @@ export abstract class Expr<T> implements Traversable<Expr<unknown>>
     throw new Error('getInferredType should not be called.');
   }
 
+  public required(): Expr<Exclude<T, null | undefined>>
+  {
+    return this as any;
+  }
+
+  public optional(): Expr<T | null | undefined>
+  {
+    return this as any;
+  }
+
+  public nullable(): Expr<T | null>
+  {
+    return this as any;
+  }
+
+  public undefinable(): Expr<T | undefined>
+  {
+    return this as any;
+  }
+
   public run<O>(runner: (expr: this) => O): O
   {
     return runner(this);
