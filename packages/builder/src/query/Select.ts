@@ -233,14 +233,18 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     return this.group('GROUPING SET', values);
   }
 
-  public groupByRollup<K extends SelectsKey<S>>(values: K[][]): this 
+  public groupByRollup<K extends SelectsKey<S>>(values: Array<K | K[]>): this 
   {
-    return this.group('ROLLUP', values);
+    const valuesGrouped = values.map( v => isArray(v) ? v : [v] );
+
+    return this.group('ROLLUP', valuesGrouped);
   }
 
-  public groupByCube<K extends SelectsKey<S>>(values: K[][]): this 
+  public groupByCube<K extends SelectsKey<S>>(values: Array<K | K[]>): this 
   {
-    return this.group('ROLLUP', values);
+    const valuesGrouped = values.map( v => isArray(v) ? v : [v] );
+
+    return this.group('CUBE', valuesGrouped);
   }
 
   public group<K extends SelectsKey<S>>(type: GroupingSetType, values: K[][]): this 

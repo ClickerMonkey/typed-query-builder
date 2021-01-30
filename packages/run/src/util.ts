@@ -1,8 +1,18 @@
-import { isNumber, isString, isDate, isBoolean, PredicateBinaryType } from '@typed-query-builder/builder';
+import { isNumber, isString, isDate, PredicateBinaryType, isArray } from '@typed-query-builder/builder';
 
 
+const typeOrdering = {
+  'string'    : 1,
+  'number'    : 2,
+  'bigint'    : 3,
+  'boolean'   : 4,
+  'symbol'    : 5,
+  'object'    : 6,
+  'function'  : 7,
+  'undefined' : 8,
+};
 
-export function compare(a: any, b: any, ignoreCase: boolean = false): number
+export function compare(a: any, b: any, ignoreCase: boolean = false, nullsLast: boolean = true, forSort: boolean = false): number
 {
   if (a === null) 
   {
@@ -19,43 +29,122 @@ export function compare(a: any, b: any, ignoreCase: boolean = false): number
     return 0;
   }
 
-  if (isString(a) && isString(b)) 
+  const at = typeof a;
+  const bt = typeof b;
+
+  if (at !== bt)
+  {
+    return at === 'undefined' && !nullsLast
+      ? forSort ? -1 : Number.NaN
+      : bt === 'undefined' && !nullsLast
+        ? forSort ? 1 : Number.NaN
+        : typeOrdering[at] - typeOrdering[bt];
+  }
+
+  if (at === 'string')
   {
     return (ignoreCase ? a.toLowerCase() : a).localeCompare(ignoreCase ? b.toLowerCase() : b);
   }
 
-  if (isNumber(a) && isNumber(b)) 
+  if (at === 'number' || at === 'bigint')
   {
     return a - b;
   }
 
-  if (isDate(a) && isDate(b)) 
-  {
-    return a.getTime() - b.getTime();
-  }
-
-  if (isBoolean(a) && isBoolean(b)) 
+  if (at === 'boolean') 
   {
     return (a ? 1 : 0) - (b ? 1 : 0);
   }
 
-  return 0;
+  if (at === 'object')
+  {
+    const ad = isDate(a);
+    const bd = isDate(b);
+
+    if (ad && bd) 
+    {
+      return a.getTime() - b.getTime();
+    }
+    else if (ad !== bd)
+    {
+      return forSort ? 0 : Number.NaN;
+    }
+
+    const aa = isArray(a);
+    const ba = isArray(b);
+
+    if (aa && ba)
+    {
+      const dl = a.length - b.length;
+
+      if (dl !== 0)
+      {
+        return dl;
+      }
+
+      for (let i = 0; i < a.length; i++)
+      {
+        const d = compare(a[i], b[i], ignoreCase, nullsLast);
+
+        if (d !== 0)
+        {
+          return d;
+        }
+      }
+
+      return 0;
+    }
+    else if (aa !== ba)
+    {
+      return forSort ? 0 : Number.NaN;
+    }
+
+    for (const prop in a)
+    {
+      if (!(prop in b))
+      {
+        return 1;
+      }
+    }
+
+    for (const prop in b)
+    {
+      if (!(prop in a))
+      {
+        return -1;
+      }
+    }
+
+    for (const prop in a)
+    {
+      const d = compare(a[prop], b[prop], ignoreCase, nullsLast);
+
+      if (d !== 0)
+      {
+        return d;
+      }
+    }
+
+    return 0;
+  }
+
+  return forSort ? 0 : Number.NaN;
 };
 
 
-export function predicate(type: PredicateBinaryType, a: any, b: any, ignoreCase: boolean = false): boolean
+export function predicate(type: PredicateBinaryType, a: any, b: any, ignoreCase: boolean = false, nullsLast: boolean = true): boolean
 {
   switch (type) 
   {
     case 'DISTINCT':
     case '!=':
-    case '<>': return compare(a, b, ignoreCase) !== 0;
+    case '<>': return compare(a, b, ignoreCase, nullsLast) !== 0;
     case 'NOT DISTINCT':
-    case '=': return compare(a, b, ignoreCase) === 0;
-    case '<': return compare(a, b, ignoreCase) < 0;
-    case '<=': return compare(a, b, ignoreCase) <= 0;
-    case '>': return compare(a, b, ignoreCase) > 0;
-    case '>=': return compare(a, b, ignoreCase) >= 0;
+    case '=': return compare(a, b, ignoreCase, nullsLast) === 0;
+    case '<': return compare(a, b, ignoreCase, nullsLast) < 0;
+    case '<=': return compare(a, b, ignoreCase, nullsLast) <= 0;
+    case '>': return compare(a, b, ignoreCase, nullsLast) > 0;
+    case '>=': return compare(a, b, ignoreCase, nullsLast) >= 0;
     case 'LIKE': return new RegExp('^' + String(b).replace(/%/g, '.*') + '$', ignoreCase ? 'i' : undefined).test(String(a));
     case 'NOT LIKE': return !new RegExp('^' + String(b).replace(/%/g, '.*') + '$', ignoreCase ? 'i' : undefined).test(String(a));
   }

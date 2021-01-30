@@ -5,13 +5,13 @@ import { predicate } from '../util';
 
 RunTransformers.setTransformer(
   ExprPredicateBinary, 
-  (v, transform) => {
-    const value = transform(v.value);
-    const test = transform(v.test);
+  (v, transform, compiler) => {
+    const value = compiler.eval(v.value);
+    const test = compiler.eval(v.test);
 
-    return (sources, params, state) => {
-      const a = value(sources, params, state);
-      const b = test(sources, params, state);
+    return (state) => {
+      const a = value.get(state);
+      const b = test.get(state);
 
       if (a === undefined || b === undefined) {
         return false;

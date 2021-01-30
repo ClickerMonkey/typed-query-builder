@@ -189,11 +189,11 @@ const QueryDataTypeConfig: {
 // @ts-ignore
 RunTransformers.setTransformer(
   ExprCast, 
-  (v, transform) => {
-    const value = transform(v.value);
+  (v, transform, compiler) => {
+    const value = compiler.eval(v.value);
 
-    return (sources, params, state) => {
-      const result = value(sources, params, state);
+    return (state) => {
+      const result = value.get(state);
       const typeName = getDataTypeFromInput(v.type);
       const typeMeta = getDataTypeMeta(v.type);
       const typeConfig: QueryDataTypeConfigObject<any> = QueryDataTypeConfig[typeName];

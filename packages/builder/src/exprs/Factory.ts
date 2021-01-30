@@ -26,6 +26,9 @@ export interface ExprFactory<T extends Sources, S extends Selects, W extends Nam
   inspect<R>(): ExprCase<boolean, R>;
   inspect<R, V>(value: ExprInput<V>): ExprCase<V, R>;
   inspect<R>(value?: ExprInput<any>): ExprCase<any, R>;
+  cases<R>(): ExprCase<boolean, R>;
+  cases<R, V>(value: ExprInput<V>): ExprCase<V, R>;
+  cases<R>(value?: ExprInput<any>): ExprCase<any, R>;
   constant<V>(value: V, dataType?: DataTypeInputs): ExprScalar<V>;
   func<F extends keyof Funcs, Funcs = Functions>(func: F, ...args: FunctionArgumentInputs<F, Funcs>): ExprScalar<FunctionResult<F, Funcs>>;
   cast<I extends DataTypeInputs>(type: I, value: any): ExprScalar<DataTypeInputType<I>>;
@@ -134,6 +137,10 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
     },
 
     inspect<R>(value?: ExprInput<any>): ExprCase<any, R> {
+      return new ExprCase(value === undefined ? new ExprConstant(true) : toExpr(value));
+    },
+
+    cases<R>(value?: ExprInput<any>): ExprCase<any, R> {
       return new ExprCase(value === undefined ? new ExprConstant(true) : toExpr(value));
     },
 

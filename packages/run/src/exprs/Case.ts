@@ -1,24 +1,24 @@
 import { ExprCase } from '@typed-query-builder/builder';
-import { RunTransformers } from '../Transformers';
+import { RunTransformerExprNoop, RunTransformers } from '../Transformers';
 
 
 RunTransformers.setTransformer(
   ExprCase, 
-  (v, transform) => {
-    const value = transform(v.value);
-    const cases = v.cases.map(([caseValue, caseResult]) => [transform(caseValue), transform(caseResult)]);
-    const otherwise = v.otherwise ? transform(v.otherwise) : () => undefined;
+  (v, transform, compiler) => {
+    const value = compiler.eval(v.value);
+    const cases = v.cases.map(([caseValue, caseResult]) => [compiler.eval(caseValue), compiler.eval(caseResult)]);
+    const otherwise = v.otherwise ? compiler.eval(v.otherwise) : RunTransformerExprNoop;
 
-    return (sources, params, state) => {
-      const x = value(sources, params, state);
+    return (state) => {
+      const x = value.get(state);
 
       for (const [caseValue, caseResult] of cases) {
-        if (x === caseValue(sources, params, state)) {
-          return caseResult(sources, params, state);
+        if (x === caseValue.get(state)) {
+          return caseResult.get(state);
         }
       }
 
-      return otherwise(sources, params, state);
+      return otherwise.get(state);
     };
   }
 );

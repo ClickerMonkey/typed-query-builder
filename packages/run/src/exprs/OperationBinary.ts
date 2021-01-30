@@ -4,13 +4,13 @@ import { RunTransformers } from '../Transformers';
 
 RunTransformers.setTransformer(
   ExprOperationBinary, 
-  (v, transform) => {
-    const first = transform(v.first);
-    const second = transform(v.second);
+  (v, transform, compiler) => {
+    const first = compiler.eval(v.first);
+    const second = compiler.eval(v.second);
 
-    return (sources, params, state) => {
-      const a = first(sources, params, state);
-      const b = second(sources, params, state);
+    return (state) => {
+      const a = first.get(state);
+      const b = second.get(state);
       
       if (a === undefined || b === undefined) {
         return undefined;

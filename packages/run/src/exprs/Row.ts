@@ -4,9 +4,9 @@ import { RunTransformers } from '../Transformers';
 
 RunTransformers.setTransformer(
   ExprRow, 
-  (v, transform) => {
-    const elements = v.elements.map(transform);
+  (v, transform, compiler) => {
+    const elements = v.elements.map( e => compiler.eval(e) );
 
-    return (sources, params, state) => elements.map( e => e(sources, params, state) );
+    return (state) => elements.map( e => e.get(state) );
   }
 );

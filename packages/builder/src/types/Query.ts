@@ -39,6 +39,24 @@ export type WindowFrameMode = 'RANGE' | 'ROWS' | 'GROUPS';
 
 export type WindowFrameExclusion = 'CURRENT ROW' | 'GROUP' | 'TIES' | 'NO OTHERS';
 
+/**
+ * 
+ * BY = [a, b, c] = [ [a, b, c] ]
+ * GROUPING SET = [ [a, b], [a], [c], [] ]
+ * CUBE = [a, b, c] = [ [a, b, c], [a, b], [a, c], [a], [b, c], [b], [c], [] ]
+ * ROLLUP = [a, b, c] = [ [a, b, c], [a, b], [a], [] ]
+ * 
+ * # Composite
+ * ROLLUP = [[a, b], c] = [ [a, b, c], [a, b], [] ]
+ * ROLLUP = [a, [b, c], d] = [ [a, b, c, d], [a, b, c], [a], [] ]
+ * 
+ * # Concatenate
+ * BY + ROLLUP = [a] + [b, c] = [ [a, b, c], [a, b], [a] ]
+ * SET + SET = [a, b] + [c, d] = [ [a, c], [a, d], [b, c], [b, d] ]
+ * BY + CUBE + SET = [a] + CUBE[b, c] + SET[[d], [e]] 
+ *    = [ [a] ] + [ [b, c], [b], [c], [] ] + [ [d], [e] ]
+ *    = [ [a, b, c, d], [a, b, c, e], [a, b, d], [a, b, e], [a, c, d], [a, c, e], [a, d], [a, e]]
+ */
 export type GroupingSetType = 'BY' | 'GROUPING SET' | 'ROLLUP' | 'CUBE';
 
 export type InsertPriority = 'LOW' | 'HIGH' | 'DELAYED';

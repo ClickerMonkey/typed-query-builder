@@ -4,8 +4,8 @@ import { RunTransformers } from '../Transformers';
 
 RunTransformers.setTransformer(
   ExprParam, 
-  (v) => (_, params) => {
-    const result = params?.[v.param];
+  (v) => (state) => {
+    const result = state.params[v.param];
 
     return result === null ? undefined : result;
   }

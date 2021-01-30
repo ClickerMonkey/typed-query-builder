@@ -5,8 +5,8 @@ import { RunTransformers } from '../Transformers';
 
 RunTransformers.setTransformer(
   ExprField, 
-  (v) => (_, __, state) => {
-    const result = state?.row?.[v.source.getName()]?.[v.alias as string];
+  (v) => (state) => {
+    const result = state.row[v.source.getName()]?.[v.alias as string];
 
     return result === null ? undefined : result;
   }

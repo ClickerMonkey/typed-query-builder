@@ -4,12 +4,12 @@ import { RunTransformers } from '../Transformers';
 
 
 RunTransformers.setTransformer<ExprFunction<keyof Functions, Functions>>(
-  ExprFunction, 
-  (v, transform) => {
-    const args = (v.args as Expr<any>[]).map(transform);
+  ExprFunction,
+  (v, transform, compiler) => {
+    const args = (v.args as Expr<any>[]).map( e => compiler.eval(e) );
 
-    return (sources, params, state) => {
-      const values = args.map(p => p(sources, params, state));
+    return (state) => {
+      const values = args.map(p => p.get(state));
 
       if (v.func in RunFunctions) {
         return RunFunctions[v.func].apply(values);

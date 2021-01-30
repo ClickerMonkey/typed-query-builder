@@ -4,11 +4,11 @@ import { RunTransformers } from '../Transformers';
 
 RunTransformers.setTransformer(
   ExprPredicateUnary, 
-  (v, transform) => {
-    const value = transform(v.value);
+  (v, transform, compiler) => {
+    const value = compiler.eval(v.value);
 
-    return (sources, params, state) => {
-      const x = value(sources, params, state);
+    return (state) => {
+      const x = value.get(state);
 
       switch (v.type) {
         case 'FALSE':

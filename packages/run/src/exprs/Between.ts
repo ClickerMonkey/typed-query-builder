@@ -5,15 +5,15 @@ import { compare } from '../util';
 
 RunTransformers.setTransformer(
   ExprBetween, 
-  (v, transform) => {
-    const value = transform(v.value);
-    const low = transform(v.low);
-    const high = transform(v.high);
+  (v, transform, compiler) => {
+    const value = compiler.eval(v.value);
+    const low = compiler.eval(v.low);
+    const high = compiler.eval(v.high);
 
-    return (sources, params, state) => {
-      const v = value(sources, params, state);
+    return (state) => {
+      const v = value.get(state);
 
-      return compare(v, low(sources, params, state)) >= 0 && compare(v, high(sources, params, state)) <= 0;
+      return compare(v, low.get(state)) >= 0 && compare(v, high.get(state)) <= 0;
     };
   }
 );

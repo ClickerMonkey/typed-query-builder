@@ -4,11 +4,11 @@ import { RunTransformers } from '../Transformers';
 
 RunTransformers.setTransformer(
   ExprOperationUnary, 
-  (v, transform) => {
-    const value = transform(v.value);
+  (v, transform, compiler) => {
+    const value = compiler.eval(v.value);
 
-    return (sources, params, state) => {
-      const a = value(sources, params, state);
+    return (state) => {
+      const a = value.get(state);
 
       if (a === undefined) {
         return undefined;

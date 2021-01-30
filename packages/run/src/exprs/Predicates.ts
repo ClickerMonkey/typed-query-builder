@@ -4,13 +4,13 @@ import { RunTransformers } from '../Transformers';
 
 RunTransformers.setTransformer(
   ExprPredicates, 
-  (v, transform) => {
-    const conditions = v.predicates.map(transform);
+  (v, transform, compiler) => {
+    const conditions = v.predicates.map( e => compiler.eval(e) );
 
     if (v.type === 'AND') {
-      return (sources, params, state) => !conditions.some((c) => !c(sources, params, state));
+      return (state) => !conditions.some((c) => !c.get(state));
     } else {
-      return (sources, params, state) => conditions.some((c) => c(sources, params, state));
+      return (state) => conditions.some((c) => c.get(state));
     }
   }
 );

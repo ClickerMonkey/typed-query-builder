@@ -4,9 +4,9 @@ import { RunTransformers } from '../Transformers';
 
 RunTransformers.setTransformer(
   ExprNot, 
-  (v, transform) => {
-    const value = transform(v.predicate);
+  (v, transform, compiler) => {
+    const value = compiler.eval(v.predicate);
 
-    return (sources, params, state) => !value(sources, params, state);
+    return (state) => !value.get(state);
   }
 );

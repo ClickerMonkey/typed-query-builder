@@ -1,44 +1,44 @@
 import { Expr, ExprDeep, isArray, isPlainObject, mapRecord } from '@typed-query-builder/builder';
-import { RunTransformerInput, RunTransformers, RunTransformerState, RunTransformerTransformer } from '../Transformers';
+import { RunCompiled, RunState, RunTransformers } from '../Transformers';
 
 
-function deepTransform(value: any, transform: RunTransformerTransformer): any 
+function deepTransform(value: any, compiler: RunCompiled): any 
 {
   if (isArray(value))
   {
-    return value.map( x => deepTransform( x, transform ) );
+    return value.map( x => deepTransform( x, compiler ) );
   }
   else if (value instanceof Expr)
   {
-    return transform(value);
+    return compiler.eval(value);
   }
   else if (isPlainObject(value))
   {
-    return mapRecord(value, x => deepTransform( x, transform ) );
+    return mapRecord(value, x => deepTransform( x, compiler ) );
   }
 
   return () => value;
 }
 
-function deepResolve(value: any, sources: RunTransformerInput, params?: Record<string, any>, state?: RunTransformerState): any 
+function deepResolve(value: any, state: RunState): any 
 {
   if (isArray(value))
   {
-    return value.map( x => deepResolve(x, sources, params, state) );
+    return value.map( x => deepResolve(x, state) );
   }
   else if (isPlainObject(value))
   {
-    return mapRecord(value, x => deepResolve(x, sources, params, state) );
+    return mapRecord(value, x => deepResolve(x, state) );
   }
 
-  return value(sources, params, state);
+  return value.get(state);
 }
 
 RunTransformers.setTransformer(
   ExprDeep, 
-  (v, transform) => {
-    const deep = deepTransform(v, transform);
+  (v, transform, compiler) => {
+    const deep = deepTransform(v, compiler);
 
-    return (sources, params, state) => deepResolve(deep, sources, params, state);
+    return (state) => deepResolve(deep, state);
   },
 );
