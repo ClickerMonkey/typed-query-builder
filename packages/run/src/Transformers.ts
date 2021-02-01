@@ -1,5 +1,4 @@
-import { Expr, Transformer } from '@typed-query-builder/builder';
-import { ExprNull } from '@typed-query-builder/builder/src/internal';
+import { Expr, QueryWindow, Transformer, ExprNull } from '@typed-query-builder/builder';
 
 
 
@@ -44,14 +43,44 @@ export interface RunTransformerResult
   selects: Record<string, any>;
 
   /**
-   * Cached order by values. These are cached by order by or window clauses.
+   * Cached group/partition by values.
    */
-  order: any[];
+  partitionValues: any[];
 
   /**
-   * The relative order value to the row before. This is -1 for the first row. 0 if the row before has the same order values. 1 if the row before is not the same order value.
+   * The zero-based partition this result is in.
    */
-  relativeOrder: number;
+  partition: number;
+
+  /**
+   * The zero-based index this result is in it's partition.
+   */
+  partitionIndex: number;
+
+  /**
+   * The number of rows in the partition.
+   */
+  partitionSize: number;
+
+  /**
+   * Cached peer order by values.
+   */
+  peerValues: any[];
+
+  /**
+   * The zero-based peer group this result is in.
+   */
+  peer: number;
+
+  /**
+   * The zero-based index this result is in it's peer group.
+   */
+  peerIndex: number;
+
+  /**
+   * The number of peers in the peer group.
+   */
+  peerSize: number;
 }
 
 /**
@@ -120,6 +149,18 @@ export class RunCompiled
 
 }
 
+export interface RunStateOptions
+{
+   // All sources, given and virtual
+   sources: RunTransformerInput;
+
+   // Any parameters passed in
+   params?: Record<string, any>;
+ 
+   // Ignore string case?
+   ignoreCase?: boolean;
+}
+
 export class RunState
 {
 
@@ -144,21 +185,41 @@ export class RunState
   // Current result to evaluate in grouping & having clauses.
   public result!: RunTransformerResult;
 
-  // All partitions based on current window function
-  public partitions: RunTransformerResult[][] = [];
-
-  // Current partition based on window functions
-  public partition: RunTransformerResult[] = [];
-
-  // The start of the window frame in the current window function partition
-  public frameStart: number = 0;
-
-  // The end of the window frame in the current window function partition
-  public frameEnd: number = 0;
+  // The last window that was applied to the results
+  public lastWindow?: QueryWindow<never, any, any, any>;
 
 
-  public getRowValue<T>(expr: RunTransformerExpr<T>): T
+  public constructor(options: RunStateOptions)
   {
+    this.sources = { ...options.sources };
+    this.params = options.params || {};
+    this.ignoreCase = !!options.ignoreCase;
+  }
+
+  public extend()
+  {
+    return new RunState(this);
+  }
+
+  public forEachResult(onResult: (result: RunTransformerResult) => void): void
+  {
+    for (const result of this.results)
+    {
+      this.result = result;
+      this.row = result.row;
+
+      onResult(result);
+    }
+  }
+
+  public getRowValue<T>(expr: RunTransformerExpr<T>, result?: RunTransformerResult): T
+  {
+    if (result)
+    {
+      this.result = result;
+      this.row = result.row;
+    }
+
     const { cached, selects } = this.result;
     let cachedValue = cached[expr.id];
   
@@ -175,8 +236,14 @@ export class RunState
     return cachedValue;
   }
 
-  public setRowValue<T>(expr: RunTransformerExpr<T>, value: any): void
+  public setRowValue<T>(expr: RunTransformerExpr<T>, value: any, result?: RunTransformerResult): void
   {
+    if (result)
+    {
+      this.result = result;
+      this.row = result.row;
+    }
+
     const { cached, selects } = this.result;
 
     cached[expr.id] = value;

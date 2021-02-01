@@ -5,7 +5,7 @@ import {
   ExprCase, ExprCast, ExprPredicateBinary, ExprPredicates, ExprPredicateUnary, ExprConstant, ExprExists, ExprFunction, fns,
   ExprIn, ExprNot, ExprOperationBinary, ExprOperationUnary, ExprParam, Expr, ExprTypeMap, ExprField, ExprRaw, ExprRow,
   ExprDefault, ExprPredicateBinaryList, ExprScalar, ExprInput, Select, SourceUnspecified, QuerySelectScalarInput, ExprNull,
-  QuerySelectScalar, isString, Cast, toExpr, ExprInputType, toAnyExpr, ExprDeep, ExprInputDeep, toExprDeep
+  QuerySelectScalar, isString, Cast, toExpr, ExprInputType, toAnyExpr, ExprDeep, ExprInputDeep, toExprDeep, QueryWindow
 } from '../internal';
 
 
@@ -79,7 +79,7 @@ export interface ExprFactory<T extends Sources, S extends Selects, W extends Nam
   notIn<V>(value: ExprInput<V>, ...values: any[]): ExprScalar<boolean>;
 }
 
-export function createExprFactory<T extends Sources, S extends Selects, W extends Name>(sources: SourcesFieldsFactory<T>, selects: SelectsExprs<S>): ExprFactory<T, S, W>
+export function createExprFactory<T extends Sources, S extends Selects, W extends Name>(sources: SourcesFieldsFactory<T>, selects: SelectsExprs<S>, windows: { [K in W]: QueryWindow<K, T, S, W> }): ExprFactory<T, S, W>
 {
   const exprs = {
       
@@ -194,7 +194,7 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
     },
 
     aggregate<A extends keyof Aggs, Aggs = AggregateFunctions, V = FunctionResult<A, Aggs>>(type: A, ...args: FunctionArgumentInputs<A, Aggs>): ExprAggregate<T, S, W, A, Aggs, V> {
-      return new ExprAggregate<T, S, W, A, Aggs, V>(exprs as ExprFactory<T, S, W>, type, (args as any).filter( (v: any) => v !== undefined ).map( toExpr ));
+      return new ExprAggregate<T, S, W, A, Aggs, V>(exprs as ExprFactory<T, S, W>, windows, type, (args as any).filter( (v: any) => v !== undefined ).map( toExpr ));
     },
 
     count(nonNullValues?: ExprScalar<any>): ExprAggregate<T, S, W, 'count'> {

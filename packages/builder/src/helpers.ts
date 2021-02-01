@@ -151,7 +151,7 @@ export function exprs<
   W extends Name = never
 >(sources: SourcesFieldsFactory<T> = {} as any, selects: SelectsExprs<S> = [] as any)
 {
-  return createExprFactory<T, S, W>(sources, selects);
+  return createExprFactory<T, S, W>(sources, selects, {} as any);
 }
 
 export function withs<

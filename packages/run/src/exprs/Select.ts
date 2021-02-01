@@ -14,36 +14,39 @@ RunTransformers.setTransformer(
     const selector = rowsBuildSelects(v._criteria.selects as never, compiler);
     const distincter = v._distinctOn.map( d => compiler.eval(d) );
 
-    return (state) => {
-      sources(state);
-      where(state);
-      grouper(state);
-      selector(state);
+    return (state) => 
+    {
+      const innerState = state.extend();
+
+      sources(innerState);
+      where(innerState);
+      grouper(innerState);
+      selector(innerState);
       
       if (v._distinct) {
-        removeDuplicates(state.results, (a, b) => compare(a.selects, b.selects, state.ignoreCase, true, false) === 0);
+        removeDuplicates(innerState.results, (a, b) => compare(a.selects, b.selects, innerState.ignoreCase, true, false) === 0);
       } else if (distincter.length > 0) {
-        removeDuplicates(state.results, (a, b) => {
+        removeDuplicates(innerState.results, (a, b) => {
           if (!a.cached[-1]) {
-            state.result = a;
-            state.row = a.row;
+            innerState.result = a;
+            innerState.row = a.row;
 
-            a.cached[-1] = distincter.map( d => state.getRowValue(d) );
+            a.cached[-1] = distincter.map( d => innerState.getRowValue(d) );
           }
           if (!b.cached[-1]) {
-            state.result = a;
-            state.row = a.row;
+            innerState.result = a;
+            innerState.row = a.row;
 
-            b.cached[-1] = distincter.map( d => state.getRowValue(d) );
+            b.cached[-1] = distincter.map( d => innerState.getRowValue(d) );
           }
 
-          return compare(a.cached[-1], b.cached[-1], state.ignoreCase, true, false) === 0;
+          return compare(a.cached[-1], b.cached[-1], innerState.ignoreCase, true, false) === 0;
         });
       }
 
-      orderer(state);
+      orderer(innerState);
 
-      let output = state.results.map( r => r.selects );
+      let output = innerState.results.map( r => r.selects );
 
       if (isNumber(v._criteria.offset)) {
         output = output.slice(v._criteria.offset);

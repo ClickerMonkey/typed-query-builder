@@ -12,6 +12,7 @@ export class ExprAggregate<T extends Sources, S extends Selects, W extends Name,
 
   public constructor(
     public _exprs: ExprFactory<T, S, W>,
+    public _windows: { [K in W]: QueryWindow<K, T, S, W> },
     public _type: A,
     public _values: FunctionArgumentValues<A, Aggs>,
     public _distinct?: boolean,

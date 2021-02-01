@@ -22,7 +22,7 @@ export class WithBuilder<T extends Sources = {}>
     this._sources = [];
     this._sourceFields = Object.create(null);
     this._sourceMap = Object.create(null);
-    this._exprs = createExprFactory(this._sourceFields as any, [] as any);
+    this._exprs = createExprFactory(this._sourceFields as any, [] as any, {} as any);
   }
   
   public with<WN extends Name, WS extends Selects>(sourceProvider: WithProvider<T, NamedSource<WN, WS>>, recursive?: WithProvider<JoinedInner<T, WN, WS>, Source<WS>>, all?: boolean): WithBuilder<JoinedInner<T, WN, WS>>

@@ -1,6 +1,6 @@
 import { OrderBy, Select, Expr, ExprScalar, JoinType, NamedSource, QuerySelect, Source, SourceJoin, SourceKind, SourceKindPair, SourceRecursive, SourceTable, SourceValues, QueryGroup } from '@typed-query-builder/builder';
-import { RunCompiled, RunTransformerExpr, RunTransformerExprNoop, RunTransformerFunction, RunTransformerResult, RunTransformerRow } from './Transformers';
-import { compare } from './util';
+import { RunCompiled, RunTransformerExpr, RunTransformerFunction, RunTransformerResult, RunTransformerRow } from './Transformers';
+import { compare, removeDuplicates, sort } from './util';
 
 
 const SourceKindOrder:  Record<SourceKind, number> = {
@@ -205,7 +205,7 @@ function getRowsForSource(source: Source<any>, kind: SourceKind, compiler: RunCo
 
         if (!source.all)
         {
-          removeDuplicates(total);
+          removeDuplicates(total, (a, b) => compare(a, b, state.ignoreCase, true, false) === 0);
         }
 
         state.sources[source.name] = total;
@@ -269,13 +269,18 @@ export function rowsGrouping(queryGroups: QueryGroup<any>[], querySelects: Recor
   const groupOrder: OrderBy[] = [];
   const groupSelectNames: string[] = [];
   const groupingSetMap: Record<string, RunTransformerExpr<any>> = {};
-  const having = queryHaving ? compiler.eval(queryHaving) : RunTransformerExprNoop;
+  const having = queryHaving ? compiler.eval(queryHaving) : undefined;
 
-  for (const groupingSet of groupingSets) {
-    for (const group of groupingSet) {
-      if (!groupOrder.some( o => o.value === group.expr )) {
+  for (const groupingSet of groupingSets) 
+  {
+    for (const group of groupingSet) 
+    {
+      if (!groupOrder.some( o => o.value === group.expr )) 
+      {
         groupOrder.push(new OrderBy(group.expr, 'ASC', true));
-        if (group.select) {
+
+        if (group.select) 
+        {
           groupSelectNames.push(group.select);
           groupingSetMap[group.select] = group;
         }
@@ -287,91 +292,98 @@ export function rowsGrouping(queryGroups: QueryGroup<any>[], querySelects: Recor
 
   return (state) =>
   {
-    if (groupingSets.length > 0) {
-      
-      let results: RunTransformerResult[] = [];
+    const group = state.sourceOutput;
+
+    if (groupingSets.length > 0) 
+    {  
+      let allGroups: RunTransformerResult[] = [];
 
       for (const groupingSet of groupingSets) 
       {
-        state.results = [{
-          group: state.sourceOutput,
-          row: state.sourceOutput[0],
-          cached: [],
-          order: [],
-          relativeOrder: 0,
-          selects: {},
-        }];
+        const groupingSetResults: RunTransformerResult[] = [];
 
-        const byMap = new Map<any, RunTransformerResult>();
-        
-        for (const group of groupingSet) 
+        for (const row of group)
         {
-          for (const result of state.results) 
-          {
-            for (const row of result.group) 
-            {
-              state.result = result;
-              state.row = row;
+          const result: RunTransformerResult = {
+            row,
+            group,
+            cached: {},
+            selects: {},
+            partitionValues: [],
+            partition: 0,
+            partitionIndex: 0,
+            partitionSize: 0,
+            peerValues: [],
+            peer: 0,
+            peerIndex: 0,
+            peerSize: 0,
+          };
 
-              const by = state.getRowValue(group);
-              const newGroup = byMap.get(by);
+          state.result = result;
+          state.row = row;
 
-              if (newGroup) 
-              {
-                newGroup.group.push(result.row);
-              } 
-              else 
-              {
-                const newResult: RunTransformerResult = {
-                  row: result.row,
-                  group: [result.row],
-                  cached: Object.assign({}, result.cached),
-                  order: [],
-                  relativeOrder: 0,
-                  selects: Object.assign({}, result.selects),
-                };
-
-                state.result = newResult;
-
-                if (groupingSets.length > 1) {
-                  for (const selectName of groupSelectNames) {
-                    if (!groupingSet.some( s => s.select === selectName ) && groupingSetMap[selectName]) {
-                      state.setRowValue( groupingSetMap[selectName], undefined );
-                    }
-                  }
-                }
-
-                byMap.set(by, newResult);
-              }
-            }
-          }
+          result.partitionValues = groupingSet.map( set => state.getRowValue(set) );
+          groupingSetResults.push(result);
         }
 
-        state.results = [ ...byMap.values() ];
+        sort(groupingSetResults, {
+          compare: (a, b) => compare(a.partitionValues, b.partitionValues, state.ignoreCase, true, true),
+          equals: (a, b) => compare(a.partitionValues, b.partitionValues, state.ignoreCase, true, false) === 0,
+          setGroup: (a, group) => a.partition = group,
+          setGroupIndex: (a, index) => a.partitionIndex = index,
+          setGroupSize: (a, size) => a.partitionSize = size,
+        });
 
-        results.push( ...state.results );
+        const groupedResults: RunTransformerResult[] = [];
+
+        for (let i = 0; i < groupingSetResults.length; i++)
+        {
+          const head = groupingSetResults[i];
+
+          for (let k = 1; k < head.partitionSize; k++)
+          {
+            const node = groupingSetResults[i + k];
+
+            head.group.push(node.row);
+          }
+
+          i += head.partitionSize - 1;
+
+          groupedResults.push(head);
+        }
+
+        allGroups.push( ...groupedResults );
       }
 
-      state.results = queryHaving
-        ? results.filter( (result) => {
+      state.results = having
+        ? allGroups.filter( (result) => {
             state.row = result.row;
             state.result = result;
 
             return state.getRowValue(having);
           }) 
-        : results;
+        : allGroups;
 
-      groupOrderer(state);
+      if (groupingSets.length > 1)
+      {
+        groupOrderer(state);
+      }
     }
     else 
     {
-      state.results = state.sourceOutput.map( row => ({
+      state.results = group.map((row, partition) => ({
         row,
-        group: state.sourceOutput,
-        cached: [],
-        order: [],
-        relativeOrder: 0,
+        group,
+        cached: {},
         selects: {},
+        partitionValues: [],
+        partition,
+        partitionIndex: 0,
+        partitionSize: 0,
+        peerValues: [],
+        peer: 0,
+        peerIndex: 0,
+        peerSize: 0,
       }));
     }
   };
@@ -380,6 +392,7 @@ export function rowsGrouping(queryGroups: QueryGroup<any>[], querySelects: Recor
 export function rowsOrdered(orders: OrderBy[], compiler: RunCompiled): RunTransformerFunction<void>
 {
   const orderBys = orders.map( o => ({ expr: compiler.eval(o.value), order: o.order || 'ASC', nullsLast: o.nullsLast }));
+  const orderComparator = rowsPeerComparator(orderBys);
 
   return (state) =>
   {
@@ -388,20 +401,24 @@ export function rowsOrdered(orders: OrderBy[], compiler: RunCompiled): RunTransf
       return;
     }
 
-    state.results.forEach((result) =>
-    {
-      state.row = result.row;
-      state.result = result;
+    state.forEachResult( r => r.peerValues = [] );
 
-      result.order = orderBys.map( o => state.getRowValue(o.expr) );
-    });
+    orderBys.forEach( o => state.forEachResult( r => r.peerValues.push(state.getRowValue(o.expr)) ) );
 
-    state.results.sort((a, b) =>
+    state.results.sort(orderComparator(state.ignoreCase));
+  };
+}
+
+export function rowsPeerComparator(orderBys: Array<{ expr: RunTransformerExpr<any>; order: "ASC" | "DESC"; nullsLast: boolean | undefined; }>)
+{
+  return (ignoreCase: boolean) =>
+  {
+    return (a: RunTransformerResult, b: RunTransformerResult): number =>
     {
       for (let i = 0; i < orderBys.length; i++)
       {
         const o = orderBys[i];
-        const d = compare(a.order[i], b.order[i], state.ignoreCase, o.nullsLast, true);
+        const d = compare(a.peerValues[i], b.peerValues[i], ignoreCase, o.nullsLast, true);
 
         if (d !== 0)
         {
@@ -410,7 +427,7 @@ export function rowsOrdered(orders: OrderBy[], compiler: RunCompiled): RunTransf
       }
 
       return 0;
-    });
+    };
   };
 }
 
@@ -431,29 +448,6 @@ export function rowsBuildSelects(querySelects: Select<any, any>[], compiler: Run
       }
     });
   };
-}
-
-export function removeDuplicates<T>(rows: T[], isMatch: (a: T, b: T) => boolean): number
-{
-  let duplicates =0;
-
-  for (let i = rows.length - 1; i > 0; i--)
-  {
-    const last = rows[i];
-
-    for (let j = i - 1; j >= 0; j--)
-    {
-      if (isMatch(last, rows[j]))
-      {
-        rows.splice( i, 1 );
-        duplicates++;
-
-        continue;
-      }
-    }
-  }
-
-  return duplicates;
 }
 
 export function computeGroupingSets(groups: QueryGroup<string>[]): string[][]

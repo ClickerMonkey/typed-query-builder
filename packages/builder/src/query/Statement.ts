@@ -45,7 +45,7 @@ export abstract class Statement<
     this._sourceMap = Object.create(null);
     this._sourceFields = Object.create(null);
     this._returning = [] as any;
-    this._exprs = createExprFactory(this._sourceFields as any, [] as any);
+    this._exprs = createExprFactory(this._sourceFields as any, [] as any, {} as any);
     this._clauses = {};
   }
 

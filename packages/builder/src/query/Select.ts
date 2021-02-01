@@ -338,6 +338,7 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
       this._criteria.extend(), 
       new ExprAggregate<T, S, W, A, Aggs, R>(
         this._criteria.exprs,
+        this._criteria.windows,
         type,
         valuesExprs as any,
         distinct,

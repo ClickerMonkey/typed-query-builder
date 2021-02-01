@@ -38,7 +38,7 @@ export class QueryCriteria<T extends Sources, S extends Selects, W extends Name>
     this.orderBy = base ? base.orderBy.slice() : [];
     this.limit = base?.limit;
     this.offset = base?.offset;
-    this.exprs = createExprFactory(this.sourcesFields, this.selectsExpr);
+    this.exprs = createExprFactory(this.sourcesFields, this.selectsExpr, this.windows);
   }
 
   public addSource(source: NamedSource<any, any>, kind: SourceKind): void 
