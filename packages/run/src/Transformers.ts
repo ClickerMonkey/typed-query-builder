@@ -29,7 +29,7 @@ export interface RunTransformerResult
   /**
    * Rows grouped together that can have aggregate expressions, or a single row if no grouping occurred.
    */
-  group: RunTransformerRow[];
+  group: RunTransformerResult[];
 
   /**
    * Cached expression values. Complex expressions can be referenced multiple times since selects are defined, then
@@ -185,6 +185,9 @@ export class RunState
   // Current result to evaluate in grouping & having clauses.
   public result!: RunTransformerResult;
 
+  // The index of result in the currently iterating results array.
+  public resultIndex: number = 0;
+
   // The last window that was applied to the results
   public lastWindow?: QueryWindow<never, any, any, any>;
 
@@ -201,11 +204,14 @@ export class RunState
     return new RunState(this);
   }
 
-  public forEachResult(onResult: (result: RunTransformerResult) => void): void
+  public forEachResult(onResult: (result: RunTransformerResult) => void, results: RunTransformerResult[] = this.results): void
   {
-    for (const result of this.results)
+    for (let i = 0; i < results.length; i++)
     {
+      const result = results[i];
+
       this.result = result;
+      this.resultIndex = i;
       this.row = result.row;
 
       onResult(result);
@@ -217,6 +223,7 @@ export class RunState
     if (result)
     {
       this.result = result;
+      this.resultIndex = -1;
       this.row = result.row;
     }
 
@@ -241,6 +248,7 @@ export class RunState
     if (result)
     {
       this.result = result;
+      this.resultIndex = -1;
       this.row = result.row;
     }
 

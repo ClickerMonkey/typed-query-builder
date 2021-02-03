@@ -13,7 +13,8 @@
         "builder": "yarn workspace @typed-query-builder/builder",
         "sql": "yarn workspace @typed-query-builder/sql",
         "sql-mssql": "yarn workspace @typed-query-builder/sql-mssql",
-        "mssql": "yarn workspace @typed-query-builder/mssql"
+        "mssql": "yarn workspace @typed-query-builder/mssql",
+        "runtime": "yarn workspace @typed-query-builder/run"
     },
     "devDependencies": {
         "@types/jest": "25.2.1",

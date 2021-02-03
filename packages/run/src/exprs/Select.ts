@@ -1,7 +1,7 @@
 import { QuerySelect, isNumber } from '@typed-query-builder/builder';
-import { removeDuplicates, rowsBuildSelects, rowsFromSources, rowsGrouping, rowsOrdered, rowsWhere } from '../Criteria';
+import { rowsBuildSelects, rowsFromSources, rowsGrouping, rowsOrdered, rowsWhere } from '../Criteria';
 import { RunTransformers } from '../Transformers';
-import { compare } from '../util';
+import { compare, removeDuplicates } from '../util';
 
 
 RunTransformers.setTransformer(

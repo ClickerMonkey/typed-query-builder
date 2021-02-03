@@ -3,6 +3,58 @@ import { RunCompiled, RunTransformerExpr, RunTransformerFunction, RunTransformer
 import { compare, removeDuplicates, sort } from './util';
 
 
+//
+// PERFORMANCE IMPROVEMENTS
+//
+// 1. if no distinct: order, paging, selects
+// 2. if distinct on: order, calculate distinct on and ignore duplicates, paging, selects
+// 3. if distinct: selects, order, paging
+// 4. if select has aggregate selects (without windows) it produces a single result, so we can't use shortcuts above.
+// 5. cache reused expression values
+
+
+//
+// ORDER OF OPERATIONS
+//
+// withs
+  // DO: run each expression, save as temporary source
+// froms
+  // DO: initial from defines sources, each subsequent one is like a full join
+// joins
+  // DO: each one is a join of the defined type
+// where
+  // DO: remove rows that don't pass condition
+// group by & having
+  // DO: generate groups
+  // DO: remove groups that don't pass condition
+// calculate selects
+  // apply windows, for each aggregate with a custom window and each defined window - calculate those selects
+    // when order by is specified, window frame is by default from start to last row that has same value as current row based on orderBy
+    // when order is not specified, window frame is complete partition
+  // terms
+    // partition = rows with same partition by value
+    // window frame = window defines start and end of frame (default start=1, end=last peer of current)
+    // peers = rows with same order by value in partition, without order by no peers
+  // window functions
+    // rowNumber = number of current row within partition, starting at 1
+    // rank = rowNumber of first row in peer group (peer group is rows with same orderby value)
+    // denseRank = counts peer groups in partition (how many unique orderby values) (1=group with same order by, 2=next, 3...)
+    // percentRank = (rank - 1) / (total partition rows - 1)
+    // cumeDist = (number of partition rows preceding or peers with current row) / (total partition rows)
+    // ntile(buckets) = floor((rowNumber - 1) / ceil(group.length / buckets)) + 1
+    // lag(value, offset=1, default=NULL) = value of row offset rows before in partition
+    // lead(value, offset=1, default=NULL) = value of row offset rows after in partition
+    // firstValue(value) = value of first row in window frame
+    // lastValue(value) = value of last row in window frame
+    // nthValue(value, n) = value of row that is the nth row of the window frame (start at 1), NULL if no row
+  // window without partition is full results (ie: count(*) over ())
+// distinct & distinct on
+// order by
+  // take order by exprs that are aggregates over windows, order by window name, compute results
+// limit & offset
+
+
+
 const SourceKindOrder:  Record<SourceKind, number> = {
   [SourceKind.WITH]: 0,
   [SourceKind.FROM]: 1,
@@ -292,7 +344,25 @@ export function rowsGrouping(queryGroups: QueryGroup<any>[], querySelects: Recor
 
   return (state) =>
   {
-    const group = state.sourceOutput;
+    const results: RunTransformerResult[] = state.results = state.sourceOutput.map((row, partition) => ({
+      row,
+      group: [],
+      cached: {},
+      selects: {},
+      partitionValues: [],
+      partition,
+      partitionIndex: 0,
+      partitionSize: 0,
+      peerValues: [],
+      peer: 0,
+      peerIndex: 0,
+      peerSize: 0,
+    }));
+
+    for (const result of results)
+    {
+      result.group = results;
+    }
 
     if (groupingSets.length > 0) 
     {  
@@ -300,33 +370,9 @@ export function rowsGrouping(queryGroups: QueryGroup<any>[], querySelects: Recor
 
       for (const groupingSet of groupingSets) 
       {
-        const groupingSetResults: RunTransformerResult[] = [];
+        state.forEachResult((result) => result.partitionValues = groupingSet.map( set => state.getRowValue(set) ));
 
-        for (const row of group)
-        {
-          const result: RunTransformerResult = {
-            row,
-            group,
-            cached: {},
-            selects: {},
-            partitionValues: [],
-            partition: 0,
-            partitionIndex: 0,
-            partitionSize: 0,
-            peerValues: [],
-            peer: 0,
-            peerIndex: 0,
-            peerSize: 0,
-          };
-
-          state.result = result;
-          state.row = row;
-
-          result.partitionValues = groupingSet.map( set => state.getRowValue(set) );
-          groupingSetResults.push(result);
-        }
-
-        sort(groupingSetResults, {
+        sort(results, {
           compare: (a, b) => compare(a.partitionValues, b.partitionValues, state.ignoreCase, true, true),
           equals: (a, b) => compare(a.partitionValues, b.partitionValues, state.ignoreCase, true, false) === 0,
           setGroup: (a, group) => a.partition = group,
@@ -334,25 +380,34 @@ export function rowsGrouping(queryGroups: QueryGroup<any>[], querySelects: Recor
           setGroupSize: (a, size) => a.partitionSize = size,
         });
 
-        const groupedResults: RunTransformerResult[] = [];
-
-        for (let i = 0; i < groupingSetResults.length; i++)
+        for (let i = 0; i < results.length; i++)
         {
-          const head = groupingSetResults[i];
+          const template = results[i];
+          const head: RunTransformerResult = {
+            ...template,
+            group: [ template ],
+            selects: { ...template.selects },
+            cached: { ...template.cached },
+          };
+
+          for (const selectName in groupingSetMap)
+          {
+            if (!groupingSet.some( s => s.select === selectName )) 
+            {
+              const clear = groupingSetMap[selectName];
+
+              head.selects[selectName] = undefined;
+              head.cached[clear.id] = undefined;
+            }
+          }
 
           for (let k = 1; k < head.partitionSize; k++)
           {
-            const node = groupingSetResults[i + k];
-
-            head.group.push(node.row);
+            head.group.push(results[++i]);
           }
 
-          i += head.partitionSize - 1;
-
-          groupedResults.push(head);
+          allGroups.push(head);
         }
-
-        allGroups.push( ...groupedResults );
       }
 
       state.results = having
@@ -368,23 +423,6 @@ export function rowsGrouping(queryGroups: QueryGroup<any>[], querySelects: Recor
       {
         groupOrderer(state);
       }
-    }
-    else 
-    {
-      state.results = group.map((row, partition) => ({
-        row,
-        group,
-        cached: {},
-        selects: {},
-        partitionValues: [],
-        partition,
-        partitionIndex: 0,
-        partitionSize: 0,
-        peerValues: [],
-        peer: 0,
-        peerIndex: 0,
-        peerSize: 0,
-      }));
     }
   };
 }
@@ -437,15 +475,12 @@ export function rowsBuildSelects(querySelects: Select<any, any>[], compiler: Run
 
   return (state) =>
   {
-    state.results.forEach((result) =>
+    selects.forEach((select) => 
     {
-      state.result = result;
-      state.row = result.row;
-
-      for (const select of selects)
+      state.forEachResult(() => 
       {
         state.getRowValue(select);
-      }
+      });
     });
   };
 }

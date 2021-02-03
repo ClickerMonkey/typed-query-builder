@@ -5,6 +5,12 @@ import { compare } from './util';
 export const RunFunctions: Functions = Object.create(null);
 
 
+export function addFunction<F extends keyof Functions>(name: F, impl: Functions[F]): void
+{
+  RunFunctions[name] = impl;
+}
+
+
 RunFunctions.coalesce = <T extends any[]>(...values: T): T[number] =>
 {
   return values.find( v => isValue(v) );
