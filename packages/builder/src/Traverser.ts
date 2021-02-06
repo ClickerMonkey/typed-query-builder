@@ -90,7 +90,7 @@ export class Traverser<T, R = any>
     {
       getStep.traverse(this);
     }
-    else
+    else if (isFunction(getStep))
     {
       getStep();
     }

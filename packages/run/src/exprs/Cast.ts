@@ -1,5 +1,4 @@
-import { DataTypeTypes, ExprCast, getDataTypeFromInput, getDataTypeFromValue, getDataTypeMeta } from '@typed-query-builder/builder/src/internal';
-import { isArray, isNumber, isString } from '@typed-query-builder/builder/typings';
+import { isArray, isNumber, isString, DataTypeTypes, ExprCast, getDataTypeFromInput, getDataTypeFromValue, getDataTypeMeta } from '@typed-query-builder/builder';
 import { RunTransformers } from '../Transformers';
 import { parseDate } from '../util';
 

@@ -8,7 +8,7 @@ addAggregate('ntile', (expr, [getBuckets], compiler) =>
   {
     initializeWindowless(expr, state);
 
-    const buckets = getBuckets(state);
+    const buckets = state.getRowValue(getBuckets);
 
     return Math.floor(state.result.partitionIndex / Math.ceil(state.result.partitionSize / buckets)) + 1;
   };

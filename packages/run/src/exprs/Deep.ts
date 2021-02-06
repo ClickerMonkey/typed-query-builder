@@ -1,8 +1,10 @@
 import { Expr, ExprDeep, isArray, isPlainObject, mapRecord } from '@typed-query-builder/builder';
-import { RunCompiled, RunState, RunTransformers } from '../Transformers';
+import { RunTransformers } from '../Transformers';
+import { RunState } from "../State";
+import { RunCompiler } from "../Compiler";
 
 
-function deepTransform(value: any, compiler: RunCompiled): any 
+function deepTransform(value: any, compiler: RunCompiler): any 
 {
   if (isArray(value))
   {

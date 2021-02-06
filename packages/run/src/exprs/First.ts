@@ -1,6 +1,6 @@
 import { QueryFirst } from '@typed-query-builder/builder';
-import { rowsBuildSelects, rowsFromSources, rowsGrouping, rowsOrdered, rowsWhere } from '../Criteria';
 import { RunTransformers } from '../Transformers';
+import { rowsBuildSelects, rowsFromSources, rowsGrouping, rowsOrdered, rowsWhere } from '../util';
 
 
 RunTransformers.setTransformer(

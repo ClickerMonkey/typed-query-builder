@@ -12,7 +12,7 @@ RunTransformers.setTransformer<ExprFunction<keyof Functions, Functions>>(
       const values = args.map(p => p.get(state));
 
       if (v.func in RunFunctions) {
-        return RunFunctions[v.func].apply(values);
+        return RunFunctions[v.func].apply(undefined, values);
       }
 
       return undefined;

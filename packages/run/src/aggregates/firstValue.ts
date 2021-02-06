@@ -21,6 +21,6 @@ addAggregate('firstValue', (expr, [getValue], compiler) =>
     state.resultIndex = absoluteIndex;
     state.row = absoluteResult.row;
 
-    return getValue(state);
+    return state.getRowValue(getValue);
   };
 });

@@ -1,10 +1,11 @@
 import { AggregateFunctions, ExprAggregate, QueryWindow } from '@typed-query-builder/builder';
-import { rowsPeerComparator } from '../Criteria';
-import { RunCompiled, RunState, RunTransformerFunction, RunTransformerResult } from '../Transformers';
-import { compare, removeDuplicates } from '../util';
+import { RunTransformerFunction } from '../Transformers';
+import { RunResult, RunState } from "../State";
+import { RunCompiler, RunExpr } from "../Compiler";
+import { compare, orderByCompile, removeDuplicates, rowsPeerComparator } from '../util';
 
 
-export function getAggregateFiltered(expr: ExprAggregate<{}, [], never, keyof AggregateFunctions, AggregateFunctions, any>, compiler: RunCompiled): RunTransformerFunction<RunTransformerResult[]>
+export function getAggregateFiltered(expr: ExprAggregate<{}, [], never, keyof AggregateFunctions, AggregateFunctions, any>, compiler: RunCompiler): RunTransformerFunction<RunResult[]>
 {
   if (expr._overWindowDefinition || expr._windows[expr._overWindow as any])
   {
@@ -22,7 +23,7 @@ export function getAggregateFiltered(expr: ExprAggregate<{}, [], never, keyof Ag
 
     return (state) => 
     {
-      const passed: RunTransformerResult[] = [];
+      const passed: RunResult[] = [];
 
       state.forEachResult((result) => state.getRowValue(filter) ? passed.push(result) : 0, state.result.group);
 
@@ -35,10 +36,10 @@ export function getAggregateFiltered(expr: ExprAggregate<{}, [], never, keyof Ag
   }
 }
 
-export function getAggregateValues<T>(expr: ExprAggregate<{}, [], never, keyof AggregateFunctions, AggregateFunctions, any>, getValue: RunTransformerFunction<T>, compiler: RunCompiled): RunTransformerFunction<T[]>
+export function getAggregateValues<T>(expr: ExprAggregate<{}, [], never, keyof AggregateFunctions, AggregateFunctions, any>, getValue: RunExpr<T>, compiler: RunCompiler): RunTransformerFunction<T[]>
 {
   const filtered = getAggregateFiltered(expr, compiler);
-  const orderBys = expr._order.map( o => ({ expr: compiler.eval(o.value), order: o.order || 'ASC', nullsLast: o.nullsLast }));
+  const orderBys = orderByCompile(expr._order, compiler);
   const orderByComparator = rowsPeerComparator(orderBys);
   
   return (state) =>
@@ -54,7 +55,7 @@ export function getAggregateValues<T>(expr: ExprAggregate<{}, [], never, keyof A
 
     const values: T[] = [];
 
-    state.forEachResult(() => values.push(getValue(state)), filteredRows);
+    state.forEachResult(() => values.push(state.getRowValue(getValue)), filteredRows);
 
     if (expr._distinct)
     {
@@ -65,7 +66,7 @@ export function getAggregateValues<T>(expr: ExprAggregate<{}, [], never, keyof A
   };
 }
 
-export function getWindowFrame(result: RunTransformerResult, win?: QueryWindow<any, any, any, any>)
+export function getWindowFrame(result: RunResult, win?: QueryWindow<any, any, any, any>)
 {
   // https://www.postgresql.org/docs/13/sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS
 

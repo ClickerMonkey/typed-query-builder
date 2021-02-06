@@ -1,4 +1,4 @@
-import { ExprOperationUnary } from '@typed-query-builder/builder/src/internal';
+import { ExprOperationUnary } from '@typed-query-builder/builder';
 import { RunTransformers } from '../Transformers';
 
 

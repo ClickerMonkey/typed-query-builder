@@ -68,24 +68,29 @@ export class ExprAggregate<T extends Sources, S extends Selects, W extends Name,
   {
     return traverse.enter(this, () => 
     {
+      const { _values, _order, _filter } = this;
+
       traverse.step('values', () => 
       {
-        for (let i = 0; this._values.length; i++) 
+        for (let i = 0; _values.length; i++) 
         {
-          traverse.step(i, this._values[i], (replace) => this._values[i] = replace as any);
+          traverse.step(i, _values[i], (replace) => _values[i] = replace as any);
         }
       });
+      
       traverse.step('orderBy', () => 
       {
-        for (let i = 0; i < this._order.length; i++) 
+        for (let i = 0; i < _order.length; i++) 
         {
-          traverse.step(i, this._order[i].value, (replace) => this._order[i].value = replace as any);
+          traverse.step(i, _order[i].value, (replace) => _order[i].value = replace as any);
         }
       });
-      if (this._filter) 
+
+      if (_filter) 
       {
-        traverse.step('filter', this._filter, (replace) => this._filter = replace as any, () => this._filter = undefined);
+        traverse.step('filter', _filter, (replace) => this._filter = replace as any, () => this._filter = undefined);
       }
+
       if (this._overWindowDefinition) 
       {
         traverse.step('window', this._overWindowDefinition);

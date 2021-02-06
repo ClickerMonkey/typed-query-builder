@@ -1,5 +1,4 @@
 import { DataTypePoint } from '@typed-query-builder/builder';
-import { distance } from '../util';
 import { Value } from './Base';
 
 
@@ -60,7 +59,7 @@ export abstract class Geometry<I> extends Value<I>
     {
       const p = this.pointAt(i);
 
-      length += distance(x, y, p.x, p.y);
+      length += x * y; // distance(x, y, p.x, p.y);
       x = p.x;
       y = p.y;
     }

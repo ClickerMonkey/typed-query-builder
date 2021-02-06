@@ -1,51 +1,51 @@
 
-import { isNumber } from '@typed-query-builder/builder';
+import { isArray, isNumber, isString } from '@typed-query-builder/builder';
 import { RunFunctions } from '../Functions';
 
 
 RunFunctions.lower = (x: string): string =>
 {
-  return x.toLowerCase();
+  return isString(x) ? x.toLowerCase() : x;
 };
 
 RunFunctions.upper = (x: string): string =>
 {
-  return x.toUpperCase();
+  return isString(x) ? x.toUpperCase() : x;
 };
 
 RunFunctions.trim = (x: string): string =>
 {
-  return x.trim();
+  return isString(x) ? x.trim() : x;
 };
 
 RunFunctions.trimLeft = (x: string): string =>
 {
-  return x.trimLeft();
+  return isString(x) ? x.trimLeft() : x;
 };
 
 RunFunctions.trimRight = (x: string): string =>
 {
-  return x.trimRight();
+  return isString(x) ? x.trimRight() : x;
 };
 
 RunFunctions.concat = (...values: string[]): string =>
 {
-  return values.join('');
+  return isArray(values) ? values.join('') : values;
 };
 
 RunFunctions.length = (x: string): number =>
 {
-  return x.length;
+  return isString(x) ? x.length : 0;
 };
 
 RunFunctions.indexOf = (x: string, search: string): number =>
 {
-  return x.indexOf(search) + 1;
+  return isString(x) ? x.indexOf(search) + 1 : -1;
 };
 
 RunFunctions.substring = (x: string, start: number, length?: number): string =>
 {
-  return x.substring(start, isNumber(length) ? start + length : undefined);
+  return isString(x) ? x.substring(start, isNumber(length) ? start + length : undefined) : '';
 };
 
 RunFunctions.regexGet = (x: string, regex: string): string =>
@@ -55,17 +55,17 @@ RunFunctions.regexGet = (x: string, regex: string): string =>
 
 RunFunctions.regexReplace = (x: string, pattern: string, replacement: string, flags?: string): string =>
 {
-  return x.replace(new RegExp(pattern, flags), replacement);
+  return isString(x) ? x.replace(new RegExp(pattern, flags), replacement) : '';
 };
 
 RunFunctions.char = (n: number): string =>
 {
-  return String.fromCharCode(n);
+  return isNumber(n) ? String.fromCharCode(n) : '';
 };
 
 RunFunctions.join = (separator: string, ...values: string[]): string =>
 {
-  return values.join(separator);
+  return isArray(values) ? values.join(separator) : '';
 };
 
 RunFunctions.format = (format: string, ...values: string[]): string =>
@@ -76,16 +76,20 @@ RunFunctions.format = (format: string, ...values: string[]): string =>
 
 RunFunctions.left = (x: string, n: number): string =>
 {
-  return x.substring(0, n);
+  return isString(x) ? x.substring(0, n) : '';
 };
 
 RunFunctions.right = (x: string, n: number): string =>
 {
-  return x.substring(x.length - n);
+  return isString(x) ? x.substring(x.length - n) : '';
 };
 
 RunFunctions.padLeft = (x: string, length: number, padding?: string): string =>
 {
+  if (!isString(x) || !isNumber(length)) {
+    return x;
+  }
+
   const remaining = length - x.length;
 
   if (remaining <= 0) return x;
@@ -98,6 +102,10 @@ RunFunctions.padLeft = (x: string, length: number, padding?: string): string =>
 
 RunFunctions.padRight = (x: string, length: number, padding?: string): string =>
 {
+  if (!isString(x) || !isNumber(length)) {
+    return x;
+  }
+
   const remaining = length - x.length;
 
   if (remaining <= 0) return x;
@@ -116,6 +124,10 @@ RunFunctions.md5 = (x: string): string =>
 
 RunFunctions.repeat = (x: string, n: number): string =>
 {
+  if (!isString(x)) {
+    return '';
+  }
+
   let r = '';
 
   while (--n >= 0) {
@@ -127,15 +139,15 @@ RunFunctions.repeat = (x: string, n: number): string =>
 
 RunFunctions.replace = (x: string, from: string, to: string): string =>
 {
-  return x.split(from).join(to);
+  return isString(x) ? x.split(from).join(to) : x;
 };
 
 RunFunctions.reverse = (x: string): string =>
 {
-  return x.split('').reverse().join('');
+  return isString(x) ? x.split('').reverse().join('') : x;
 };
 
 RunFunctions.startsWith = (x: string, y: string): boolean =>
 {
-  return y.length <= x.length && x.substring(0, y.length) === y;
+  return isString(x) && isString(y) ? y.length <= x.length && x.substring(0, y.length) === y : false;
 };

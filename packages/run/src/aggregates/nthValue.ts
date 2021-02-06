@@ -14,7 +14,7 @@ addAggregate('nthValue', (expr, [getValue, getNth], compiler) =>
     
     const { result, resultIndex } = state;
     const [ start ] = getWindowFrame(result, win);
-    const nth = getNth( state ) - 1;
+    const nth = state.getRowValue( getNth ) - 1;
     const absoluteIndex = start + resultIndex - result.partitionIndex + nth;
     const absoluteResult = state.results[absoluteIndex];
 
@@ -22,6 +22,6 @@ addAggregate('nthValue', (expr, [getValue, getNth], compiler) =>
     state.resultIndex = absoluteIndex;
     state.row = absoluteResult.row;
 
-    return getValue(state);
+    return state.getRowValue(getValue);
   };
 });

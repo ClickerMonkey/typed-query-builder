@@ -9,7 +9,7 @@ addAggregate('lag', (expr, [getValue, getOffset, getDefault], compiler) =>
   {
     initializeWindowless(expr, state);
     
-    const offset = getOffset ? getOffset(state) || 1 : 1;
+    const offset = getOffset ? state.getRowValue(getOffset) || 1 : 1;
     const absoluteIndex = state.resultIndex - offset;
     const result = state.results[absoluteIndex];
 
@@ -17,12 +17,12 @@ addAggregate('lag', (expr, [getValue, getOffset, getDefault], compiler) =>
     state.resultIndex = absoluteIndex;
     state.row = result.row;
 
-    const value = getValue(state);
+    const value = state.getRowValue(getValue);
 
     return isValue(value) 
       ? value 
       : getDefault
-        ? getDefault(state)
+        ? state.getRowValue(getDefault)
         : undefined;
   };
 });

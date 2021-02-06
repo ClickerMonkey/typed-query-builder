@@ -8,7 +8,7 @@ addAggregate('string', (expr, [value, getDelimiter], compiler) =>
 
   return (state) =>
   {
-    const delimiter = getDelimiter(state);
+    const delimiter = state.getRowValue(getDelimiter);
     const values = getValues(state);
 
     return values.join(delimiter);

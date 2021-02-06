@@ -1,6 +1,6 @@
 import { QueryExistential } from '@typed-query-builder/builder';
-import { rowsFromSources, rowsGrouping, rowsWhere } from '../Criteria';
 import { RunTransformers } from '../Transformers';
+import { rowsFromSources, rowsGrouping, rowsWhere } from '../util';
 
 
 RunTransformers.setTransformer(
