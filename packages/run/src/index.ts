@@ -63,5 +63,6 @@ import './exprs/First';
 import './exprs/Value';
 import './exprs/List';
 import './exprs/Existential';
+import './exprs/Delete';
 
 export * from './core';

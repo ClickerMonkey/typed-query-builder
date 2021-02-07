@@ -1,4 +1,4 @@
-import { SourceKind, NamedSource, JoinType, SourceKindPair, SourceJoin, Source, SourceRecursive, QuerySelect, SourceTable, SourceValues } from '@typed-query-builder/builder';
+import { SourceKind, NamedSource, JoinType, SourceKindPair, SourceJoin, Source, SourceRecursive, QuerySelect, SourceTable, SourceValues, SourceVirtual } from '@typed-query-builder/builder';
 import { RunCompiler } from '../Compiler';
 import { RunRow } from '../State';
 import { RunTransformerFunction } from '../Transformers';
@@ -45,9 +45,19 @@ export function rowsFromSources(sourcePairs: SourceKindPair<any, any>[], compile
 
     if (source instanceof SourceJoin)
     {
-      getRows = getRowsForSource(source.source, kind, compiler);
+      getRows = source.virtual
+        ? (state) => state.sources[source.name]
+        : getRowsForSource(source.source, kind, compiler);
       type = source.type;
       condition = compiler.eval(source.condition).get;
+    }
+    else if (source instanceof SourceRecursive)
+    {
+      getRows = getRowsForRecursive(source, compiler);
+    }
+    else if (source instanceof SourceVirtual)
+    {
+      getRows = (state) => state.sources[source.name];
     }
     else
     {
@@ -183,51 +193,49 @@ export function rowsFromSources(sourcePairs: SourceKindPair<any, any>[], compile
   };
 }
 
+function getRowsForRecursive(source: SourceRecursive<any, any>, compiler: RunCompiler): RunTransformerFunction<any[]>
+{
+  const initial = compiler.eval(source.source);
+  const next = compiler.eval(source.recursive);
+
+  return (state) =>
+  {
+    const total: any[] = [];
+
+    let last = initial.get(state);
+
+    while (last.length > 0) 
+    {
+      total.push( ...last );
+
+      state.sources[source.name] = last;
+
+      last = next.get(state);
+    }
+
+    if (!source.all)
+    {
+      removeDuplicates(total, (a, b) => compare(a, b, state.ignoreCase, true, false) === 0);
+    }
+
+    state.sources[source.name] = total;
+
+    return total;
+  };
+}
+
 function getRowsForSource(source: Source<any>, kind: SourceKind, compiler: RunCompiler): RunTransformerFunction<any[]> | undefined
 {
   if (kind === SourceKind.WITH)
   {
-    if (source instanceof SourceRecursive)
+    const getWith = compiler.eval(source);
+
+    return (state) =>
     {
-      const initial = compiler.eval(source.source);
-      const next = compiler.eval(source.recursive);
+      state.sources[source.getName() as string] = getWith.get(state);
 
-      return (state) =>
-      {
-        const total: any[] = [];
-
-        let last = initial.get(state);
-
-        while (last.length > 0) 
-        {
-          total.push( ...last );
-
-          state.sources[source.name] = last;
-
-          last = next.get(state);
-        }
-
-        if (!source.all)
-        {
-          removeDuplicates(total, (a, b) => compare(a, b, state.ignoreCase, true, false) === 0);
-        }
-
-        state.sources[source.name] = total;
-
-        return [];
-      };
-    }
-    else
-    {
-      const getWith = compiler.eval(source);
-
-      return (state) =>
-      {
-        state.sources[source.getName() as string] = getWith.get(state);
-
-        return [];
-      };
-    }
+      return [];
+    };
   }
   else
   {

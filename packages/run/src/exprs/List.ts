@@ -34,6 +34,8 @@ RunTransformers.setTransformer(
 
       state.forEachResult(() => items.push(state.getRowValue(getItem)), output);
 
+      state.affected += innerState.affected;
+
       return items;
     };
   }

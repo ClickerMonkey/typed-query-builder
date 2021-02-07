@@ -163,24 +163,19 @@ export class RunState
     });
   }
 
-  public getRowValue<T>(expr: RunExpr<T>, result?: RunResult): T 
+  public getRowValue<T>(expr: RunExpr<T>): T 
   {
-    if (result) 
-    {
-      this.result = result;
-      this.resultIndex = -1;
-      this.row = result.row;
-    }
-
     const { cached, selects } = this.result;
     let cachedValue = cached[expr.id];
 
-    if (!(expr.id in cached)) {
+    if (!(expr.id in cached)) 
+    {
       cached[expr.id] = cachedValue = expr.get(this);
-
-      if (expr.select) {
-        selects[expr.select] = cachedValue;
-      }
+    }
+    
+    if (expr.select && !(expr.select in selects))
+    {
+      selects[expr.select] = cachedValue;
     }
 
     return cachedValue;

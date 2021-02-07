@@ -28,7 +28,11 @@ RunTransformers.setTransformer(
       innerState.resultIndex = 0;
       innerState.row = first.row;
 
-      return innerState.getRowValue(getValue);
+      const value = innerState.getRowValue(getValue);
+
+      state.affected += innerState.affected;
+
+      return value;
     };
   }
 );

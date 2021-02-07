@@ -9,9 +9,9 @@ RunTransformers.setTransformer(
     const sources = rowsFromSources(v._criteria.sources, compiler);
     const where = rowsWhere(v._criteria.where, compiler);
     const grouper = rowsGrouping(v._criteria.group, v._criteria.selectsExpr, v._criteria.having, compiler);
-    const orderer = rowsOrdered(v._criteria.orderBy, compiler);
     const selector = rowsBuildSelects(v._criteria.selects as never, compiler);
     const distincter = v._distinctOn.map( d => compiler.eval(d) );
+    const orderer = rowsOrdered(v._criteria.orderBy, compiler);
 
     return (state) => 
     {
@@ -53,6 +53,8 @@ RunTransformers.setTransformer(
       if (isNumber(v._criteria.limit)) {
         output = output.slice(0, v._criteria.limit);
       }
+
+      state.affected += innerState.affected;
 
       return output;
     };

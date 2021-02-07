@@ -19,8 +19,11 @@ RunTransformers.setTransformer(
       grouper(innerState);
 
       const offset = v.criteria.offset || 0;
+      const exists = state.results.length > offset ? 1 : undefined;
 
-      return state.results.length > offset ? 1 : undefined;
+      state.affected += innerState.affected;
+
+      return exists;
     };
   }
 );

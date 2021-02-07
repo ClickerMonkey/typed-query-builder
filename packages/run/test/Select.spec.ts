@@ -1,5 +1,6 @@
-import { table, from } from '@typed-query-builder/builder';
-import { exec } from '../src';
+import { table, from, withs } from '@typed-query-builder/builder';
+import { exec, prepare } from '../src';
+
 
 import '../src/functions/string';
 
@@ -24,6 +25,15 @@ describe('Select', () =>
       role: 'TEXT',
       project: 'TEXT',
       amount: 'MONEY',
+    },
+  });
+
+  const Comments = table({
+    name: 'comment',
+    fields: {
+      id: 'INT',
+      parentId: ['NULL', 'INT'],
+      content: 'TEXT',
     },
   });
 
@@ -208,6 +218,35 @@ describe('Select', () =>
     ]);
   });
 
+  it('group by cube having', () =>
+  {
+    const db = getDB();
+    const getResult = exec(db);
+
+    const results = from(Employees)
+      .select(({ employee }, { sum, count }) => [
+        count().as('count'),
+        sum(employee.amount).as('total'),
+        employee.project,
+        employee.role,
+      ])
+      .groupByCube(['project', 'role']) // project role, project, role, []
+      .having(({}, {}, {}, { count }) => count.gt(1))
+      .run(getResult)
+    ;
+
+    expect(results).toStrictEqual([
+      { count: 2, total: 220, project: 'Bridge', role: 'Manager' },
+      { count: 4, total: 360, project: 'Bridge', role: undefined },
+      { count: 2, total:   3, project: 'Home', role: 'Engineer' },
+      { count: 4, total:  17, project: 'Home', role: undefined },
+      { count: 3, total: 510, project: undefined, role: 'Architect' },
+      { count: 3, total:  43, project: undefined, role: 'Engineer' },
+      { count: 3, total: 224, project: undefined, role: 'Manager' },
+      { count: 9, total: 777, project: undefined, role: undefined },
+    ]);
+  });
+
   it('group by rollup partial', () =>
   {
     const db = getDB();
@@ -272,6 +311,81 @@ describe('Select', () =>
     ]);
   });
 
+  it('window named partition order reorder', () =>
+  {
+    const db = getDB();
+    const getResult = exec(db);
+
+    const results = from(Employees)
+      .select(({ employee }) => [
+        employee.id,
+        employee.project,
+        employee.role,
+      ])
+      .window('w', (w) => w.partition('project').order('role'))
+      .select(({}, { rank, rowNumber, denseRank }) => [
+        rank().over('w').as('rank'),
+        rowNumber().over('w').as('row'),
+        denseRank().over('w').as('dense'),
+      ])
+      .orderBy('rank')
+      .run(getResult)
+    ;
+
+    expect(results).toStrictEqual([
+      { id: 7, role: 'Architect', project: 'Bridge',   rank: 1, row: 1, dense: 1 },
+      { id: 4, role: 'Architect', project: 'Home',     rank: 1, row: 1, dense: 1 },
+      { id: 9, role: 'Architect', project: 'Workshop', rank: 1, row: 1, dense: 1 },
+      { id: 6, role: 'Engineer',  project: 'Bridge',   rank: 2, row: 2, dense: 2 },
+      { id: 1, role: 'Engineer',  project: 'Home',     rank: 2, row: 2, dense: 2 },
+      { id: 2, role: 'Engineer',  project: 'Home',     rank: 2, row: 3, dense: 2 },
+      { id: 5, role: 'Manager',   project: 'Bridge',   rank: 3, row: 3, dense: 3 },
+      { id: 8, role: 'Manager',   project: 'Bridge',   rank: 3, row: 4, dense: 3 },
+      { id: 3, role: 'Manager',   project: 'Home',     rank: 4, row: 4, dense: 3 },
+    ]);
+  });
+
+  it('recursive', () =>
+  {
+    const db = getDB();
+    const getPrepared = prepare(db);
+
+    const results = 
+      withs(
+        () => 
+        from(Comments)
+          .select(({ comment }, { constant }) => [
+            constant(0).as('depth'),
+            comment.id,
+            comment.content
+          ])
+          .where(({ comment }, { param }) => comment.id.eq(param('id')))
+          .as('tree')
+        ,
+        ({ tree }) => 
+        from(Comments)
+          .joinInner(tree, ({ tree, comment }) => comment.parentId.eq(tree.id))
+          .select(({ comment, tree }) => [
+            tree.depth.add(1).as('depth'),
+            comment.id,
+            comment.content
+          ])
+      )
+      .from('tree')
+      .select('*')
+      .orderBy('content')
+      .run(getPrepared)
+    ;
+
+    expect(results({id: 1})).toStrictEqual([
+      { id: 1, content: 'A', depth: 0 },
+      { id: 2, content: 'A1', depth: 1 },
+      { id: 4, content: 'A1a', depth: 2 },
+      { id: 8, content: 'A1b', depth: 2 },
+      { id: 3, content: 'A2', depth: 1 },
+    ]);
+  });
+
   function getDB() {
     return {
       todo: [
@@ -289,6 +403,16 @@ describe('Select', () =>
         { id: 7, name: 'Erik', role: 'Architect', project: 'Bridge', amount: 100 },
         { id: 8, name: 'Kyle', role: 'Manager', project: 'Bridge', amount: 200 },
         { id: 9, name: 'Lori', role: 'Architect', project: 'Workshop', amount: 400 },
+      ],
+      comment: [
+        { id: 1, content: 'A' },
+        { id: 2, content: 'A1', parentId: 1 },
+        { id: 3, content: 'A2', parentId: 1 },
+        { id: 4, content: 'A1a', parentId: 2 },
+        { id: 5, content: 'B' },
+        { id: 6, content: 'C' },
+        { id: 7, content: 'C1', parentId: 6 },
+        { id: 8, content: 'A1b', parentId: 2 },
       ],
     };
   }

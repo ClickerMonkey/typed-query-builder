@@ -46,11 +46,17 @@ export class RunCompiler
       found = {
         expr,
         id: exprs.length,
-        get: transform(expr, this),
+        get: () => {},
         select,
       };
 
       exprs.push(found);
+
+      found.get = transform(expr, this);
+    }
+    else if (select && !found.select)
+    {
+      found.select = select;
     }
 
     return found;

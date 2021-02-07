@@ -24,7 +24,11 @@ RunTransformers.setTransformer(
       // TODO instead of full sort, get min
       orderer(innerState);
 
-      return innerState.results[0]?.selects;
+      const first = innerState.results[0]?.selects;
+
+      state.affected += innerState.affected;
+
+      return first;
     };
   }
 );
