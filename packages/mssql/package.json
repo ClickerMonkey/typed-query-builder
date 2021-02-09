@@ -52,5 +52,5 @@
     "@types/mssql": "6.0.7",
     "mssql": "6.3.1"
   },
-  "gitHead": "d0445620a6188314a42e5d37e81d515708fd9ddd"
+  "gitHead": "8f4b2097a70f1557ebcf5f6fa497e8957651129b"
 }

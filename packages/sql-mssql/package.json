@@ -49,5 +49,5 @@
     "@typed-query-builder/builder": "^0.3.0",
     "@typed-query-builder/sql": "^0.3.0"
   },
-  "gitHead": "d0445620a6188314a42e5d37e81d515708fd9ddd"
+  "gitHead": "8f4b2097a70f1557ebcf5f6fa497e8957651129b"
 }
