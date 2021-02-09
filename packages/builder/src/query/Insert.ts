@@ -5,6 +5,7 @@ import {
   ObjectExprFromSelects, isString, isArray, SelectsValuesExprs, SelectsFromKeys, InsertPriority, ExprScalar, 
   QuerySelectScalarInput, SourceCompatible, WithProvider
 } from '../internal';
+import { toAnyExpr } from '../Parse';
 
 
 export type StatementInsertValuesTuple<
@@ -113,7 +114,7 @@ export class StatementInsert<
 
   public values(values: ExprProvider<T, [], never, StatementInsertValuesInput<S, C>>): this 
   {
-    this._values.push(toExpr(this._exprs.provide(values as any)));
+    this._values.push(toAnyExpr(this._exprs.provide(values as any)));
 
     return this;
   }

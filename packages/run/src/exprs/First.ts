@@ -1,11 +1,11 @@
 import { QueryFirst } from '@typed-query-builder/builder';
 import { RunTransformers } from '../Transformers';
-import { rowsBuildSelects, rowsFromSources, rowsGrouping, rowsOrdered, rowsWhere } from '../util';
+import { convertToTuples, rowsBuildSelects, rowsFromSources, rowsGrouping, rowsOrdered, rowsWhere } from '../util';
 
 
 RunTransformers.setTransformer(
   QueryFirst, 
-  (v, transform, compiler) => {
+  (v, transform, compiler, tuples) => {
     const sources = rowsFromSources(v.criteria.sources, compiler);
     const where = rowsWhere(v.criteria.where, compiler);
     const grouper = rowsGrouping(v.criteria.group, v.criteria.selectsExpr, v.criteria.having, compiler);
@@ -28,7 +28,9 @@ RunTransformers.setTransformer(
 
       state.affected += innerState.affected;
 
-      return first;
+      return first && tuples
+        ? convertToTuples([first], v.criteria.selects)[0] 
+        : first;
     };
   }
 );

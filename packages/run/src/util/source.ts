@@ -72,6 +72,7 @@ export function rowsFromSources(sourcePairs: SourceKindPair<any, any>[], compile
 
   return (state) =>
   {
+    const base = state.row || {};
     let initialized = false;
 
     for (const source of providers) 
@@ -87,7 +88,8 @@ export function rowsFromSources(sourcePairs: SourceKindPair<any, any>[], compile
       switch (source.type) 
       {
         case 'FULL':
-          if (initialized) {
+          if (initialized) 
+          {
             for (const row of state.sourceOutput) 
             {
               for (const joinRow of joinRows) 
@@ -109,6 +111,7 @@ export function rowsFromSources(sourcePairs: SourceKindPair<any, any>[], compile
             for (const joinRow of joinRows) 
             {
               state.row = {
+                ...base,
                 [source.alias]: joinRow,
               };
               const match = source.condition(state);

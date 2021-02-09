@@ -2,7 +2,6 @@ import { OrderBy } from '@typed-query-builder/builder';
 import { compare } from './compare';
 import { RunCompiler, RunExpr } from '../Compiler';
 import { RunTransformerFunction } from '../Transformers';
-import { RunResult } from '../State';
 
 
 export function rowsOrdered(orders: OrderBy[], compiler: RunCompiler): RunTransformerFunction<void>
@@ -39,7 +38,9 @@ export function rowsPeerComparator(orderBys: Array<{ expr: RunExpr<any>; order: 
 {
   return (ignoreCase: boolean) =>
   {
-    return (a: RunResult, b: RunResult): number =>
+    type HasPeerValues = { peerValues: any[] };
+
+    return (a: HasPeerValues, b: HasPeerValues): number =>
     {
       for (let i = 0; i < orderBys.length; i++)
       {

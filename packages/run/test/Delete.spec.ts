@@ -5,7 +5,7 @@ import { exec, prepare } from '../src';
 import '../src/functions/string';
 
 
-describe('Select', () =>
+describe('Delete', () =>
 {
 
   const Todos = table({
@@ -61,7 +61,7 @@ describe('Select', () =>
     const getResult = exec(db);
 
     expect(db.employee.length).toBe(9);
-
+ 
     deletes(Employees)
       .run( getResult )
     ;

@@ -143,7 +143,11 @@ export class RunState
 
   public extend() 
   {
-    return new RunState(this);
+    const extended = new RunState(this);
+
+    extended.row = this.row;
+
+    return extended;
   }
 
   public forEachResult(onResult: (result: RunResult) => void, results: RunResult[] = this.results): void 

@@ -17,3 +17,8 @@ export function rowsBuildSelects(querySelects: Select<any, any>[], compiler: Run
     });
   };
 }
+
+export function convertToTuples(rows: any[], selects: Select<any, any>[])
+{
+  return rows.map((obj) => selects.map((s) => obj[s.alias]));
+}

@@ -12,9 +12,9 @@ export interface RunTransformerFunction<T>
 
 export interface RunTransformerTransformer
 {
-  <T>(value: Expr<T>, compiling: RunCompiler): RunTransformerFunction<T>;
+  <T>(value: Expr<T>, compiling: RunCompiler, tuples: boolean): RunTransformerFunction<T>;
 }
 
 
-export const RunTransformers = new Transformer<RunTransformerTransformer, [RunCompiler]>();
+export const RunTransformers = new Transformer<RunTransformerTransformer, [RunCompiler, boolean]>();
 

@@ -55,7 +55,7 @@ export function exec<P = any>(db: RunInput, options?: RunOptions<P>): <R>(expr: 
   return <R>(e: Expr<R>) =>
   {
     const compiling = new RunCompiler(RunTransformers.transform);
-    const compiled = RunTransformers.transform(e, compiling);
+    const compiled = RunTransformers.transform(e, compiling, !!options?.arrayMode);
     const state = new RunState({ sources: db, params: options?.params, ignoreCase: options?.ignoreCase });
     const result = compiled(state);
 
@@ -70,7 +70,7 @@ export function exec<P = any>(db: RunInput, options?: RunOptions<P>): <R>(expr: 
 /**
  * A prepared query that can be executed multiple times. It MUST be released, ideally in a try-finally block.
  */
-export type PreparedQuery<R, P = any> = (params: P) => R;
+export type PreparedQuery<R, P = any> = (params?: P) => R;
 
 /**
  * Creates a prepared statement for the given expression. This is useful when you need to invoke the same query over and over
@@ -101,7 +101,7 @@ export function prepare<P = any>(db: RunInput, options?: RunOptions<P>): <R>(exp
   return <R>(e: Expr<R>) =>
   {
     const compiling = new RunCompiler(RunTransformers.transform);
-    const compiled = RunTransformers.transform(e, compiling);
+    const compiled = RunTransformers.transform(e, compiling, !!options?.arrayMode);
     const optionsParams = options?.params || {};
     
     return (params): any =>

@@ -386,6 +386,107 @@ describe('Select', () =>
     ]);
   });
 
+  it('union', () =>
+  {
+    const db = getDB();
+    const getPrepared = prepare(db);
+
+    const results = from(Todos)
+      .select('*')
+      .where(({ todo }) => todo.id.lte(2))
+      .union(
+        from(Todos)
+          .select('*')
+          .where(({ todo }) => todo.id.gte(2))
+          .generic()
+      )
+      .run(getPrepared)
+    ;
+
+    const out = results();
+
+    expect(out).toStrictEqual([
+      { id: 1, name: 'Task 1', done: true },
+      { id: 2, name: 'Task 2', done: false },
+      { id: 3, name: 'Task 3', done: true }
+    ]);
+  });
+
+  it('union all', () =>
+  {
+    const db = getDB();
+    const getPrepared = prepare(db);
+
+    const results = from(Todos)
+      .select('*')
+      .where(({ todo }) => todo.id.lte(2))
+      .unionAll(
+        from(Todos)
+          .select('*')
+          .where(({ todo }) => todo.id.gte(2))
+          .generic()
+      )
+      .run(getPrepared)
+    ;
+
+    const out = results();
+
+    expect(out).toStrictEqual([
+      { id: 1, name: 'Task 1', done: true },
+      { id: 2, name: 'Task 2', done: false },
+      { id: 2, name: 'Task 2', done: false },
+      { id: 3, name: 'Task 3', done: true }
+    ]);
+  });
+
+  it('intersect', () =>
+  {
+    const db = getDB();
+    const getPrepared = prepare(db);
+
+    const results = from(Todos)
+      .select('*')
+      .where(({ todo }) => todo.id.lte(2))
+      .intersect(
+        from(Todos)
+          .select('*')
+          .where(({ todo }) => todo.id.gte(2))
+          .generic()
+      )
+      .run(getPrepared)
+    ;
+
+    const out = results();
+
+    expect(out).toStrictEqual([
+      { id: 2, name: 'Task 2', done: false },
+    ]);
+  });
+
+  it('except', () =>
+  {
+    const db = getDB();
+    const getPrepared = prepare(db);
+
+    const results = from(Todos)
+      .select('*')
+      .where(({ todo }) => todo.id.lte(2))
+      .except(
+        from(Todos)
+          .select('*')
+          .where(({ todo }) => todo.id.gte(2))
+          .generic()
+      )
+      .run(getPrepared)
+    ;
+
+    const out = results();
+
+    expect(out).toStrictEqual([
+      { id: 1, name: 'Task 1', done: true },
+    ]);
+  });
+
   function getDB() {
     return {
       todo: [

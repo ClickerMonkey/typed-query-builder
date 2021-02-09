@@ -57,6 +57,7 @@ import './exprs/PredicateUnary';
 import './exprs/Predicates';
 import './exprs/Raw';
 import './exprs/Row';
+import './exprs/Json';
 
 import './exprs/Select';
 import './exprs/First';
@@ -64,5 +65,8 @@ import './exprs/Value';
 import './exprs/List';
 import './exprs/Existential';
 import './exprs/Delete';
+import './exprs/Update';
+import './exprs/Insert';
+import './exprs/Set';
 
 export * from './core';

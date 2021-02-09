@@ -15,8 +15,8 @@ RunTransformers.setTransformer(
       const test = value.get(state);
 
       return isArray(list)
-        ? v.not !== list.some((item) => compare(item.get(state), test))
-        : v.not !== list.get(state).some((item) => compare(item, test));
+        ? v.not !== list.some((item) => compare(item.get(state), test) === 0)
+        : v.not !== list.get(state).some((item) => compare(item, test) === 0);
     };
   }
 );

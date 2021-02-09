@@ -1,11 +1,11 @@
 import { QuerySelect, isNumber } from '@typed-query-builder/builder';
 import { RunTransformers } from '../Transformers';
-import { compare, removeDuplicates, rowsBuildSelects, rowsFromSources, rowsGrouping, rowsOrdered, rowsWhere } from '../util';
+import { compare, convertToTuples, removeDuplicates, rowsBuildSelects, rowsFromSources, rowsGrouping, rowsOrdered, rowsWhere } from '../util';
 
 
 RunTransformers.setTransformer(
   QuerySelect, 
-  (v, transform, compiler) => {
+  (v, transform, compiler, tuples) => {
     const sources = rowsFromSources(v._criteria.sources, compiler);
     const where = rowsWhere(v._criteria.where, compiler);
     const grouper = rowsGrouping(v._criteria.group, v._criteria.selectsExpr, v._criteria.having, compiler);
@@ -56,7 +56,9 @@ RunTransformers.setTransformer(
 
       state.affected += innerState.affected;
 
-      return output;
+      return tuples 
+        ? convertToTuples(output, v._criteria.selects) 
+        : output;
     };
   }
 );

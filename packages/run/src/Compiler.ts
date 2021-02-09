@@ -1,4 +1,4 @@
-import { Expr, ExprNull } from '@typed-query-builder/builder';
+import { Expr, ExprNull, isFunction, isNumber, isObject } from '@typed-query-builder/builder';
 import { RunTransformerFunction, RunTransformerTransformer } from './Transformers';
 
 
@@ -23,6 +23,10 @@ export const RunExprNoop: RunExpr<any> =
 };
 
 
+export function isRunExpr<T>(x: any): x is RunExpr<T>
+{
+  return isObject(x) && x.expr instanceof Expr && isFunction(x.get) && isNumber(x.id);
+}
 
 export class RunCompiler 
 {
@@ -36,7 +40,7 @@ export class RunCompiler
     this.transform = transform;
   }
 
-  public eval<T>(expr: Expr<T>, select?: string): RunExpr<T> 
+  public eval<T>(expr: Expr<T>, select?: string, tuples: boolean = false): RunExpr<T> 
   {
     const { exprs, transform } = this;
     let found = exprs.find(e => e.expr === expr);
@@ -52,7 +56,7 @@ export class RunCompiler
 
       exprs.push(found);
 
-      found.get = transform(expr, this);
+      found.get = transform(expr, this, tuples);
     }
     else if (select && !found.select)
     {

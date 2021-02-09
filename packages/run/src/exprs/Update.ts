@@ -1,58 +1,60 @@
-import { isArray, StatementDelete } from '@typed-query-builder/builder';
+import { isArray, StatementUpdate } from '@typed-query-builder/builder';
 import { RunTransformers } from '../Transformers';
 import { convertToTuples, rowsBuildSelects } from '../util';
+import { buildsSetter } from '../util/set';
 
 
 
 RunTransformers.setTransformer(
-  StatementDelete, 
+  StatementUpdate, 
   (v, transform, compiler, tuples) => {
     const returning = rowsBuildSelects(v._returning, compiler);
     const where = v._where.map( w => compiler.eval( w ) );
+    const setter = buildsSetter(v._sets, compiler);
 
     return (state) => 
     {
-      const fromName = v._from.table in state.sources
-        ? v._from.table as string
-        : v._from.name as string;
-      const from = state.sources[fromName];
+      const targetName = v._target.table in state.sources
+        ? v._target.table as string
+        : v._target.name as string;
+      const target = state.sources[targetName];
       
-      if (!isArray(from))
+      if (!isArray(target))
       {
-        throw new Error(`Cannot delete from missing source ${fromName}`);
+        throw new Error(`Cannot update from missing source ${targetName}`);
       }
 
-      const removed: any[] = [];
+      const updated: any[] = [];
 
-      for (let i = 0; i < from.length; i++)
+      for (let i = 0; i < target.length; i++)
       {
-        const row = from[i];
+        const row = target[i];
 
-        state.row = { [fromName]: row };
+        state.row = { [targetName]: row };
 
         if (!where.some( w => !w.get(state) ))
         {
-          removed.push(row);
-          from.splice(i, 1);
-          i--;
+          updated.push(row);
           state.affected++;
+          
+          setter(state, row);
         }
       }
 
-      if (v._returning.length > 0 && removed.length > 0)
+      if (v._returning.length > 0 && updated.length > 0)
       {
         const innerState = state.extend();
 
-        innerState.sources[fromName] = removed;
+        innerState.sources[targetName] = updated;
 
-        innerState.results = removed.map( (row, partitionIndex) => ({
-          row: { [fromName]: row },
+        innerState.results = updated.map( (row, partitionIndex) => ({
+          row: { [targetName]: row },
           group: [],
           cached: {},
           selects: {},
           partition: 0,
           partitionIndex,
-          partitionSize: removed.length,
+          partitionSize: updated.length,
           partitionValues: [],
           peer: 0,
           peerIndex: 0,
