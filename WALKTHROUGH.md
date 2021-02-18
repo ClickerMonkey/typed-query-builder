@@ -16,7 +16,7 @@ Welcome to the walk-through! The goal of this document is to explain how the que
 ## Intro
 
 At it's core TQB allows you to build an abstract syntax tree (AST). Each node in the AST is referred to as an Expr (short for expression). 
-This AST can represent a SELECT, DELETE, UPDATE, or INSERT.
+This AST can represent a SELECT, DELETE, UPDATE, or INSERT. Examples of Exprs: And, Or, Constant, Math Operation, Comparison, Aggregation, Cast.
 
 A built AST can be transformed with the following transformers:
 
