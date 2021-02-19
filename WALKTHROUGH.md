@@ -152,7 +152,27 @@ See [Delete Returning](#delete-returning)
 
 ## Select
 
-Using a `SELECT` statement is how you query values from zero or more sources. There are three different functions you can use to start a select statement: `withs`, `query`, & `from`.
+Using a `SELECT` statement is how you query values from zero or more sources. 
+
+There are three different functions you can use to start a select statement: `withs`, `query`, & `from`.
+
+```ts
+import { from, withs, query } from '@typed-query-builder/builder';
+
+// Method 1 (query)
+query()
+  .with(...)
+  .from(...)
+
+// Method 2 (withs)
+// - short for method 1, except insert/update/deletes can follow withs(...) not just from(...)
+withs(...)
+  .from(...)
+
+// Method 3 (from)
+// - short for method 1, starting right off with from instead of CTE/with.
+from(...)
+```
 
 The order of functions for building a query matter.
 
@@ -206,3 +226,63 @@ The functions available on a select expression:
 - `list(selectOrExpr)`: Returns an expression which returns an array of values from the results in the query.
 - `value(selectOrExpr, defaultValue?)`: Returns an expression which returns a single value from the first result in the query.
 - `generic()`: Converts the query into something that can be used in a `UNION`, `INTERSECT`, or `EXCEPT`.
+
+### Examples 
+
+```ts
+query()
+  // A CTE
+  .with(
+    from(Task).select(({ task }) => [
+      task.name
+    ])
+    .as('taskNames')
+  )
+  // A recursive CTE, loads a task and ALL subtasks
+  .with(
+    from(Task)
+      .select(({ task }, { constant }) => [
+        task.id,
+        task.name,
+        constant(0).as('depth'),
+      ])
+      .where(({ task }) => task.id.eq(42))
+      .as('taskTree'),
+    ({ taskTree }) =>
+      from(Task)
+        .joinInner(taskTree, ({ task, taskTree }) => task.parentId.eq(taskTree.id))
+        .select(({ task, taskTree }) => [
+          task.id,
+          task.name,
+          taskTree.depth.add(1).as('depth'),
+        ])
+  )
+  // from CTE results
+  .from('taskTree')
+  // from Table
+  .from(Task)
+  // from alias
+  .from(Task.as('parentTasks'))
+  // join with alias
+  .joinInner(Task.as('parentTask'), ({ task, parentTask }) => parentTask.id.eq(task.parentId))
+  // named window
+  .window('w', w => w
+    .partition(({ taskTree }) => taskTree.depth)
+    .order(({ taskTree }) => taskTree.id, 'DESC')
+    // .mode()
+    // .start()
+    // .end()
+    // .exclude()
+  ),
+  // select everything from all sources
+  .select('*')
+  // select fields (only works if Task source was used without alias)
+  .select(Task.only(['id', 'name']))
+  // select expressions
+  .select(({ task }, {}, { lower }) => [
+    task.name,
+    lower( task.name ).as('nameLower'),
+    task.id.add(23).as('idPlus23'),
+    rowNumber().over('w').as('rowNumber').
+  ])
+```
