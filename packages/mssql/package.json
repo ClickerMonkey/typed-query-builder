@@ -10,7 +10,8 @@
   },
   "files": [
     "dist",
-    "typings"
+    "typings",
+    "src"
   ],
   "sideEffects": false,
   "repository": {

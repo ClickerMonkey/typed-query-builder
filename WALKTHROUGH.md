@@ -279,7 +279,7 @@ query()
   // select fields (only works if Task source was used without alias)
   .select(Task.only(['id', 'name']))
   // select expressions
-  .select(({ task }, {}, { lower }) => [
+  .select(({ task }, {}, { lower, rowNumber }) => [
     task.name,
     lower( task.name ).as('nameLower'),
     task.id.add(23).as('idPlus23'),

@@ -1,4 +1,4 @@
-import { exprs, table, from, DataTypePoint, insert, deletes, update, tableFromType } from '@typed-query-builder/builder';
+import { exprs, table, from, DataTypePoint, insert, deletes, update } from '@typed-query-builder/builder';
 import { expectText, sql, sqlWithOptions } from './helper';
 
 
@@ -890,34 +890,5 @@ describe('index', () =>
     `);
   });
 
-  it('aliases', () => 
-  {
-    const AliasedTable = tableFromType<{ id: number }>()({
-      name: 'Alias',
-      table: 'Aliases',
-      fields: ['id'],
-      fieldColumn: {
-        id: 'AliasID',
-      },
-    });
-
-    const SelectStar = from(AliasedTable)
-      .select('*')
-      .run(sql)
-    ;
-
-    expectText({ condenseSpace: true }, SelectStar, `
-      SELECT Aliases.AliasID AS id FROM Aliases
-    `);
-
-    const SelectAll = from(AliasedTable)
-      .select(({ Alias }) => Alias.all())
-      .run(sql)
-    ;
-
-    expectText({ condenseSpace: true }, SelectAll, `
-      SELECT Aliases.AliasID AS id FROM Aliases
-    `);
-  });
 
 });
