@@ -5,6 +5,7 @@
   "description": "A SQL dialect for Postgres",
   "main": "dist/index.js",
   "typings": "typings/index.d.ts",
+  "private": true,
   "publishConfig": {
     "access": "restricted"
   },
@@ -49,5 +50,5 @@
     "@typed-query-builder/builder": "^0.3.2",
     "@typed-query-builder/sql": "^0.3.2"
   },
-  "gitHead": "8f4b2097a70f1557ebcf5f6fa497e8957651129b"
+  "gitHead": "2619c027919f5d59167df540686231246ac2b9d2"
 }
