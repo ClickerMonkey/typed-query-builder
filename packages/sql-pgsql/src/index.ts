@@ -1,6 +1,6 @@
 
-import { getDataTypeMeta, DataTypeInputs, isNumber, isString, OrderBy, QueryJson, NamedSource, Selects, QueryFirst, QuerySelect, QueryList, QueryFirstValue, ExprAggregate, SourceKind, SourceRecursive } from '@typed-query-builder/builder';
-import { Dialect, addExprs, addFeatures, addQuery, ReservedWords, addSources, DialectFeatures, getOrder, getSelects, getNamedSource, getCriteria } from '@typed-query-builder/sql';
+import { getDataTypeMeta, DataTypeInputs, isNumber, isString, QueryJson, QueryFirst, QuerySelect, QueryList, QueryFirstValue, ExprAggregate, SourceKind, SourceRecursive } from '@typed-query-builder/builder';
+import { Dialect, addExprs, addFeatures, addQuery, ReservedWords, addSources, DialectFeatures, getCriteria } from '@typed-query-builder/sql';
 
 import './types';
 
@@ -13,6 +13,8 @@ DialectPgsql.removeSupport(
 );
 
 DialectPgsql.addReservedWords(ReservedWords);
+
+DialectPgsql.implicitPredicates = true;
 
 DialectPgsql.insertOrder = ['with', 'INSERT', 'top', 'INTO', 'table', 'columns', 'returning', 'values', 'option'];
 DialectPgsql.deleteOrder = ['with', 'DELETE', 'top', 'FROM', 'table', 'returning', 'using', 'where', 'option'];
@@ -214,6 +216,7 @@ DialectPgsql.aggregates.setUnsupported([
   // 'bitAnd', 'bitOr', 'nthValue'
 ]);
 
+/*
 DialectPgsql.functions.aliases({
   ln: 'LOG',
   join: 'CONCAT_WS',
@@ -248,6 +251,7 @@ DialectPgsql.functions.setFormats({
   geomPointX: '({0}).STX',
   geomPointY: '({0}).STY'
 });
+*/
 
 DialectPgsql.aggregates.aliases({
   string: 'STRING_AGG',
@@ -318,10 +322,12 @@ DialectPgsql.functions.setCascadings({
   ],
 });
 
+/*
 DialectPgsql.functions.sets({
   greatest: (params) => `(SELECT MAX(i) FROM (VALUES ${params.argList?.map( a => `(${a})`).join(', ')}) AS T(i))`,
   least: (params) => `(SELECT MIN(i) FROM (VALUES ${params.argList?.map( a => `(${a})`).join(', ')}) AS T(i))`,
 });
+*/
 
 
 // =========================================================
@@ -332,6 +338,7 @@ addFeatures(DialectPgsql);
 addQuery(DialectPgsql);
 addSources(DialectPgsql);
 
+/*
 DialectPgsql.featureFormatter[DialectFeatures.AGGREGATE_ORDER] = (_order: OrderBy[], transform, out) =>
 {
   return 'WITHIN GROUP (ORDER BY ' + _order.map( (o) => getOrder(o, out) ).join(', ') + ')';
@@ -363,6 +370,7 @@ DialectPgsql.featureFormatter[DialectFeatures.DELETE_USING] = (froms: NamedSourc
     return s;
   }).join(', ');
 };
+*/
 
 const withRecursive = DialectPgsql.featureFormatter[DialectFeatures.WITH_RECURSIVE];
 
@@ -410,11 +418,6 @@ DialectPgsql.transformer.setTransformer<QueryFirst<any, any, any>>(
 
     params.paging = () => out.dialect.selectLimitOnly({ limit: 1 });
 
-    if (!params.order)
-    {
-      params.order = () => 'ORDER BY (SELECT NULL)';
-    }
-
     const saved = out.saveSources();
 
     const sql = out.dialect.formatOrdered(out.dialect.selectOrder, params);
@@ -436,11 +439,6 @@ DialectPgsql.transformer.setTransformer<QueryFirstValue<any, any, any, any>>(
     if (!(value instanceof ExprAggregate))
     {
       params.paging = () => out.dialect.selectLimitOnly({ limit: 1 });
-
-      if (!params.order)
-      {
-        params.order = () => 'ORDER BY (SELECT NULL)';
-      }
     }
 
     const allSources = criteria.sources.filter( s => s.kind !== SourceKind.WITH ).map( s => s.source );

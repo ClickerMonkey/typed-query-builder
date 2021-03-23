@@ -29,7 +29,7 @@ describe('index', () =>
     const x = exprs().param('userId').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT @userId
+      SELECT $0
     `);
   });
 
@@ -38,7 +38,7 @@ describe('index', () =>
     const x = exprs().constant(true).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT 1
+      SELECT true
     `);
   });
 
@@ -47,7 +47,7 @@ describe('index', () =>
     const x = exprs().constant(false).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT 0
+      SELECT false
     `);
   });
 
@@ -74,7 +74,7 @@ describe('index', () =>
     const x = exprs().op(1, 'BITLEFT', 2).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT CAST(CAST(1 * POWER(CAST(2 AS BIGINT), 2 & 0x1F) AS BINARY(4)) AS INT)
+      SELECT 1 << 2
     `);
   });
 
@@ -92,7 +92,7 @@ describe('index', () =>
     const x = exprs().isTrue(false).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT 0 = 1
+      SELECT false
     `);
   });
 
@@ -101,7 +101,7 @@ describe('index', () =>
     const x = exprs().isFalse(false).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT 0 = 0
+      SELECT false is false
     `);
   });
 
@@ -116,7 +116,7 @@ describe('index', () =>
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT 
-        STRING_AGG("name", ',') WITHIN GROUP (ORDER BY "name" ASC) AS "names"
+        STRING_AGG("name", ',' WITHIN GROUP (ORDER BY "name" ASC)) AS "names"
       FROM task
     `);
   });
@@ -153,7 +153,7 @@ describe('index', () =>
     const x = exprs().constant(true, 'BOOLEAN').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT 1
+      SELECT true
     `);
   });
 
@@ -247,7 +247,7 @@ describe('index', () =>
     const x = deep({x: param('x'), y: 2}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT geometry::Point(@x, 2, 0)
+      SELECT geometry::Point($0, 2, 0)
     `);
   });
 
@@ -371,7 +371,7 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        CEILING(id) AS "ceil",
+        CEIL(id) AS "ceil",
         LTRIM("name") AS trimmedName
       FROM task
     `);
@@ -480,7 +480,7 @@ describe('index', () =>
         "name"
       FROM task
       ORDER BY "name"
-      OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY
+      LIMIT 10
     `);
   });
 
@@ -500,7 +500,7 @@ describe('index', () =>
         "name"
       FROM task
       ORDER BY "name"
-      OFFSET 5 ROWS FETCH NEXT 10 ROWS ONLY
+      LIMIT 10 OFFSET 5
     `);
   });
 
@@ -519,7 +519,7 @@ describe('index', () =>
         "name"
       FROM task
       ORDER BY "name"
-      OFFSET 5 ROWS
+      LIMIT ALL OFFSET 5
     `);
   });
 
@@ -626,11 +626,11 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       DELETE FROM task
-      OUTPUT 
+      WHERE 
+        done
+      RETURNING
         DELETED.id AS id, 
         DELETED.doneAt AS doneAt
-      WHERE 
-        done = 1
     `);
   });
 
@@ -647,27 +647,11 @@ describe('index', () =>
       UPDATE task
       SET
         done = 0
-      OUTPUT 
+      WHERE 
+        done
+      RETURNING
         INSERTED.id AS id, 
         INSERTED.doneAt AS doneAt
-      WHERE 
-        done = 1
-    `);
-  });
-
-  it('delete top', () =>
-  {
-    const x = deletes(Task)
-      .setClause('top', 'TOP (2)')
-      .where(({ task }) => task.done)
-      .run(sqlWithOptions({ simplifyReferences: true }))
-    ;
-    
-    expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      DELETE TOP (2) 
-      FROM task
-      WHERE 
-        done = 1
     `);
   });
 
@@ -744,7 +728,7 @@ describe('index', () =>
       SELECT 
         id, 
         "name", 
-        (SELECT task.id AS id, task."name" AS "name", done, doneAt FROM task WHERE task.id = parentId ORDER BY (SELECT NULL) OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) AS parent
+        (SELECT task.id AS id, task."name" AS "name", done, doneAt FROM task WHERE task.id = parentId ORDER BY (SELECT NULL) LIMIT 1 JSON PATH, WITHOUT_ARRAY_WRAPPER) AS parent
       FROM subtask
     `);
   });
