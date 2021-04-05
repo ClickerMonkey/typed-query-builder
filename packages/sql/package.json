@@ -1,7 +1,7 @@
 {
   "name": "@typed-query-builder/sql",
   "license": "GPL-3.0-or-later",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "A generic SQL dialect for typed-query-builder",
   "main": "dist/index.js",
   "typings": "typings/index.d.ts",
@@ -47,7 +47,7 @@
     "extends": "../../tslint.json"
   },
   "dependencies": {
-    "@typed-query-builder/builder": "^0.3.6"
+    "@typed-query-builder/builder": "^0.3.7"
   },
   "gitHead": "8f4b2097a70f1557ebcf5f6fa497e8957651129b"
 }
