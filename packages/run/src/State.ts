@@ -13,6 +13,9 @@ export interface RunStateOptions
  
    // Ignore string case?
    ignoreCase?: boolean;
+
+   // Use the column/table names instead of the aliases?
+   useNames?: boolean;
 }
 
 
@@ -112,6 +115,9 @@ export class RunState
   // Ignore string case?
   public ignoreCase: boolean = false;
 
+  // Use the column/table names instead of the aliases?
+  public useNames: boolean = false;
+
   // Built by sources
   public sourceOutput: RunRow[] = [];
 
@@ -139,9 +145,10 @@ export class RunState
     this.sources = { ...options.sources };
     this.params = options.params || {};
     this.ignoreCase = !!options.ignoreCase;
+    this.useNames = !!options.useNames;
   }
 
-  public extend() 
+  public extend()
   {
     const extended = new RunState(this);
 

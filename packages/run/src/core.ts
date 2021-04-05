@@ -20,6 +20,11 @@ export interface RunOptions<P>
   ignoreCase?: boolean;
 
   /**
+   * Use the column/table names instead of the aliases?
+   */ 
+  useNames?: boolean;
+
+  /**
    * If the affected count should be returned, transforming the result into { affected: number, result: any }.
    */
   affectedCount?: boolean;
@@ -56,7 +61,7 @@ export function exec<P = any>(db: RunInput, options?: RunOptions<P>): <R>(expr: 
   {
     const compiling = new RunCompiler(RunTransformers.transform);
     const compiled = RunTransformers.transform(e, compiling, !!options?.arrayMode);
-    const state = new RunState({ sources: db, params: options?.params, ignoreCase: options?.ignoreCase });
+    const state = new RunState({ sources: db, params: options?.params, ignoreCase: options?.ignoreCase, useNames: options?.useNames });
     const result = compiled(state);
 
     return options?.affectedCount
@@ -106,7 +111,7 @@ export function prepare<P = any>(db: RunInput, options?: RunOptions<P>): <R>(exp
     
     return (params): any =>
     { 
-      const state = new RunState({ sources: db, params: { ...optionsParams, ...(params || {})}, ignoreCase: options?.ignoreCase });
+      const state = new RunState({ sources: db, params: { ...optionsParams, ...(params || {})}, ignoreCase: options?.ignoreCase, useNames: options?.useNames });
       const result = compiled(state);
 
       return options?.affectedCount

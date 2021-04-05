@@ -250,11 +250,12 @@ function getRowsForSource(source: Source<any>, kind: SourceKind, compiler: RunCo
     {
       return (state) => 
       {
-        const tableSource = state.sources[source.table as string];
+        const sourceName = state.useNames ? source.table : source.name;
+        const tableSource = state.sources[sourceName as string];
 
         if (!tableSource)
         {
-          throw new Error(`Source ${source.table as string} was not found.`);
+          throw new Error(`Source ${sourceName as string} was not found.`);
         }
         
         return tableSource;

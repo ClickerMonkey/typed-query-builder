@@ -10,11 +10,11 @@ RunTransformers.setTransformer(
   (v, transform, compiler, tuples) => {
     const returning = rowsBuildSelects(v._returning, compiler);
     const where = v._where.map( w => compiler.eval( w ) );
-    const setter = buildsSetter(v._sets, compiler);
+    const setter = buildsSetter(v._sets, v._target, compiler);
 
     return (state) => 
     {
-      const targetName = v._target.table in state.sources
+      const targetName = state.useNames
         ? v._target.table as string
         : v._target.name as string;
       const target = state.sources[targetName];

@@ -253,6 +253,9 @@ describe('Select', () => {
       )
     ;
 
+    // type QT = ExprType<typeof q>;
+    // type EVO = ExprValueObjects<QT>;
+
     expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number, parentName?: string }]>(q);
     expectTypeMatch<{
       id: number;

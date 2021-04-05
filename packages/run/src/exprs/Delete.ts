@@ -12,7 +12,7 @@ RunTransformers.setTransformer(
 
     return (state) => 
     {
-      const fromName = v._from.table in state.sources
+      const fromName = state.useNames
         ? v._from.table as string
         : v._from.name as string;
       const from = state.sources[fromName];

@@ -12,13 +12,13 @@ RunTransformers.setTransformer(
   (v, transform, compiler, tuples) => {
     const returning = rowsBuildSelects(v._returning, compiler);
     const values = v._values.map( valueInput => compileValues(valueInput as any, v._columns, compiler));
-    const setter = buildsSetter(v._sets, compiler);
+    const setter = buildsSetter(v._sets, v._into, compiler);
     const updateWhere = v._setsWhere.map( where => compiler.eval(where) );
     const getExisting = getPrimarySelector(v._into);
 
     return (state) => 
     {
-      const intoName = v._into.table in state.sources
+      const intoName = state.useNames
         ? v._into.table as string
         : v._into.name as string;
       const into = state.sources[intoName];

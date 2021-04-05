@@ -1,9 +1,9 @@
-import { Expr, isArray, StatementSet } from '@typed-query-builder/builder';
+import { Expr, isArray, Name, Select, SourceTable, StatementSet } from '@typed-query-builder/builder';
 import { isRunExpr, RunCompiler } from '../Compiler';
 import { RunState } from '../State';
 
 
-export function buildsSetter(statementSets: StatementSet<any>[], compiler: RunCompiler)
+export function buildsSetter(statementSets: StatementSet<any>[], target: SourceTable<Name, Select<Name, any>[], any>, compiler: RunCompiler)
 {
   const sets = statementSets.map( s => ({ 
     set: s.set, 
@@ -26,11 +26,14 @@ export function buildsSetter(statementSets: StatementSet<any>[], compiler: RunCo
       {
         for (let i = 0; i < set.set.length; i++)
         {
-          const field = set.set[i];
+          const field = set.set[i] as string;
+          const property = state.useNames
+            ? target.fieldColumn[ field ] || field
+            : field;
           const value = setValues[i];
           const resolvedValue = isRunExpr(value) ? value.get(state) : value;
 
-          row[field] = resolvedValue;
+          row[property] = resolvedValue;
         }
       }
     }

@@ -37,6 +37,21 @@ describe('Update', () =>
     },
   });
 
+  const CommentsAliased = table({
+    name: 'comment',
+    table: 'Comments',
+    fields: {
+      id: 'INT',
+      parentId: ['NULL', 'INT'],
+      content: 'TEXT',
+    },
+    fieldColumn: {
+      id: 'CommentID',
+      content: 'CommentContent',
+      parentId: 'CommentParentID',
+    },
+  });
+
   it('update by id set one', () =>
   {
     const db = getDB();
@@ -173,6 +188,54 @@ describe('Update', () =>
     expect(db.employee[2].amount).toBe(1);
     expect(db.employee[3].project).toBe('Home');
     expect(db.employee[3].amount).toBe(10);
+  });
+
+  it('update with aliases', () =>
+  {
+    const db = {
+      comment: [
+        { id: 2, parentId: null, content: 'Hi' }
+      ],
+    };
+
+    const getResult = prepare(db, { affectedCount: true });
+
+    const updater = update(CommentsAliased)
+      .where(({ comment }, { param }) => comment.id.eq(param('id')))
+      .set(['parentId', 'content'], () => [23, 'Changed'])
+      .run(getResult)
+    ;
+
+    const result = updater({ id: 2 });
+
+    expect(result.affected).toBe(1);
+
+    expect(db.comment[0].content).toBe('Changed');
+    expect(db.comment[0].parentId).toBe(23);
+  });
+
+  it('update with aliases useNames', () =>
+  {
+    const db = {
+      Comments: [
+        { CommentID: 2, CommentParentID: null, CommentContent: 'Hi' }
+      ],
+    };
+
+    const getResult = prepare(db, { affectedCount: true, useNames: true });
+
+    const updater = update(CommentsAliased)
+      .where(({ comment }, { param }) => comment.id.eq(param('id')))
+      .set(['parentId', 'content'], () => [23, 'Changed'])
+      .run(getResult)
+    ;
+
+    const result = updater({ id: 2 });
+
+    expect(result.affected).toBe(1);
+
+    expect(db.Comments[0].CommentContent).toBe('Changed');
+    expect(db.Comments[0].CommentParentID).toBe(23);
   });
 
   function getDB() {
