@@ -573,6 +573,51 @@ describe('index', () =>
     `);
   });
 
+  it('first json', () =>
+  {
+    const x = from(Task)
+      .select(({ task }) => [
+        task.id.as('task.id'), 
+        task.name.as('task.name')
+      ])
+      .orderBy('task.name')
+      .first()
+      .json()
+      .run(sql)
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      SELECT TOP 1 
+        task.id as "task.id", 
+        task."name" as "task.name" 
+      FROM task 
+      ORDER BY task."name" 
+      FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
+    `);
+  });
+
+  it('json', () =>
+  {
+    const x = from(Task)
+      .select(({ task }) => [
+        task.id.as('task.id'), 
+        task.name.as('task.name')
+      ])
+      .orderBy('task.name')
+      .json()
+      .run(sql)
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      SELECT
+        task.id as "task.id", 
+        task."name" as "task.name" 
+      FROM task 
+      ORDER BY task."name" 
+      FOR JSON PATH
+    `);
+  });
+
   it('existential', () =>
   {
     const x = from(Task)

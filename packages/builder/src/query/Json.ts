@@ -17,6 +17,11 @@ export class QueryJson<S extends Selects, V> extends ExprScalar<V>
     return ExprKind.JSON;
   }
 
+  public isStatement(): boolean 
+  {
+    return true;
+  }
+
   public traverse<R>(traverse: Traverser<Expr<any>, R>): R 
   {
     return traverse.enter(this, () => 
