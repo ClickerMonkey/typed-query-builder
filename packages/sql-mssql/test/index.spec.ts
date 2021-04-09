@@ -523,6 +523,71 @@ describe('index', () =>
     `);
   });
 
+  it('first', () =>
+  {
+    const x = from(Task)
+      .select(({ task }) => [task.id, task.name])
+      .orderBy('name')
+      .first()
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      SELECT TOP 1
+        id,
+        "name"
+      FROM task
+      ORDER BY "name"
+    `);
+  });
+
+  it('first aggregate', () =>
+  {
+    const x = from(Task)
+      .select(({ task }, { max }) => [max(task.id).as('id')])
+      .first()
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      SELECT
+        MAX(id) AS id
+      FROM task
+    `);
+  });
+
+  it('first value', () =>
+  {
+    const x = from(Task)
+      .select(({ task }) => [task.id, task.name])
+      .orderBy('name')
+      .value('id')
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      SELECT TOP 1
+        id
+      FROM task
+      ORDER BY "name"
+    `);
+  });
+
+  it('existential', () =>
+  {
+    const x = from(Task)
+      .select(({ task }) => [task.id, task.name])
+      .orderBy('name')
+      .exists()
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      SELECT TOP 1 1
+      FROM task
+    `);
+  });
+
   it('round', () =>
   {
     const x = from(Task)
@@ -744,7 +809,7 @@ describe('index', () =>
       SELECT 
         id, 
         "name", 
-        (SELECT task.id AS id, task."name" AS "name", done, doneAt FROM task WHERE task.id = parentId ORDER BY (SELECT NULL) OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) AS parent
+        (SELECT TOP 1 task.id AS id, task."name" AS "name", done, doneAt FROM task WHERE task.id = parentId FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) AS parent
       FROM subtask
     `);
   });

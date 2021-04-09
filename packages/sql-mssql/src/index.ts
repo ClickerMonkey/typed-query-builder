@@ -1,5 +1,5 @@
 
-import { getDataTypeMeta, DataTypeInputs, isNumber, isString, OrderBy, compileFormat, QueryJson, NamedSource, Selects, QueryFirst, QuerySelect, QueryList, QueryFirstValue, ExprAggregate, SourceKind, SourceRecursive } from '@typed-query-builder/builder';
+import { getDataTypeMeta, DataTypeInputs, isNumber, isString, OrderBy, compileFormat, QueryJson, NamedSource, Selects, QueryFirst, QuerySelect, QueryList, QueryFirstValue, ExprAggregate, SourceKind, SourceRecursive, QueryExistential } from '@typed-query-builder/builder';
 import { Dialect, addExprs, addFeatures, addQuery, ReservedWords, addSources, DialectFeatures, getOrder, getSelects, getNamedSource, getCriteria } from '@typed-query-builder/sql';
 
 import './types';
@@ -458,13 +458,15 @@ DialectMssql.transformer.setTransformer<QueryFirst<any, any, any>>(
     const { criteria } = expr;
 
     const params = getCriteria(criteria, transform, out, true);
+    const top = criteria.selects.length === 1 && criteria.selects[0].getExpr() instanceof ExprAggregate ? '' : 'TOP 1 ';
+    const selects = params.selects;
 
-    params.paging = () => out.dialect.selectLimitOnly({ limit: 1 });
-
-    if (!params.order)
+    if (selects)
     {
-      params.order = () => 'ORDER BY (SELECT NULL)';
+      params.selects = () => top + selects();
     }
+
+    delete params.paging;
 
     const saved = out.saveSources();
 
@@ -483,29 +485,45 @@ DialectMssql.transformer.setTransformer<QueryFirstValue<any, any, any, any>>(
     const { criteria, value, defaultValue } = expr;
 
     const params = getCriteria(criteria, transform, out, false);
-
-    if (!(value instanceof ExprAggregate))
-    {
-      params.paging = () => out.dialect.selectLimitOnly({ limit: 1 });
-
-      if (!params.order)
-      {
-        params.order = () => 'ORDER BY (SELECT NULL)';
-      }
-    }
-
+    const top = value instanceof ExprAggregate ? '' : 'TOP 1 ';
     const allSources = criteria.sources.filter( s => s.kind !== SourceKind.WITH ).map( s => s.source );
 
     if (defaultValue)
     {
-      params.selects = () => out.addSources(allSources, () =>
+      params.selects = () => top + out.addSources(allSources, () =>
         `COALESCE(${transform(value, out)}, ${transform(defaultValue, out)})`
       );
     }
     else
     {
-      params.selects = () => out.addSources(allSources, () => out.wrap(value));
+      params.selects = () => top + out.addSources(allSources, () => out.wrap(value));
     }
+
+    delete params.paging;
+
+    const saved = out.saveSources();
+
+    const sql = out.dialect.formatOrdered(out.dialect.selectOrder, params);
+
+    out.restoreSources(saved);
+
+    return sql;
+  }
+);
+
+DialectMssql.transformer.setTransformer<QueryExistential<any, any, any>>(
+  QueryExistential,
+  (expr, transform, out) => 
+  {
+    const { criteria } = expr;
+
+    const params = getCriteria(criteria, transform, out, false);
+
+    params.selects = () => 'TOP 1 1';
+    
+    delete params.paging;
+    delete params.order;
+    delete params.windows;
 
     const saved = out.saveSources();
 
