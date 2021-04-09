@@ -16,8 +16,6 @@ export function getNamedSource(source: NamedSource<any, any>, out: DialectOutput
     x += out.wrap(original);
   }
 
-  debugger;
-
   if (!original.getName() || original.getName() !== source.getName() || (source instanceof NamedSourceBase && source.constructor === NamedSourceBase && original instanceof SourceTable && original.table !== source.getName()))
   {
     const alias = out.dialect.quoteAlias(source.getName());
