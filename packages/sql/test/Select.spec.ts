@@ -34,6 +34,15 @@ describe('Select', () =>
     },
   });
 
+  const PeopleAliased = table({
+    name: 'people',
+    table: 'Persons',
+    fields: {
+      id: 'INT',
+      name: ['VARCHAR', 64],
+    },
+  });
+
   it('all', () =>
   {
     const x = from(Task)
@@ -1013,6 +1022,36 @@ describe('Select', () =>
         WHERE doneAt IS NOT NULL
       )
       ORDER BY id
+    `);
+  });
+
+  it('aliases', () =>
+  {
+    const x = from(PeopleAliased)
+      .select('*')
+      .run(sql)
+    ;
+    
+    expectText({ ignoreSpace: true, ignoreCase: true }, x, `
+      SELECT
+        Persons.id AS id,
+        Persons."name" AS "name"
+      FROM Persons
+    `);
+  });
+
+  it('aliases aliased', () =>
+  {
+    const x = from(PeopleAliased.as('people'))
+      .select('*')
+      .run(sql)
+    ;
+    
+    expectText({ ignoreSpace: true, ignoreCase: true }, x, `
+      SELECT
+        people.id AS id,
+        people."name" AS "name"
+      FROM Persons AS people
     `);
   });
 

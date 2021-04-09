@@ -1,4 +1,4 @@
-import { NamedSource, Select } from '@typed-query-builder/builder';
+import { NamedSource, NamedSourceBase, Select, SourceTable } from '@typed-query-builder/builder';
 import { DialectOutput } from '../Output';
 
 
@@ -16,7 +16,9 @@ export function getNamedSource(source: NamedSource<any, any>, out: DialectOutput
     x += out.wrap(original);
   }
 
-  if (!original.getName() || original.getName() !== source.getName())
+  debugger;
+
+  if (!original.getName() || original.getName() !== source.getName() || (source instanceof NamedSourceBase && source.constructor === NamedSourceBase && original instanceof SourceTable && original.table !== source.getName()))
   {
     const alias = out.dialect.quoteAlias(source.getName());
 
@@ -33,7 +35,7 @@ export function getNamedSource(source: NamedSource<any, any>, out: DialectOutput
 
     x += ' (';
     x += selects.map( s => out.dialect.quoteName(s.alias) ).join(', ');
-    x += ')'
+    x += ')';
   }
 
   return x;
