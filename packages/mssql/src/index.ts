@@ -1,4 +1,4 @@
-import { ExprValueTuples, DataTypeInputs, Expr, ExprValueObjects, getDataTypeFromInput, getDataTypeFromValue, getDataTypeMeta, QueryFirst, QueryFirstValue, QueryList } from '@typed-query-builder/builder';
+import { ExprValueTuples, DataTypeInputs, Expr, ExprValueObjects, getDataTypeFromInput, getDataTypeFromValue, getDataTypeMeta, QueryFirst, QueryFirstValue, QueryList, QueryJson, isArray, isString, isPlainObject, isFunction } from '@typed-query-builder/builder';
 import { DialectOutput } from '@typed-query-builder/sql';
 import { DialectMssql } from '@typed-query-builder/sql-mssql';
 import { ConnectionPool, IResult, ISqlType, MAX, PreparedStatement, Request, Transaction, TYPES } from 'mssql';
@@ -11,6 +11,7 @@ import './parsers';
  */
 export interface MssqlOptions<P>
 {
+
   /**
    * Named parameters to pass to the query.
    */
@@ -50,6 +51,42 @@ export interface MssqlOptions<P>
    * When calling stream, if the stream should take pauses between batch sizes to process a batch at once.
    */
   streamBatchSize?: number;
+
+  /**
+   * If true all strings in results will be inspected for JSON values and be automatically parsed.
+   */
+  detectJson?: boolean;
+
+  /**
+   * If true all strings in results will be inspected for "YYYY-MM-DD" format and automatically converted to a Date (or custom object).
+   */
+  detectDate?: boolean | ((detected: string) => any);
+
+  /**
+   * If true all strings in results will be inspected for "YYYY-MM-DD(T| )hh:mm:ss" format and automatically converted to a Date (or custom object).
+   */
+  detectSmallDateTime?: boolean | ((detected: string) => any);
+
+  /**
+   * If true all strings in results will be inspected for "YYYY-MM-DD(T| )hh:mm:ss[.nnn]" format and automatically converted to a Date (or custom object).
+   */
+  detectDateTime?: boolean | ((detected: string) => any);
+
+  /**
+   * If true all strings in results will be inspected for "YYYY-MM-DD(T| )hh:mm:ss[.nnnnnnn]" format and automatically converted to a Date (or custom object).
+   */
+  detectDateTime2?: boolean | ((detected: string) => any);
+
+  /**
+   * If true all strings in results will be inspected for "YYYY-MM-DD(T| )hh:mm:ss[.nnnnnnn] [+|-]hh:mm" format and automatically converted to a Date (or custom object).
+   */
+  detectDateTimeOffset?: boolean | ((detected: string) => any);
+
+  /**
+   * If true all strings will be inspected for a date format and will be automatically converted to a Date (or custom object).
+   */
+  detectAllDates?: boolean | ((detected: string) => any);
+
 }
 
 
@@ -319,14 +356,114 @@ export function prepare<P = any>(access?: ConnectionPool | Transaction, options?
 
 export function parseResult<R, P>(expr: Expr<R>, iresult: IResult<ExprValueObjects<R>>, options?: MssqlOptions<P>)
 {
-  const result = DialectMssql.getResult(expr, handleResult(expr, iresult, options));
+  let result = DialectMssql.getResult(expr, handleResult(expr, iresult, options));
+
+  if (options && (options.detectJson || options.detectDate || options.detectSmallDateTime || options.detectDateTime || options.detectDateTime2 || options.detectDateTimeOffset || options.detectAllDates))
+  {
+    const traverse = (value: any, onValue: (value: any) => any) => 
+    {
+      value = onValue(value);
+
+      if (isArray(value)) 
+      {
+        for (let i = 0; i < value.length; i++) 
+        {
+          value[i] = traverse(value[i], onValue);
+        }
+      } 
+      else if (isPlainObject(value)) 
+      {
+        for (const prop in value) 
+        {
+          value[prop] = traverse(value[prop], onValue);
+        }
+      }
+
+      return value;
+    };
+
+    if (options.detectJson)
+    {
+      result = traverse(result, (value) => 
+      {
+        if (isString(value) && value.match(/^({|true$|false$|\[|null$|[+-]?\d|")/)) 
+        {
+          try {
+            return JSON.parse(value);
+          } catch (e) {}
+        }
+
+        return value;
+      });
+    }
+
+    const dateDetectors = [
+      {
+        detect: options.detectDate || options.detectAllDates,
+        length: 10,
+        regex: /^\d{4}-\d\d-\d\d$/,
+        toDate: (value: string) => new Date(value + 'T00:00:00'),
+      },
+      {
+        detect: options.detectSmallDateTime || options.detectAllDates,
+        length: 19,
+        regex: /^\d{4}-\d\d-\d\d(T|\s)\d\d:\d\d:\d\d?$/,
+        toDate: (value: string) => new Date(value),
+      },
+      {
+        detect: options.detectDateTime || options.detectAllDates,
+        length: 23,
+        regex: /^\d{4}-\d\d-\d\d(T|\s)\d\d:\d\d:\d\d\.\d{3}?$/,
+        toDate: (value: string) => new Date(value),
+      },
+      {
+        detect: options.detectDateTime2 || options.detectAllDates,
+        length: 27,
+        regex: /^\d{4}-\d\d-\d\d(T|\s)\d\d:\d\d:\d\d\.\d{7}?$/,
+        toDate: (value: string) => new Date(value),
+      },
+      {
+        detect: options.detectDateTimeOffset || options.detectAllDates,
+        length: 34,
+        regex: /^\d{4}-\d\d-\d\d(T|\s)\d\d:\d\d:\d\d\.\d{7}\s[+-]\d\d:\d\d?$/,
+        toDate: (value: string) => new Date(value.replace(/\s([-+])/, '$1')),
+      }
+    ];
+
+    if (dateDetectors.some(d => d.detect))
+    {
+      for (const detector of dateDetectors)
+      {
+        if (isFunction(detector.detect))
+        {
+          detector.toDate = detector.detect;
+        }
+      }
+
+      result = traverse(result, (value) =>
+      {
+        if (isString(value))
+        {
+          for (const detector of dateDetectors)
+          {
+            if (value.length === detector.length && value.match(detector.regex))
+            {
+              return detector.toDate(value);
+            }
+          }
+        }
+
+        return value;
+      });
+    }
+  }
 
   return options?.affectedCount
     ? { affected: iresult.rowsAffected[0], result }
     : result;
 }
 
-export function handleResult<R, P>(expr: Expr<R>, result: IResult<ExprValueObjects<R>>, options?: MssqlOptions<P>)
+export function handleResult<R, P>(expr: Expr<R>, result: IResult<ExprValueObjects<R>>, options?: MssqlOptions<P>): any
 {
   if (expr instanceof QueryFirst)
   {
@@ -344,6 +481,11 @@ export function handleResult<R, P>(expr: Expr<R>, result: IResult<ExprValueObjec
   if (expr instanceof QueryList)
   {
     return result.recordset.map( r => (r as any).item );
+  }
+
+  if (expr instanceof QueryJson)
+  {
+    return result.recordset[0];
   }
 
   return result.recordset;

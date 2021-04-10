@@ -572,4 +572,81 @@ describe('index', () =>
     ]);
   });
 
+  it('select json', async () =>
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn);
+
+    const result = await from(TaskTable)
+      .select(({ Task }) => [
+        Task.Name.as('task.name'),
+        Task.Done.as('task.done')
+      ])
+      .where(({ Task }) => [
+        Task.Name.gt('Task 4'),
+      ])
+      .json()
+      .run( getResult )
+    ;
+
+    expect(result).toStrictEqual([
+      { task: { name: 'Task 5', done: true } },
+      { task: { name: 'Task 6', done: true } },
+      { task: { name: 'Task 7', done: true } },
+    ]);
+  });
+
+  it('select json nested', async () =>
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn, { detectJson: true, detectAllDates: true });
+
+    const result = await from(TaskTable)
+      .select(({ Task }) => [
+        Task.Name.as('task.name'),
+        Task.Done.as('task.done'),
+        from(TaskTable.as('parent'))
+          .where(({ parent }) => Task.ParentID.eq(parent.ID))
+          .select(({ parent }) => parent.only(['Name', 'CreatedAt']))
+          .first()
+          .json()
+          .as('task.parent')
+      ])
+      .where(({ Task }) => [
+        Task.Name.gt('Task 4'),
+      ])
+      .json()
+      .run( getResult )
+    ;
+
+    expect(result).toStrictEqual([
+      { task: { name: 'Task 5', done: true, parent: { Name: 'Task 3', CreatedAt: (result as any)[0].task.parent.CreatedAt } } },
+      { task: { name: 'Task 6', done: true, parent: { Name: 'Task 3', CreatedAt: (result as any)[1].task.parent.CreatedAt } } },
+      { task: { name: 'Task 7', done: true, parent: { Name: 'Task 4', CreatedAt: (result as any)[2].task.parent.CreatedAt } } },
+    ]);
+  });
+
+  it('select json first', async () =>
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn);
+
+    const result = await from(TaskTable)
+      .select(({ Task }) => [
+        Task.Name.as('task.name'),
+        Task.Done.as('task.done')
+      ])
+      .where(({ Task }) => [
+        Task.Name.gt('Task 4'),
+      ])
+      .first()
+      .json()
+      .run( getResult )
+    ;
+
+    expect(result).toStrictEqual(
+      { task: { name: 'Task 5', done: true } }
+    );
+  });
+
 });

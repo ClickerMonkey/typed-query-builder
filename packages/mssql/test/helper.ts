@@ -6,6 +6,7 @@ export const pool = new sql.ConnectionPool({
   database: 'tqb',
   user: 'test',
   password: 'password#1',
+  parseJSON: true,
   options: {
     enableArithAbort: true,
     packetSize: 65536,
