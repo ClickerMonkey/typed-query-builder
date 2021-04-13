@@ -1,6 +1,6 @@
 
 import { getDataTypeMeta, DataTypeInputs, isNumber, isString, OrderBy, compileFormat, QueryJson, NamedSource, Selects, QueryFirst, QuerySelect, QueryList, QueryFirstValue, ExprAggregate, SourceKind, SourceRecursive, QueryExistential } from '@typed-query-builder/builder';
-import { Dialect, addExprs, addFeatures, addQuery, ReservedWords, addSources, DialectFeatures, getOrder, getSelects, getNamedSource, getCriteria } from '@typed-query-builder/sql';
+import { Dialect, addExprs, addFeatures, addQuery, ReservedWords, addSources, DialectFeatures, getOrder, getSelects, getNamedSource, getCriteria, getLock } from '@typed-query-builder/sql';
 
 import './types';
 
@@ -423,6 +423,45 @@ DialectMssql.featureFormatter[DialectFeatures.WITH_RECURSIVE] = (value: SourceRe
 
   return withRecursive(value, transform, out);
 };
+
+DialectMssql.transformer.setTransformer<QuerySelect<any, any, any>>(
+  QuerySelect,
+  (expr, transform, out) => 
+  {
+    const { _criteria, _distinct, _distinctOn, _locks } = expr;
+
+    const params = getCriteria(_criteria, transform, out, true);
+
+    const saved = out.saveSources();
+
+    if (_distinctOn.length > 0)
+    {
+      const allSources = _criteria.sources.filter( s => s.kind !== SourceKind.WITH ).map( s => s.source );
+
+      params.distinct = () => out.addSources(allSources, () => out.dialect.getFeatureOutput(DialectFeatures.SELECT_DISTINCT_ON, _distinctOn, out));
+    }
+    else if (_distinct)
+    {
+      params.distinct = () => 'DISTINCT';
+    }
+
+    if (_locks.length > 0)
+    {
+      params.locks = () => _locks.map( l => getLock( l, out ) ).join(' ');
+    }
+
+    if (params.paging && !params.order)
+    {
+      params.order = () => 'ORDER BY (SELECT NULL)';
+    }
+
+    const sql = out.dialect.formatOrdered(out.dialect.selectOrder, params);
+
+    out.restoreSources(saved);
+
+    return sql;
+  }
+);
 
 DialectMssql.transformer.setTransformer<QueryJson<any, any>>(
   QueryJson,

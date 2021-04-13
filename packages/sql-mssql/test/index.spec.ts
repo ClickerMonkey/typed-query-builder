@@ -484,6 +484,24 @@ describe('index', () =>
     `);
   });
 
+  it('limit without order', () =>
+  {
+    const x = from(Task)
+      .select(({ task }) => [task.id, task.name])
+      .limit(10)
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      SELECT
+        id,
+        "name"
+      FROM task
+      ORDER BY (SELECT NULL)
+      OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY
+    `);
+  });
+
   it('limit offset', () =>
   {
     const x = from(Task)
@@ -504,6 +522,25 @@ describe('index', () =>
     `);
   });
 
+  it('limit offset without order', () =>
+  {
+    const x = from(Task)
+      .select(({ task }) => [task.id, task.name])
+      .limit(10)
+      .offset(5)
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      SELECT
+        id,
+        "name"
+      FROM task
+      ORDER BY (SELECT NULL)
+      OFFSET 5 ROWS FETCH NEXT 10 ROWS ONLY
+    `);
+  });
+
   it('offset', () =>
   {
     const x = from(Task)
@@ -519,6 +556,24 @@ describe('index', () =>
         "name"
       FROM task
       ORDER BY "name"
+      OFFSET 5 ROWS
+    `);
+  });
+
+  it('offset without order', () =>
+  {
+    const x = from(Task)
+      .select(({ task }) => [task.id, task.name])
+      .offset(5)
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      SELECT
+        id,
+        "name"
+      FROM task
+      ORDER BY (SELECT NULL)
       OFFSET 5 ROWS
     `);
   });
