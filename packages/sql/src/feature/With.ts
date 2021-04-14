@@ -11,7 +11,7 @@ export function addWithFeature(dialect: Dialect)
     x += out.dialect.quoteName(value.getName());
     x += ' AS (';
     x += transform(value.getSource(), out);
-    x += ')'
+    x += ')';
 
     return x;
   };

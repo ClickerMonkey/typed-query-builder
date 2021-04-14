@@ -1,4 +1,5 @@
 import { exprs, table, from, DataTypePoint, insert, deletes, update, tableFromType } from '@typed-query-builder/builder';
+import { withs } from '@typed-query-builder/builder/src';
 import { expectText, sql, sqlWithOptions } from './helper';
 
 
@@ -1082,6 +1083,36 @@ describe('index', () =>
 
     expectText({ condenseSpace: true }, SelectAll, `
       SELECT Aliases.AliasID AS id FROM Aliases
+    `);
+  });
+
+  it('with ordered', () =>
+  {
+    // @ts-ignore
+    const SelectAll = withs(() => 
+        from(Task)
+          .select(({ task }) => [task.id, task.name])
+          .orderBy('name')
+          .as('tasks')
+      )
+      .from('tasks')
+      .select('*')
+      .run(sql)
+    ;
+
+    expectText({ ignoreSpace: true }, SelectAll, `
+      WITH tasks AS (
+        SELECT 
+          task.id AS id,
+          task."name" AS "name"
+        FROM task
+        ORDER BY task."name"
+        OFFSET 0 ROWS
+      )
+      SELECT 
+        tasks.id AS id,
+        tasks."name" AS "name"
+      FROM tasks
     `);
   });
 

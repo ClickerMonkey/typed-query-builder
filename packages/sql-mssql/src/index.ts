@@ -1,5 +1,5 @@
 
-import { getDataTypeMeta, DataTypeInputs, isNumber, isString, OrderBy, compileFormat, QueryJson, NamedSource, Selects, QueryFirst, QuerySelect, QueryList, QueryFirstValue, ExprAggregate, SourceKind, SourceRecursive, QueryExistential } from '@typed-query-builder/builder';
+import { getDataTypeMeta, DataTypeInputs, isNumber, isString, OrderBy, compileFormat, QueryJson, NamedSource, Selects, QueryFirst, QuerySelect, QueryList, QueryFirstValue, ExprAggregate, SourceKind, SourceRecursive, QueryExistential, QuerySet } from '@typed-query-builder/builder';
 import { Dialect, addExprs, addFeatures, addQuery, ReservedWords, addSources, DialectFeatures, getOrder, getSelects, getNamedSource, getCriteria, getLock } from '@typed-query-builder/sql';
 
 import './types';
@@ -422,6 +422,28 @@ DialectMssql.featureFormatter[DialectFeatures.WITH_RECURSIVE] = (value: SourceRe
   value.all = true;
 
   return withRecursive(value, transform, out);
+};
+
+DialectMssql.featureFormatter[DialectFeatures.WITH] = (value: NamedSource<any, any>, transform, out) => 
+{
+  const source = value.getSource();
+
+  if (source instanceof QuerySelect || source instanceof QuerySet)
+  {
+    if (!source._criteria.limit && !source._criteria.offset && source._criteria.orderBy.length > 0)
+    {
+      source._criteria.offset = 0;
+    }
+  }
+
+  let x = '';
+
+  x += out.dialect.quoteName(value.getName());
+  x += ' AS (';
+  x += transform(source, out);
+  x += ')';
+
+  return x;
 };
 
 DialectMssql.transformer.setTransformer<QuerySelect<any, any, any>>(
