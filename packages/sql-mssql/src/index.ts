@@ -1,5 +1,5 @@
 
-import { getDataTypeMeta, DataTypeInputs, isNumber, isString, OrderBy, compileFormat, QueryJson, NamedSource, Selects, QueryFirst, QuerySelect, QueryList, QueryFirstValue, ExprAggregate, SourceKind, SourceRecursive, QueryExistential, QuerySet } from '@typed-query-builder/builder';
+import { getDataTypeMeta, DataTypeInputs, isNumber, isString, OrderBy, compileFormat, QueryJson, NamedSource, Selects, QueryFirst, QuerySelect, QueryList, QueryFirstValue, ExprAggregate, SourceKind, SourceRecursive, QueryExistential, QuerySet, Select, Name } from '@typed-query-builder/builder';
 import { Dialect, addExprs, addFeatures, addQuery, ReservedWords, addSources, DialectFeatures, getOrder, getSelects, getNamedSource, getCriteria, getLock } from '@typed-query-builder/sql';
 
 import './types';
@@ -490,6 +490,11 @@ DialectMssql.transformer.setTransformer<QueryJson<any, any>>(
   (expr, transform, out) => 
   {
     const { json } = expr;
+
+    if (json instanceof QuerySelect)
+    {
+      (json._criteria.selects as Select<Name, any>[]).sort((a, b) => String(a.alias).localeCompare(String(b.alias)));
+    }
 
     const subquery = out.modify({ includeSelectAlias: true }, () => transform(json, out));
 

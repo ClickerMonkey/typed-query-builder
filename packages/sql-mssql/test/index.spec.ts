@@ -656,8 +656,8 @@ describe('index', () =>
   {
     const x = from(Task)
       .select(({ task }) => [
-        task.id.as('task.id'), 
-        task.name.as('task.name')
+        task.name.as('task.name'),
+        task.id.as('task.id')
       ])
       .orderBy('task.name')
       .json()
