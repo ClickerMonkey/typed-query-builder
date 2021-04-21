@@ -19,6 +19,19 @@ declare module "@typed-query-builder/builder"
 
   export interface Functions
   {
+    minScale(x: number): number;
+    scale(x: number): number;
+    trimScale(x: number): number;
+    widthBudget(operand: number, low: number, high: number, count: number): number;
+    bitLength(text: string): number;
+    toHex(n: number): string;
+    octetLength(x: string): number;
+    sha256(x: string): string;
+    sha512(x: string): string;
+    encode(x: string, format: string): string;
+    decode(x: string, format: string): string;
+    age(from: Date, to?: Date): string;
+
     square(x: number): number;
     choose<T>(i: number, ...options: T[]): T;
     nchar(i: number): string;
@@ -41,14 +54,7 @@ declare module "@typed-query-builder/sql"
 
   export interface DialectParamsInsert
   {
-    top: string;
-    option: string;
-  }
-
-  export interface DialectParamsUpdate
-  {
-    top: string;
-    option: string;
+    override: string;
   }
 
   export interface DialectParamsDelete

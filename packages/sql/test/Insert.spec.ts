@@ -122,6 +122,31 @@ describe('Insert', () =>
     `);
   });
 
+  it('single tuple escaping', () =>
+  {
+    debugger;
+    
+    const x = insert()
+      .into(Task)
+      .values(({}, { defaults, nulls }) => [
+        defaults(),
+        'Hello \'World\'',
+        false,
+        nulls(),
+        nulls(),
+        10,
+      ])
+      .run(sql)
+    ;
+
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      INSERT INTO task 
+        (id, "name", done, doneAt, parentId, assignee) 
+      VALUES
+        (DEFAULT, 'Hello ''World''', FALSE, NULL, NULL, 10)
+    `);
+  });
+
   it('multiple object', () =>
   {
     const x = insert()

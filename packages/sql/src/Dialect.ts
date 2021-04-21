@@ -637,7 +637,7 @@ export class Dialect
 
     const [quote, escape] = input;
 
-    return (value) => quote + value.replace(new RegExp(escape, 'g'), quote) + quote;
+    return (value) => quote + value.replace(new RegExp(quote, 'g'), escape) + quote;
   }
 
   public static FormatString: DialectValueFormatter = (value, dialect) => 

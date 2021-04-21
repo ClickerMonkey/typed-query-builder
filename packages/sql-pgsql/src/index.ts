@@ -16,11 +16,6 @@ DialectPgsql.addReservedWords(ReservedWords);
 
 DialectPgsql.implicitPredicates = true;
 
-DialectPgsql.insertOrder = ['with', 'INSERT', 'top', 'INTO', 'table', 'columns', 'returning', 'values', 'option'];
-DialectPgsql.deleteOrder = ['with', 'DELETE', 'top', 'FROM', 'table', 'returning', 'using', 'where', 'option'];
-DialectPgsql.updateOrder = ['with', 'UPDATE', 'top', 'ONLY', 'table', 'set', 'returning', 'from', 'where', 'option'];
-DialectPgsql.selectOrder = ['with', 'SELECT', 'top', 'distinct', 'selects', 'into', 'from', 'joins', 'where', 'group', 'having', 'windows', 'order', 'paging', 'locks', 'option'];
-
 DialectPgsql.predicateBinary.alias('!=', '<>');
 
 DialectPgsql.predicateBinaryList.alias('!=', '<>');
@@ -216,53 +211,87 @@ DialectPgsql.aggregates.setUnsupported([
   // 'bitAnd', 'bitOr', 'nthValue'
 ]);
 
-/*
 DialectPgsql.functions.aliases({
-  ln: 'LOG',
-  join: 'CONCAT_WS',
+  minScale: 'MIN_SCALE',
+  trimScale: 'TRIM_SCALE',
+  truncate: 'TRUNC',
+  widthBudget: 'WIDTH_BUDGET',
+  bitLength: 'BIT_LENGTH',
   trimLeft: 'LTRIM',
   trimRight: 'RTRIM',
-  char: 'CHAR',
-  nchar: 'NCHAR',
-  regexReplace: 'REPLACE',
-  length: 'LEN',
-  split: 'STRING_SPLIT',
-  repeat: 'REPLICATE',
-  soundexDifference: 'DIFFERENCE',
-  jsonTest: 'ISJSON',
-  jsonValue: 'JSON_VALUE',
-  jsonQuery: 'JSON_QUERY',
-  jsonModify: 'JSON_MODIFY',
-  dateFormat: 'FORMAT',
-  dateGet: 'DATEPART',
-  createDate: 'DATEFROMPARTS',
+  padLeft: 'LPAD',
+  padRight: 'RPAD',
+  indexOf: 'STRPOS',
+  substring: 'SUBSTR',
+  startsWith: 'STARTS_WITH',
+  regexReplace: 'REGEXP_REPLACE',
+  char: 'CHR',
+  join: 'CONCAT_WS',
+  dateParse:'TO_DATE',
+  timestampParse: 'TO_TIMESTAMP',
+  dateFormat: 'TO_CHAR',
+  dateGet: 'DATE_PART',
 });
 
 DialectPgsql.functions.setFormats({
-  geomCenter: '({0}).STCentroid()',
-  geomContains: '({0}).STContains({1})',
-  geomDistance: '({0}).STDistance({1})',
-  geomIntersection: '({0}).STIntersection({1})',
-  geomIntersects: '({0}).STIntersects({1})',
-  geomTouches: '({0}).STTouches({1})',
-  geomLength: '({0}).STLength()',
-  geomPoints: '({0}).STNumPoints()',
-  geomPoint: '({0}).STPointN({1})',
-  geomPointX: '({0}).STX',
-  geomPointY: '({0}).STY'
+  regexGet: 'REGEXP_MATCH({0}, {1})[1]',
+  currentTime: 'CURRENT_TIME',
+  currentTimestamp: 'CURRENT_TIMESTAMP',
+  currentDate: 'CURRENT_DATE',
+  // geomCenter: '({0}).STCentroid()',
+  // geomContains: '({0}).STContains({1})',
+  // geomDistance: '({0}).STDistance({1})',
+  // geomIntersection: '({0}).STIntersection({1})',
+  // geomIntersects: '({0}).STIntersects({1})',
+  // geomTouches: '({0}).STTouches({1})',
+  // geomLength: '({0}).STLength()',
+  // geomPoints: '({0}).STNumPoints()',
+  // geomPoint: '({0}).STPointN({1})',
+  // geomPointX: '({0}).STX',
+  // geomPointY: '({0}).STY'
 });
-*/
+
 
 DialectPgsql.aggregates.aliases({
-  string: 'STRING_AGG',
-  rowNumber: 'ROW_NUMBER',
-  denseRank: 'DENSE_RANK',
-  percentRank: 'PERCENT_RANK',
-  culmulativeDistribution: 'CUME_DIST',
-  firstValue: 'FIRST_VALUE',
-  lastValue: 'LAST_VALUE',
-  variance: 'VAR',
-  deviation: 'STDEV',
+  // string: 'STRING_AGG',
+  // rowNumber: 'ROW_NUMBER',
+  // denseRank: 'DENSE_RANK',
+  // percentRank: 'PERCENT_RANK',
+  // culmulativeDistribution: 'CUME_DIST',
+  // firstValue: 'FIRST_VALUE',
+  // lastValue: 'LAST_VALUE',
+  // variance: 'VAR',
+  // deviation: 'STDEV',
+});
+
+DialectPgsql.functions.setFormats({
+  // truncate: 'ROUND({0}, 0, 1)',
+});
+
+DialectPgsql.aggregates.setFormats({
+  // boolAnd: '(1 - MIN({distinct}{0})){over}',
+  // boolOr: 'MAX({distinct}{0}){over}',
+  // countIf: 'COUNT({distinct}CASE WHEN ({0}) = 1 THEN 1 ELSE NULL END){over}',
+});
+
+DialectPgsql.functions.setCascadings({
+  // round: [
+  //   [1, 'ROUND({0}, {1})'],
+  //   [0, 'ROUND({0}, 0)'],
+  // ],
+  // padLeft: [
+  //   [2,  `CONCAT(REPLICATE({2}, LEN({0}) - ({1})), {0})`],
+  //   [1,  `CONCAT(REPLICATE(' ', LEN({0}) - ({1})), {0})`],
+  // ],
+  // padRight: [
+  //   [2, `CONCAT({0}, REPLICATE({2}, LEN({0}) - ({1})))`],
+  //   [1, `CONCAT({0}, REPLICATE(' ', LEN({0}) - ({1})))`],
+  // ],
+  random: [
+    [1, '(random() * (({0}) - ({1})) + ({1}))'],
+    [0, '(random() * ({0}))'],
+    ['*', 'random()'],
+  ],
 });
 
 DialectPgsql.functionsRawArguments.dateGet = { 0: true };
@@ -270,57 +299,6 @@ DialectPgsql.functionsRawArguments.dateTruncate = { 0: true };
 DialectPgsql.functionsRawArguments.dateAdd = { 0: true };
 DialectPgsql.functionsRawArguments.dateDiff = { 0: true };
 // DialectPgsql.functionsRawArguments.convert = { 0: true };
-
-DialectPgsql.functions.setFormats({
-  factorial: '(WITH factorial(num, ans) AS (SELECT {0}, {0} UNION ALL SELECT num - 1, ans * (num - 1) FROM factorial WHERE num > 1) SELECT TOP 1 ans FROM factorial ORDER BY ans DESC)',
-  truncate: 'ROUND({0}, 0, 1)',
-  mod: '(({0}) % ({1}))',
-  div: 'ROUND(({0}) / ({1}), 0, 1)',
-  indexOf: 'PATINDEX({1}, {0})',
-  md5: `HASHBYTES('MD5', {0})`,
-  startsWith: '(LEFT({0}, LEN({1})) = {1})',
-  dateParse: 'TRY_CAST({0} AS DATE)',
-  timestampParse: 'TRY_CAST({0} AS DATETIME2)',
-  dateAddDays: 'DATEADD(DAY, {1}, {0})',
-  dateWithTime: 'DATETIME2FROMPARTS(DATEPART(YEAR, {0}), DATEPART(MONTH, {0}), DATEPART(DAY, {0}), DATEPART(HOUR, {1}), DATEPART(MINUTE, {1}), DATEPART(SECOND, {1}), 0, 0)',
-  dateSubDays: 'DATEADD(DAY, -({1}), {0})',
-  daysBetween: 'DATEDIFF(DAY, {0}, {1})',
-  currentTime: 'CONVERT(TIME, CURRENT_TIMESTAMP)',
-  currentTimestamp: 'CURRENT_TIMESTAMP',
-  currentDate: 'CONVERT(DATE, CURRENT_TIMESTAMP)',
-  createTime: 'TIMEFROMPARTS({0}, {1}, {2}, 0, 0)',
-  createTimestamp: 'DATETIME2FROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, 0, 0)',
-  timestampToSeconds: `DATEDIFF(SECOND, '1970-01-01 00:00:00', {0})`,
-  timestampFromSeconds: `DATEADD(SECOND, {0}, '1970-01-01 00:00:00')`,
-  datesOverlap: 'NOT({2} > {1} OR {3} < {0})',
-  timestampsOverlap: 'NOT({2} > {1} OR {3} < {0})',
-});
-
-DialectPgsql.aggregates.setFormats({
-  boolAnd: '(1 - MIN({distinct}{0})){over}',
-  boolOr: 'MAX({distinct}{0}){over}',
-  countIf: 'COUNT({distinct}CASE WHEN ({0}) = 1 THEN 1 ELSE NULL END){over}',
-});
-
-DialectPgsql.functions.setCascadings({
-  round: [
-    [1, 'ROUND({0}, {1})'],
-    [0, 'ROUND({0}, 0)'],
-  ],
-  padLeft: [
-    [2,  `CONCAT(REPLICATE({2}, LEN({0}) - ({1})), {0})`],
-    [1,  `CONCAT(REPLICATE(' ', LEN({0}) - ({1})), {0})`],
-  ],
-  padRight: [
-    [2, `CONCAT({0}, REPLICATE({2}, LEN({0}) - ({1})))`],
-    [1, `CONCAT({0}, REPLICATE(' ', LEN({0}) - ({1})))`],
-  ],
-  random: [
-    [1, '(RAND() * (({0}) - ({1})) + ({1}))'],
-    [0, '(RAND() * ({0}))'],
-    ['*', 'RAND()'],
-  ],
-});
 
 /*
 DialectPgsql.functions.sets({

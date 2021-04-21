@@ -25,3 +25,11 @@ The following query builder features are not supported on SQL Server:
 - `LINE` data type (not to be confused with SEGMENT)
 - `CBRT, GCD, LCM, REGEX_REPLACE, REGEX_GET` functions
 - `BIT_AND, BIT_OR, NTHVALUE` aggregate functions
+
+
+
+TODO
+
+- Geometry types
+- Functions
+- Aggregates
