@@ -16,6 +16,27 @@ describe('Insert', () =>
       assignee: 'INT',
     },
   });
+  
+  const TaskAliased = table({
+    name: 'task',
+    table: 'Tasks',
+    fields: {
+      id: 'INT',
+      name: ['VARCHAR', 64],
+      done: 'BOOLEAN',
+      doneAt: ['NULL', 'TIMESTAMP'],
+      parentId: ['NULL', 'INT'],
+      assignee: 'INT',
+    },
+    fieldColumn: {
+      id: 'TaskID',
+      name: 'TaskName',
+      done: 'TaskDone',
+      doneAt: 'TaskDoneAt',
+      parentId: 'TaskParentID',
+      assignee: 'Assignee'
+    },
+  });
 
   // const Book = table({
   //   name: 'book',
@@ -124,8 +145,6 @@ describe('Insert', () =>
 
   it('single tuple escaping', () =>
   {
-    debugger;
-    
     const x = insert()
       .into(Task)
       .values(({}, { defaults, nulls }) => [
@@ -144,6 +163,25 @@ describe('Insert', () =>
         (id, "name", done, doneAt, parentId, assignee) 
       VALUES
         (DEFAULT, 'Hello ''World''', FALSE, NULL, NULL, 10)
+    `);
+  });
+
+  it('single tuple specific columns', () =>
+  {
+    const x = insert()
+      .into(TaskAliased, ['name', 'done'])
+      .values(() => [
+        'Name',
+        false,
+      ])
+      .run(sql)
+    ;
+
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      INSERT INTO Tasks 
+        (TaskName, TaskDone) 
+      VALUES
+        ('Name', false)
     `);
   });
 

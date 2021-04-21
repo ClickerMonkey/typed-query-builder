@@ -87,7 +87,7 @@ export function addInsert(dialect: Dialect)
         return table;
       };
 
-      params.columns = () => '(' + _columns.map( (c: string) => out.dialect.quoteName(c) ).join(', ') + ')';
+      params.columns = () => '(' + _columns.map( (c: string) => out.dialect.quoteName(_into.fieldColumn[c] || c) ).join(', ') + ')';
 
       const hasSources = _values.some( v => v instanceof Source );
 
