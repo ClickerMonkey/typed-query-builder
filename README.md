@@ -240,7 +240,7 @@ interface TaskDTO {
   name: string;
   done: boolean;
   doneAt: Date;
-  parentId?: number;
+  parentId?: number | null;
 }
 
 export const Task = tableFromType<TaskDTO>()({
