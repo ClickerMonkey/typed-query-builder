@@ -216,7 +216,7 @@ You can resolve a `SELECT` down to a list of objects or tuples, a first row, a s
 
 #### Define Tables
 ```ts
-import { query, from, insert, update, remove, table } from '@typed-query-builder/builder';
+import { table, tableFromType } from '@typed-query-builder/builder';
 
 // First we define our tables
 const Task = table({
@@ -233,10 +233,30 @@ const Task = table({
     doneAt: 'finished_at', // optionally the real column name
   },
 });
+
+// This method is also available, and won't result in TS errors if you have too many columns/fields.
+interface TaskDTO {
+  id: number;
+  name: string;
+  done: boolean;
+  doneAt: Date;
+  parentId?: number;
+}
+
+export const Task = tableFromType<TaskDTO>()({
+	name: 'task',
+	table: 'v_table',
+	fields: ['id', 'name', 'done', 'doneAt', 'parentId'],
+	fieldColumn: {
+		doneAt: 'finished_at',
+  },
+});
 ```
 
 #### Select
 ```ts
+import { from, query, insert, update, deletes } from '@typed-query-builder/builder';
+
 // SELECT * FROM task
 from(Task).select('*');
 
