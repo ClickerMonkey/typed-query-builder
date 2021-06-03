@@ -4,7 +4,7 @@ The most advanced TypeScript query builder available! It can generate SQL, be tr
 
 But why? Do we need more? **I think so**. If you find yourself struggling to use an ORM or have problems using typical SQL features in a query builder this is the query builder for you. Nothing is more irritating than having to resort to SQL strings because what you're using doesn't support something simple. This library aims at providing a query building experience that feels like SQL, but with type safety and auto-completion. Not only that, but your queries can be ran against any supported database. This library also has a *runtime* implementation which is a local implementation of a database. This makes testing your business logic _without connecting to a real database_ as easy as can be. Each database implementation has common SQL features but also features specific to that database if you really need to utilize uncommon functionality. If you also have custom expressions, functions, data types, etc you can easily merge your types and utilize them. **With all of this power, this makes developing, refactoring, and testing easy.**
 
-[Examples](#examples) | [FAQ](#faq) | [**Walkthrough**](Walkthrough.md)
+[Examples](#examples) | [FAQ](#faq) | [**Walkthrough**](WALKTHROUGH.md)
 
 ### Features
 - [Type safe](#type-safe)
