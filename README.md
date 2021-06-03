@@ -244,11 +244,11 @@ interface TaskDTO {
 }
 
 export const Task = tableFromType<TaskDTO>()({
-	name: 'task',
-	table: 'v_table',
-	fields: ['id', 'name', 'done', 'doneAt', 'parentId'],
-	fieldColumn: {
-		doneAt: 'finished_at',
+  name: 'task',
+  table: 'v_table',
+  fields: ['id', 'name', 'done', 'doneAt', 'parentId'],
+  fieldColumn: {
+    doneAt: 'finished_at',
   },
 });
 ```
