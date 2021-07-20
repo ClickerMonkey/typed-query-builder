@@ -31,21 +31,6 @@ declare module "@typed-query-builder/builder"
     encode(x: string, format: string): string;
     decode(x: string, format: string): string;
     age(from: Date, to?: Date): string;
-
-    square(x: number): number;
-    choose<T>(i: number, ...options: T[]): T;
-    nchar(i: number): string;
-    soundexDifference(a: string, b: string): number;
-    soundex(x: string): string;
-    split(x: string, separator: string): string[];
-    jsonTest(x: any): boolean;
-    jsonValue(x: any, path: string): Json;
-    jsonQuery(x: any, path?: string): Json;
-    jsonModify(x: any, path: string, newValue: Json): Json;
-    dateName(field: DateField, date: Date): string;
-    day(date: Date): number;
-    month(date: Date): number;
-    year(date: Date): number;
   }
 }
 
