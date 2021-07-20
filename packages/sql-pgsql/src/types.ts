@@ -59,15 +59,11 @@ declare module "@typed-query-builder/sql"
 
   export interface DialectParamsDelete
   {
-    top: string;
-    option: string;
   }
 
   export interface DialectParamsSelect
   {
-    top: string;
     into: string;
-    option: string;
   }
   
 }

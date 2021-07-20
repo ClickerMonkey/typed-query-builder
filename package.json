@@ -13,6 +13,7 @@
         "builder": "yarn workspace @typed-query-builder/builder",
         "sql": "yarn workspace @typed-query-builder/sql",
         "sql-mssql": "yarn workspace @typed-query-builder/sql-mssql",
+        "sql-pgsql": "yarn workspace @typed-query-builder/sql-pgsql",
         "mssql": "yarn workspace @typed-query-builder/mssql",
         "runtime": "yarn workspace @typed-query-builder/run"
     },

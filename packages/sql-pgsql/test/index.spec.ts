@@ -116,7 +116,7 @@ describe('index', () =>
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT 
-        STRING_AGG("name", ',' WITHIN GROUP (ORDER BY "name" ASC)) AS "names"
+        STRING_AGG("name", ',' ORDER BY "name" ASC) AS "names"
       FROM task
     `);
   });
@@ -126,7 +126,7 @@ describe('index', () =>
     const x = exprs().cast('BOOLEAN', 1).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT CAST(1 AS BIT)
+      SELECT CAST(1 AS boolean)
     `);
   });
 
@@ -144,7 +144,7 @@ describe('index', () =>
     const x = exprs().cast(['MEDIUMINT', 2], 1).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT CAST(1 AS INT(2))
+      SELECT CAST(1 AS INT)
     `);
   });
 
@@ -227,7 +227,7 @@ describe('index', () =>
     const x = exprs().constant({x: 1, y: 2}, 'POINT').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT geometry::Point(1, 2, 0)
+      SELECT point (1, 2)
     `);
   });
 
@@ -236,7 +236,7 @@ describe('index', () =>
     const x = exprs().constant({x: 1, y: 2}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT geometry::Point(1, 2, 0)
+      SELECT point (1, 2)
     `);
   });
 
@@ -247,7 +247,7 @@ describe('index', () =>
     const x = deep({x: param('x'), y: 2}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT geometry::Point($0, 2, 0)
+      SELECT point ($0, 2)
     `);
   });
 
@@ -256,7 +256,7 @@ describe('index', () =>
     const x = exprs().constant({x1: 1, y1: 2, x2: 3, y2: 4}, 'SEGMENT').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT geometry::STGeomFromText('LINESTRING (1 2, 3 4)', 0)
+      SELECT lseg [(1, 2), (3, 4)]
     `);
   });
 
@@ -265,7 +265,7 @@ describe('index', () =>
     const x = exprs().constant({x1: 1, y1: 2, x2: 3, y2: 4}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT geometry::STGeomFromText('LINESTRING (1 2, 3 4)', 0)
+      SELECT lseg [(1, 2), (3, 4)]
     `);
   });
 
@@ -274,7 +274,7 @@ describe('index', () =>
     const x = exprs().constant({x: 1, y: 2, r: 3}, 'CIRCLE').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT geometry::STGeomFromText('CIRCULARSTRING (4 2, 1 5, -2 2, 1 -1, 4 2)', 0)
+      SELECT circle <(1, 2), 3>
     `);
   });
 
@@ -283,7 +283,7 @@ describe('index', () =>
     const x = exprs().constant({x: 1, y: 2, r: 3}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT geometry::STGeomFromText('CIRCULARSTRING (4 2, 1 5, -2 2, 1 -1, 4 2)', 0)
+      SELECT circle <(1, 2), 3>
     `);
   });
 
@@ -292,7 +292,7 @@ describe('index', () =>
     const x = exprs().constant({points: [{x: 1, y: 2}, {x: 3, y: 4}]}, 'PATH').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT geometry::STGeomFromText('LINESTRING (1 2, 3 4)', 0)
+      SELECT  path [(1, 2), (3, 4)]
     `);
   });
 
@@ -301,7 +301,7 @@ describe('index', () =>
     const x = exprs().constant({points: []}, 'PATH').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT geometry::STGeomFromText('LINESTRING EMPTY', 0)
+      SELECT path []
     `);
   });
 
@@ -310,7 +310,7 @@ describe('index', () =>
     const x = exprs().constant({points: [{x: 1, y: 2}, {x: 3, y: 4}]}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT geometry::STGeomFromText('LINESTRING (1 2, 3 4)', 0)
+      SELECT path [(1, 2), (3, 4)]
     `);
   });
 
@@ -319,7 +319,7 @@ describe('index', () =>
     const x = exprs().constant({points: []}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT geometry::STGeomFromText('LINESTRING EMPTY', 0)
+      SELECT path []
     `);
   });
 
@@ -328,7 +328,7 @@ describe('index', () =>
     const x = exprs().constant({corners: [{x: 1, y: 2}, {x: 3, y: 4}]}, 'POLYGON').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT geometry::STGeomFromText('POLYGON ((1 2, 3 4))', 0)
+      SELECT polygon ((1, 2), (3, 4))
     `);
   });
 
@@ -337,7 +337,7 @@ describe('index', () =>
     const x = exprs().constant({corners: []}, 'POLYGON').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT geometry::STGeomFromText('POLYGON EMPTY', 0)
+      SELECT polygon ()
     `);
   });
 
@@ -346,7 +346,7 @@ describe('index', () =>
     const x = exprs().constant({corners: [{x: 1, y: 2}, {x: 3, y: 4}]}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT geometry::STGeomFromText('POLYGON ((1 2, 3 4))', 0)
+      SELECT polygon ((1, 2), (3, 4))
     `);
   });
 
@@ -355,7 +355,7 @@ describe('index', () =>
     const x = exprs().constant({corners: []}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT geometry::STGeomFromText('POLYGON EMPTY', 0)
+      SELECT polygon ()
     `);
   });
 
@@ -388,7 +388,7 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        DATEADD(year, 1, CONVERT(DATE, CURRENT_TIMESTAMP)) AS yearFromNow
+        (CURRENT_DATE + interval '1 year') AS yearFromNow
       FROM task
     `);
   });
@@ -404,7 +404,7 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        (geometry::Point(0, 2, 0)).STDistance(geometry::Point(3, 2, 0)) AS distance
+        ((point (0, 2))<->(point (3, 2))) AS distance
       FROM task
     `);
   });
@@ -438,9 +438,9 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        ROUND(id * 1.3, 0, 1) AS truncated,
-        CURRENT_TIMESTAMP AS now,
-        DATEDIFF(SECOND, '1970-01-01 00:00:00', doneAt) AS doneAtSeconds
+        TRUNC(id * 1.3) AS truncated, 
+        CURRENT_TIMESTAMP AS now, 
+        EXTRACT(EPOCH FROM doneAt) AS doneAtSeconds
       FROM task
     `);
   });
@@ -458,8 +458,8 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        (1 - MIN(done)) AS boolAnd,
-        MAX(done) AS boolOr,
+        BOOL_AND(done) AS boolAnd,
+        BOOL_OR(done) AS boolOr,
         COUNT(CASE WHEN (done) = 1 THEN 1 ELSE NULL END) AS countIf
       FROM task
     `);
@@ -535,7 +535,7 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        ROUND(id, 0) AS roundToNearestWhole,
+        ROUND(id) AS roundToNearestWhole,
         ROUND(id, 2) AS roundTo2
       FROM task
     `);
@@ -553,8 +553,8 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        CONCAT(REPLICATE(' ', LEN("name") - (10)), "name") AS padLeftSpaces,
-        CONCAT(REPLICATE('_', LEN("name") - (8)), "name") AS padLeftScores
+        LPAD(\"name\", 10) AS padLeftSpaces,
+        LPAD(\"name\", 8, '_') AS padLeftScores
       FROM task
     `);
   });
@@ -571,8 +571,8 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        CONCAT("name", REPLICATE(' ', LEN("name") - (10))) AS padRightSpaces,
-        CONCAT("name", REPLICATE('_', LEN("name") - (8))) AS padRightScores
+        RPAD(\"name\", 10) AS padRightSpaces,
+        RPAD(\"name\", 8, '_') AS padRightScores
       FROM task
     `);
   });
@@ -590,9 +590,9 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        RAND() AS defaultSpan,
-        (RAND() * (5)) AS zeroToFivish,
-        (RAND() * ((6) - (3)) + (3)) AS threeToSixish
+        RANDOM() AS defaultSpan,
+        (RANDOM() * (5)) AS zeroToFivish,
+        (RANDOM() * ((6) - (3)) + (3)) AS threeToSixish
       FROM task
     `);
   });
@@ -607,12 +607,10 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       INSERT INTO task ("name")
-      OUTPUT 
-        INSERTED.id AS id, 
-        INSERTED.done AS done
       VALUES 
         ('Task 1'),
         ('Task 2')
+      RETURNING id, done
     `);
   });
 
@@ -628,9 +626,7 @@ describe('index', () =>
       DELETE FROM task
       WHERE 
         done
-      RETURNING
-        DELETED.id AS id, 
-        DELETED.doneAt AS doneAt
+      RETURNING id, doneAt
     `);
   });
 
@@ -646,12 +642,10 @@ describe('index', () =>
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       UPDATE task
       SET
-        done = 0
+        done = false
       WHERE 
         done
-      RETURNING
-        INSERTED.id AS id, 
-        INSERTED.doneAt AS doneAt
+      RETURNING id, doneAt
     `);
   });
 
@@ -677,7 +671,7 @@ describe('index', () =>
         id, 
         "name", 
         done, 
-        (REPLACE( REPLACE( (SELECT subtask."name" AS item FROM subtask WHERE parentId = task.id FOR JSON PATH),'{\"item\":','' ), '\"}','\"' )) AS subtasks 
+        (SELECT json_agg(t.item) FROM (SELECT subtask."name" AS item FROM subtask WHERE parentId = task.id) as t) AS subtasks 
       FROM task
     `);
   });
@@ -703,7 +697,7 @@ describe('index', () =>
         id, 
         "name", 
         done, 
-        (SELECT subtask.id AS id, subtask."name" AS "name", parentId FROM subtask WHERE parentId = task.id FOR JSON PATH) AS subtasks 
+        (SELECT json_agg(row_to_json(t)) FROM (SELECT subtask.id AS id, subtask."name" AS "name", parentId FROM subtask WHERE parentId = task.id) as t) AS subtasks 
       FROM task
     `);
   });
@@ -728,7 +722,7 @@ describe('index', () =>
       SELECT 
         id, 
         "name", 
-        (SELECT task.id AS id, task."name" AS "name", done, doneAt FROM task WHERE task.id = parentId ORDER BY (SELECT NULL) LIMIT 1 JSON PATH, WITHOUT_ARRAY_WRAPPER) AS parent
+        (SELECT row_to_json(t) FROM (SELECT task.id AS id, task."name" AS "name", done, doneAt FROM task WHERE task.id = parentId LIMIT 1) as t) AS parent
       FROM subtask
     `);
   });
@@ -850,27 +844,27 @@ describe('index', () =>
         primaryCount, 
         scoreRaw, 
         distance, 
-        (scoreRaw * (SELECT MAX(i) FROM (VALUES (1), ((CASE WHEN boostExpires > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * @searchBoost)) AS T(i))) AS score 
+        (scoreRaw * greatest(1, (CASE WHEN boostExpires > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * $0)) AS score 
       FROM (SELECT 
           party_id AS relatedId, 
           COUNT(*) AS interestCount, 
-          COUNT(CASE WHEN (("status" = @interestPrimary)) = 1 THEN 1 ELSE NULL END) AS primaryCount, 
-          SUM(("status" + 1)) AS scoreRaw, 
-          (MIN(search_location)).STDistance(geometry::Point(@lng, @lat, 0)) AS distance 
+          COUNT(CASE WHEN (("status" = $1)) = 1 THEN 1 ELSE NULL END) AS primaryCount, 
+          SUM(("status" + 1)) AS scoreRaw, ((MIN(search_location))<->(point ($2, $3))) AS distance 
         FROM party_interest 
-        WHERE ((search_location).STDistance(geometry::Point(@lng, @lat, 0)) <= @radius) = 1
+        WHERE ((search_location)<->(point ($2, $3))) <= $4
           AND interest_id IN (1, 2, 3, 4) 
-          AND party_id <> @partyId GROUP BY party_id) AS neighbor 
+          AND party_id <> $5 
+        GROUP BY party_id) AS neighbor 
       INNER JOIN party 
         ON id = relatedId 
       LEFT JOIN party_relation 
         ON party_relation.relatedId = neighbor.relatedId 
-      WHERE partyId = @partyId 
-        AND (party_relation."status" IS NULL OR (party_relation."status" & @visibleStatuses) <> 0) 
-        AND visibility > @visibleHidden 
-        AND (visibility <> @visiblePrimary OR primaryCount > 0) 
-        AND party."status" <= @statusValid 
-      ORDER BY (scoreRaw * (SELECT MAX(i) FROM (VALUES (1), ((CASE WHEN boostExpires > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * @searchBoost)) AS T(i)))
+      WHERE partyId = $5 
+        AND (party_relation."status" IS NULL OR (party_relation."status" & $6) <> 0) 
+        AND visibility > $7 
+        AND (visibility <> $8 OR primaryCount > 0) 
+        AND party."status" <= $9 
+      ORDER BY (scoreRaw * greatest(1, (CASE WHEN boostExpires > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * $0))
     `);
   });
 
