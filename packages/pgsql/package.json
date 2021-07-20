@@ -1,7 +1,7 @@
 {
   "name": "@typed-query-builder/pgsql",
   "license": "GPL-3.0-or-later",
-  "version": "0.3.18",
+  "version": "0.3.19",
   "description": "A PostgreSQL query builder",
   "main": "dist/index.js",
   "typings": "typings/index.d.ts",
@@ -50,7 +50,7 @@
   "dependencies": {
     "@typed-query-builder/builder": "^0.3.14",
     "@typed-query-builder/sql": "^0.3.17",
-    "@typed-query-builder/sql-pgsql": "^0.3.18",
+    "@typed-query-builder/sql-pgsql": "^0.3.19",
     "@types/pg": "8.6.1",
     "pg": "8.6.0",
     "pg-cursor": "2.6.0"
