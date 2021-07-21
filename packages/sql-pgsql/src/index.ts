@@ -182,8 +182,14 @@ DialectPgsql.functions.aliases({
   minScale: 'MIN_SCALE',
   trimScale: 'TRIM_SCALE',
   truncate: 'TRUNC',
-  widthBudget: 'WIDTH_BUDGET',
+  widthBucket: 'WIDTH_BUCKET',
   bitLength: 'BIT_LENGTH',
+  toHex: 'TO_HEX',
+  octetLength: 'OCTET_LENGTH',
+  getBit: 'GET_BIT',
+  getByte: 'GET_BYTE',
+  setBit: 'SET_BIT',
+  setByte: 'SET_BYTE',
   trimLeft: 'LTRIM',
   trimRight: 'RTRIM',
   padLeft: 'LPAD',
@@ -206,6 +212,7 @@ DialectPgsql.functions.aliases({
   geomCenter: 'CENTER',
   geomLength: 'LENGTH',
   geomPoints: 'NPOINTS',
+  uuid: 'GEN_RANDOM_UUID',
 });
 
 DialectPgsql.functions.setFormats({
@@ -223,8 +230,13 @@ DialectPgsql.functions.setFormats({
   geomDistance: '(({0})<->({1}))',
   geomIntersection: '(({0})#({1}))',
   geomIntersects: '(({0})?#({1}))',
-  geomTouches: '(({0})?#({1}))',
+  geomTouches: '(({0})&&({1}))',
   geomWithinDistance: '(({0})<->({1})) <= {2}',
+  geomTranslate: '(({0})+({1}))',
+  geomPathConcat: '(({0})+({1}))',
+  geomScale: '(({0})*({1}))',
+  geomDivide: '(({0})/({1}))',
+  geomSame: '(({0})~=({1}))',
 });
 
 DialectPgsql.aggregates.aliases({
