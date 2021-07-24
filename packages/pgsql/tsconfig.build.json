@@ -4,7 +4,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
-    "declarationDir": "typings"
+    "declarationDir": "typings",
   },
 
   "include": [

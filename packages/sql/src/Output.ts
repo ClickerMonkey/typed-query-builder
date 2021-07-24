@@ -51,10 +51,10 @@ export class DialectOutput
 
     const paramKey = this.dialect.hasSupport(DialectFeatures.NAMED_PARAMETERS)
       ? param
-      : paramIndex;
+      : paramIndex + this.dialect.paramOffset;
 
-    this.params[this.paramCount] = defaultValue;
-    this.paramTypes[this.paramCount] = paramType;
+    this.params[paramIndex] = defaultValue;
+    this.paramTypes[paramIndex] = paramType;
 
     return `${this.dialect.paramPrefix}${paramKey}${this.dialect.paramSuffix}`;
   }

@@ -52,7 +52,7 @@ export interface DataTypeInputRegistry
   polygon: 'POLYGON';
   circle: 'CIRCLE';
   geometry: 'GEOMETRY';
-  geography: [ geography: 'POINT' | 'SEGMENT' | 'LINE' | 'BOX' | 'PATH' | 'POLYGON' | 'CIRCLE', srid: number ];
+  geography: 'GEOGRAPHY' | [ geography: 'POINT' | 'SEGMENT' | 'LINE' | 'BOX' | 'PATH' | 'POLYGON' | 'CIRCLE', srid: number ];
   world: { world: 'POINT' | 'SEGMENT' | 'LINE' | 'BOX' | 'PATH' | 'POLYGON' | 'CIRCLE' };
   any: 'ANY';
 }
@@ -141,7 +141,7 @@ export type DataTypeCircle = defineType<{
   r: 'FLOAT'
 }>;
 
-export type DataTypeGeometry = 
+export type DataTypeGeometryBase = 
   DataTypePoint | 
   DataTypeSegment | 
   DataTypePath | 
@@ -150,6 +150,10 @@ export type DataTypeGeometry =
   DataTypeBox |
   DataTypeLine;
 
+export type DataTypeGeometry = 
+  DataTypeGeometryBase |
+  [base: DataTypeGeometryBase, srid: number]
+;
 
 export interface DataTypeBooleanTypes { base: boolean; }
 export interface DataTypeBitTypes { base: boolean; }
@@ -187,6 +191,7 @@ export interface DataTypePolygonTypes { base: DataTypePolygon; }
 export interface DataTypeBoxTypes { base: DataTypeBox; }
 export interface DataTypeCircleTypes { base: DataTypeCircle; }
 export interface DataTypeGeometryTypes { base: DataTypeGeometry; }
+export interface DataTypeGeographyTypes { base: [geo: DataTypeGeometryBase, srid: number]; }
 export interface DataTypeArrayTypes { base: any[]; }
 export interface DataTypeNullTypes { base: null; }
 export interface DataTypeAnyTypes { base: any; }
@@ -236,6 +241,7 @@ export interface DataTypeTypes
   PATH: DataTypePathTypes[keyof DataTypePathTypes];
   CIRCLE: DataTypeCircleTypes[keyof DataTypeCircleTypes];
   GEOMETRY: DataTypeGeometryTypes[keyof DataTypeGeometryTypes];
+  GEOGRAPHY: DataTypeGeographyTypes[keyof DataTypeGeographyTypes];
 
   ARRAY: DataTypeArrayTypes[keyof DataTypeArrayTypes];
 
@@ -325,6 +331,7 @@ export function getDataTypeMeta(input?: DataTypeInputs): DataTypeMeta
     case 'PATH':
     case 'CIRCLE':
     case 'GEOMETRY':
+    case 'GEOGRAPHY':
       return {
         srid: isArray(input) ? input[1] as number : isObject(input) ? 4326 : 0
       };
@@ -365,6 +372,15 @@ export function getDataTypeFromValue(value: any): DataTypeInputs
   if (typeof BigInt !== 'undefined' && value instanceof BigInt)
   {
     return 'BIGINT';
+  }
+  if (isArray(value) && value.length == 2 && isNumber(value[1]))
+  {
+    const geomType = getDataTypeFromValue(value[0]);
+
+    if (['PATH', 'POLYGON', 'CIRCLE', 'LINE', 'SEGMENT', 'BOX', 'POINT'].includes(geomType as string))
+    {
+      return 'GEOGRAPHY';
+    }
   }
   if (isArray(value))
   {

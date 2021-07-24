@@ -7,7 +7,7 @@ import { RunCompiler } from "./Compiler";
 /**
  * Options 
  */
-export interface RunOptions<P>
+export interface RunOptions<P, D extends RunInput>
 {
   /**
    * Named parameters to pass to the query.
@@ -33,6 +33,12 @@ export interface RunOptions<P>
    * If any records to be returned should be arrays instead of objects.
    */
   arrayMode?: boolean;
+
+  /**
+   * Functions that return tables.
+   */
+  funcs?: Record<string, (data: D, params: Record<string, any>) => any>;
+
 }
 
 
@@ -51,18 +57,18 @@ export type AffectedResult<R> = { affected: number, result: R };
  * @param db The connection, transaction, or prepared statement to stream the expression results from.
  * @param options Options that control how the query is built or the results returned.
  */
-export function exec<P = any>(db: RunInput, options: RunOptions<P> & { affectedCount: true }): <R>(expr: Expr<R>) => AffectedResult<ExprValueObjects<R>>
-export function exec<P = any>(db: RunInput, options: RunOptions<P> & { affectedCount: true, arrayMode: true }): <R>(expr: Expr<R>) => AffectedResult<ExprValueTuples<R>>
-export function exec<P = any>(db: RunInput, options: RunOptions<P> & { arrayMode: true }): <R>(expr: Expr<R>) => ExprValueTuples<R>
-export function exec<P = any>(db: RunInput, options?: RunOptions<P>): <R>(expr: Expr<R>) => ExprValueObjects<R>
-export function exec<P = any>(db: RunInput, options?: RunOptions<P>): <R>(expr: Expr<R>) => any
+export function exec<D extends RunInput>(db: D, options: RunOptions<any, D> & { affectedCount: true }): <R>(expr: Expr<R>) => AffectedResult<ExprValueObjects<R>>
+export function exec<D extends RunInput>(db: D, options: RunOptions<any, D> & { affectedCount: true, arrayMode: true }): <R>(expr: Expr<R>) => AffectedResult<ExprValueTuples<R>>
+export function exec<D extends RunInput>(db: D, options: RunOptions<any, D> & { arrayMode: true }): <R>(expr: Expr<R>) => ExprValueTuples<R>
+export function exec<D extends RunInput>(db: D, options?: RunOptions<any, D>): <R>(expr: Expr<R>) => ExprValueObjects<R>
+export function exec<D extends RunInput>(db: D, options?: RunOptions<any, D>): <R>(expr: Expr<R>) => any
 {
   return <R>(e: Expr<R>) =>
   {
     const compiling = new RunCompiler(RunTransformers.transform);
     const compiled = RunTransformers.transform(e, compiling, !!options?.arrayMode);
-    const state = new RunState({ sources: db, params: options?.params, ignoreCase: options?.ignoreCase, useNames: options?.useNames });
-    const result = compiled(state);
+    const state = new RunState({ sources: db, ...(options || {}) });
+    const result = compiled(state as any);
 
     return options?.affectedCount
       ? { affected: state.affected, result }
@@ -97,11 +103,11 @@ export type PreparedQuery<R, P = any> = (params?: P) => R;
  * @param options Options that control how the query is built or the results returned.
  * @returns An object that can be executed multiple times, once finished it must be released.
  */
-export function prepare<P = any>(db: RunInput, options: RunOptions<P> & { affectedCount: true }): <R>(expr: Expr<any>) => PreparedQuery<AffectedResult<ExprValueObjects<R>>, P>
-export function prepare<P = any>(db: RunInput, options: RunOptions<P> & { affectedCount: true, arrayMode: true }): <R>(expr: Expr<any>) => PreparedQuery<AffectedResult<ExprValueTuples<R>>, P>
-export function prepare<P = any>(db: RunInput, options: RunOptions<P> & { arrayMode: true }): <R>(expr: Expr<R>) => PreparedQuery<ExprValueTuples<R>, P>
-export function prepare<P = any>(db: RunInput, options?: RunOptions<P>): <R>(expr: Expr<R>) => PreparedQuery<ExprValueObjects<R>, P>
-export function prepare<P = any>(db: RunInput, options?: RunOptions<P>): <R>(expr: Expr<R>) => PreparedQuery<any, P>
+export function prepare<D extends RunInput, P = any>(db: D, options: RunOptions<P, D> & { affectedCount: true }): <R>(expr: Expr<any>) => PreparedQuery<AffectedResult<ExprValueObjects<R>>, P>
+export function prepare<D extends RunInput, P = any>(db: D, options: RunOptions<P, D> & { affectedCount: true, arrayMode: true }): <R>(expr: Expr<any>) => PreparedQuery<AffectedResult<ExprValueTuples<R>>, P>
+export function prepare<D extends RunInput, P = any>(db: D, options: RunOptions<P, D> & { arrayMode: true }): <R>(expr: Expr<R>) => PreparedQuery<ExprValueTuples<R>, P>
+export function prepare<D extends RunInput, P = any>(db: D, options?: RunOptions<P, D>): <R>(expr: Expr<R>) => PreparedQuery<ExprValueObjects<R>, P>
+export function prepare<D extends RunInput, P = any>(db: D, options?: RunOptions<P, D>): <R>(expr: Expr<R>) => PreparedQuery<any, P>
 {
   return <R>(e: Expr<R>) =>
   {
@@ -111,8 +117,8 @@ export function prepare<P = any>(db: RunInput, options?: RunOptions<P>): <R>(exp
     
     return (params): any =>
     { 
-      const state = new RunState({ sources: db, params: { ...optionsParams, ...(params || {})}, ignoreCase: options?.ignoreCase, useNames: options?.useNames });
-      const result = compiled(state);
+      const state = new RunState({ sources: db, ...(options || {}), params: { ...optionsParams, ...(params || {}) } });
+      const result = compiled(state as any);
 
       return options?.affectedCount
         ? { affected: state.affected, result }

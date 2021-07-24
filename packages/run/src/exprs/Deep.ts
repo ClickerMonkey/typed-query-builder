@@ -1,6 +1,6 @@
 import { Expr, ExprDeep, isArray, isPlainObject, mapRecord } from '@typed-query-builder/builder';
 import { RunTransformers } from '../Transformers';
-import { RunState } from "../State";
+import { RunInput, RunState } from "../State";
 import { RunCompiler } from "../Compiler";
 
 
@@ -22,7 +22,7 @@ function deepTransform(value: any, compiler: RunCompiler): any
   return () => value;
 }
 
-function deepResolve(value: any, state: RunState): any 
+function deepResolve(value: any, state: RunState<RunInput>): any 
 {
   if (isArray(value))
   {

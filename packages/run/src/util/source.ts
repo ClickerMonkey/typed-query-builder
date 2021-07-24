@@ -1,4 +1,4 @@
-import { SourceKind, NamedSource, JoinType, SourceKindPair, SourceJoin, Source, SourceRecursive, QuerySelect, SourceTable, SourceValues, SourceVirtual } from '@typed-query-builder/builder';
+import { SourceKind, NamedSource, JoinType, SourceKindPair, SourceJoin, Source, SourceRecursive, QuerySelect, SourceTable, SourceValues, SourceVirtual, SourceFunction, mapRecord } from '@typed-query-builder/builder';
 import { RunCompiler } from '../Compiler';
 import { RunRow } from '../State';
 import { RunTransformerFunction } from '../Transformers';
@@ -58,6 +58,22 @@ export function rowsFromSources(sourcePairs: SourceKindPair<any, any>[], compile
     else if (source instanceof SourceVirtual)
     {
       getRows = (state) => state.sources[source.name];
+    }
+    else if (source instanceof SourceFunction)
+    {
+      const args = mapRecord(source.parameters, (v) => compiler.eval(v).get);
+
+      getRows = (state) => {
+        const func = state.funcs[String(source.table.table)];
+
+        if (!func) {
+          throw new Error(`A function with the name ${String(source.table.table)} was not defined.`);
+        }
+
+        const params = mapRecord(args, (a) => a(state));
+
+        return func(state.sources, params);
+      };
     }
     else
     {

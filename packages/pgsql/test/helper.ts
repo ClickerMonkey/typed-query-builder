@@ -1,22 +1,16 @@
-import sql from 'mssql';
+import { Client } from 'pg';
 
-
-export const pool = new sql.ConnectionPool({
-  server: 'localhost',
+export const client = new Client({
+  host: 'localhost',
+  port: 5435,
+  user: 'postgres',
+  password: 'postgres',
   database: 'tqb',
-  user: 'test',
-  password: 'password#1',
-  parseJSON: true,
-  options: {
-    enableArithAbort: true,
-    packetSize: 65536,
-    encrypt: true,
-  },
 });
 
-const connPromise = pool.connect();
+const connPromise = client.connect();
 
-pool.on('error', (e) => 
+client.on('error', (e) => 
 {
   console.error(e);
 });
@@ -25,7 +19,9 @@ pool.on('error', (e) =>
 
 export async function getConnection()
 {
-  return await connPromise;
+  await connPromise;
+
+  return client;
 }
 
 

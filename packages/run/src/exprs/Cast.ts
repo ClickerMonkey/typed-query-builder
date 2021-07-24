@@ -183,6 +183,10 @@ const QueryDataTypeConfig: {
     parser: (x) => x,
     isValid: (x) => ['POINT', 'LINE', 'SEGMENT', 'PATH', 'POLYGON', 'BOX'].includes(getDataTypeFromValue(x) as any),
   },
+  'GEOGRAPHY': {
+    parser: (x) => x,
+    isValid: () => true,
+  },
 };
 
 // @ts-ignore

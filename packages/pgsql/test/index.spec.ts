@@ -1,4 +1,5 @@
 import { table, insert, update, from, withs, deletes } from '@typed-query-builder/builder';
+import { DialectPgsql } from '@typed-query-builder/sql-pgsql';
 import { exec, prepare, stream } from '../src';
 import { getConnection } from './helper';
 
@@ -8,52 +9,76 @@ describe('index', () =>
 
   jest.setTimeout(10 * 1000);
 
-  const GroupTable = table({
-    name: 'Group',
-    primary: ['ID'],
-    fields: {
-      ID: "INT",
-      Name: ["NVARCHAR", 128],
+  const GroupTable = table({ 
+    name: 'group', 
+    primary: ['id'], 
+    fields: { 
+      id: "INT", 
+      name: ["VARCHAR", 128], 
+    }, 
+  }); 
+  
+  const PersonGroupTable = table({ 
+    name: 'personGroup',
+    table: 'person_group', 
+    primary: ['groupId', 'personId'], 
+    fields: { 
+      groupId: "INT", 
+      personId: "INT", 
+      status: "SMALLINT", 
+    }, 
+    fieldColumn: {
+      groupId: 'group_id',
+      personId: 'person_id',
+    },
+  }); 
+  
+  const PersonTable = table({ 
+    name: 'person', 
+    primary: ['id'], 
+    fields: { 
+      id: "INT", 
+      name: ["VARCHAR", 128], 
+      email: ["VARCHAR", 128], 
+      location: ["NULL", "POINT"], 
+    }, 
+  }); 
+  
+  const TaskTable = table({ 
+    name: 'task', 
+    primary: ['id'], 
+    fields: { 
+      id: "INT", 
+      groupId: "INT", 
+      name: ["VARCHAR", 128], 
+      details: "TEXT", 
+      done: "BOOLEAN", 
+      doneAt: ["NULL", "TIMESTAMP"], 
+      parentId: ["NULL", "INT"], 
+      assignedTo: ["NULL", "INT"], 
+      assignedAt: ["NULL", "TIMESTAMP"], 
+      createdAt: "TIMESTAMP", 
+      createdBy: ["NULL", "INT"], 
+    }, 
+    fieldColumn: {
+      groupId: 'group_id',
+      doneAt: 'done_at',
+      parentId: 'parent_id',
+      assignedTo: 'assigned_to',
+      assignedAt: 'assigned_at',
+      createdAt: 'created_at',
+      createdBy: 'created_by',
     },
   });
 
-  const PersonTable = table({
-    name: 'Person',
-    primary: ['ID'],
-    fields: {
-      ID: "INT",
-      Name: ["NVARCHAR", 128],
-      Email: ["NVARCHAR", 128],
-      Location: ["NULL", "POINT"],
-    },
-  });
-
-  const PersonGroupTable = table({
-    name: 'PersonGroup',
-    primary: ['GroupID', 'PersonID'],
-    fields: {
-      GroupID: "INT",
-      PersonID: "INT",
-      Status: "SMALLINT",
-    },
-  });
-
-  const TaskTable = table({
-    name: 'Task',
-    primary: ['ID'],
-    fields: {
-      ID: "INT",
-      GroupID: "INT",
-      Name: ["NVARCHAR", 128],
-      Details: "NTEXT",
-      Done: "BIT",
-      DoneAt: ["NULL", "TIMESTAMP"],
-      ParentID: ["NULL", "INT"],
-      AssignedTo: ["NULL", "INT"],
-      AssignedAt: ["NULL", "TIMESTAMP"],
-      CreatedAt: "TIMESTAMP",
-      CreatedBy: ["NULL", "INT"],
-    },
+  const LocationsTable = table({ 
+    name: 'locations', 
+    primary: ['id'], 
+    fields: { 
+      id: "INT", 
+      location: ["NULL", "GEOMETRY"], 
+      name: ["NULL", "TEXT"], 
+    }, 
   });
 
   it('insert, insert returning, insert object, insert object array, affectedCount', async () =>
@@ -62,41 +87,41 @@ describe('index', () =>
     const getResult = exec(conn);
     const getCount = exec(conn, { affectedCount: true });
 
-    const groupInserts = await insert(GroupTable, ['Name'])
-      .returning(({ Group }) => [Group.ID])
-      .values({ Name: 'Group 1' })
+    const groupInserts = await insert(GroupTable, ['name'])
+      .returning(({ group }) => [group.id])
+      .values({ name: 'Group 1' })
       .run( getResult )
     ;
 
     expect(groupInserts).toBeInstanceOf(Array);
     expect(groupInserts.length).toEqual(1);
-    expect(groupInserts[0].ID).toBeDefined();
+    expect(groupInserts[0].id).toBeDefined();
 
-    const groupId = groupInserts[0].ID;
+    const groupId = groupInserts[0].id;
 
-    const personInserts = await insert(PersonTable, ['Name', 'Email'])
-      .returning(({ Person }) => [Person.ID])
+    const personInserts = await insert(PersonTable, ['name', 'email'])
+      .returning(({ person }) => [person.id])
       .values([
-        { Name: 'Person 1', Email: 'Person1@gmail.com' },
-        { Name: 'Person 2', Email: 'Person2@gmail.com' }
+        { name: 'Person 1', email: 'Person1@gmail.com' },
+        { name: 'Person 2', email: 'Person2@gmail.com' }
       ])
       .run( getResult )
     ;
 
-    const personGroupInserts = await insert(PersonGroupTable, ['GroupID', 'PersonID'])
-      .values(personInserts.map(p => ({ GroupID: groupId, PersonID: p.ID })))
+    const personGroupInserts = await insert(PersonGroupTable, ['groupId', 'personId'])
+      .values(personInserts.map(p => ({ groupId, personId: p.id })))
       .run( getCount )
     ;
 
     expect(personGroupInserts.affected).toEqual(2);
 
-    const taskInserts = await insert(TaskTable, ['GroupID', 'Name', 'Details', 'CreatedBy', 'Done'])
+    const taskInserts = await insert(TaskTable, ['groupId', 'name', 'details', 'createdBy', 'done'])
       .values([{
-        GroupID: groupId,
-        Name: 'Task 1',
-        Done: false,
-        Details: 'Task 1 Details',
-        CreatedBy: personInserts[0].ID,
+        groupId,
+        name: 'Task 1',
+        done: false,
+        details: 'Task 1 Details',
+        createdBy: personInserts[0].id,
       }])
       .run( getCount )
     ;
@@ -117,11 +142,11 @@ describe('index', () =>
     ;
 
     expect(first).toBeDefined();
-    expect(first.Done).toBe(false);
+    expect(first.done).toBe(false);
 
     const updateCount = await update(TaskTable)
-      .set('Done', true)
-      .where(({ Task }) => Task.ID.eq(first.ID))
+      .set('done', true)
+      .where(({ task }) => task.id.eq(first.id))
       .run( getCount )
     ;
 
@@ -129,14 +154,14 @@ describe('index', () =>
 
     const reloaded = await from(TaskTable)
       .select('*')
-      .where(({ Task }) => Task.ID.eq(first.ID))
+      .where(({ task }) => task.id.eq(first.id))
       .first()
       .run( getResult )
     ;
 
     expect(reloaded).toBeDefined();
-    expect(reloaded.ID).toBe(first.ID);
-    expect(reloaded.Done).toBe(true);
+    expect(reloaded.id).toBe(first.id);
+    expect(reloaded.done).toBe(true);
   });
 
   it('select list', async () =>
@@ -145,7 +170,7 @@ describe('index', () =>
     const getResult = exec(conn);
 
     const names = await from(TaskTable)
-      .list(({ Task }) => Task.Name)
+      .list(({ task }) => task.name)
       .run( getResult )
     ;
 
@@ -160,7 +185,7 @@ describe('index', () =>
     const getResult = exec(conn);
 
     const name = await from(TaskTable)
-      .value(({ Task }) => Task.Name)
+      .value(({ task }) => task.name)
       .run( getResult )
     ;
 
@@ -183,13 +208,13 @@ describe('index', () =>
 
     const paramed = await from(TaskTable)
       .select('*')
-      .where(({ Task }, { param }) => Task.ID.eq(param('id')))
+      .where(({ task }, { param }) => task.id.eq(param('id')))
       .first()
-      .run( exec(conn, { params: { id: first.ID } }))
+      .run( exec(conn, { params: { id: first.id } }))
     ;
 
     expect(paramed).toBeDefined();
-    expect(paramed.ID).toBe(first.ID);
+    expect(paramed.id).toBe(first.id);
   });
 
   it('prepared select', async () =>
@@ -199,7 +224,7 @@ describe('index', () =>
 
     const findById = await from(TaskTable)
       .select('*')
-      .where(({ Task }, { param }) => Task.Name.eq(param('name')))
+      .where(({ task }, { param }) => task.name.eq(param('name')))
       .first()
       .run( getPrepared )
     ;
@@ -209,7 +234,7 @@ describe('index', () =>
       const first = await findById.exec({ name: 'Task 1' });
     
       expect(first).toBeDefined();
-      expect(first.Name).toBe('Task 1');
+      expect(first.name).toBe('Task 1');
     }
     finally
     {
@@ -230,12 +255,12 @@ describe('index', () =>
     ;
 
     expect(first).toBeDefined();
-    expect(first.Name).toBe('Task 1');
-    expect(first.DoneAt).toBeNull();
+    expect(first.name).toBe('Task 1');
+    expect(first.doneAt).toBeNull();
 
     const findById = await update(TaskTable)
-      .set(({}, {}, { currentDate }) => ({ DoneAt: currentDate() }))
-      .where(({ Task }, { param }) => Task.Name.eq(param('name')))
+      .set(({}, {}, { currentDate }) => ({ doneAt: currentDate() }))
+      .where(({ task }, { param }) => task.name.eq(param('name')))
       .run( getPrepared )
     ;
     
@@ -257,23 +282,23 @@ describe('index', () =>
     ;
 
     expect(reloaded).toBeDefined();
-    expect(reloaded.Name).toBe('Task 1');
-    expect(reloaded.DoneAt).toBeTruthy();
+    expect(reloaded.name).toBe('Task 1');
+    expect(reloaded.doneAt).toBeTruthy();
   });
 
   it('prepared insert', async () =>
   {
     const conn = await getConnection();
     const getResult = exec(conn);
-    const getPrepared = prepare<{ GroupID: number, Name: string, Details: string }>(conn);
+    const getPrepared = prepare<{ groupId: number, name: string, details: string }>(conn);
 
     const group = await from(GroupTable)
-      .value(({ Group }) => Group.ID)
+      .value(({ group }) => group.id)
       .run( getResult )
     ;
 
-    const insertPrepared = await insert(TaskTable, ['GroupID', 'Name', 'Details'])
-      .returning(({ Task }) => [Task.ID, Task.CreatedAt])
+    const insertPrepared = await insert(TaskTable, ['groupId', 'name', 'details'])
+      .returning(({ task }) => [task.id, task.createdAt])
       .valuesFromParams()
       .run( getPrepared )
     ;
@@ -281,15 +306,15 @@ describe('index', () =>
     try
     {
       const inserted = await insertPrepared.exec({
-        GroupID: group,
-        Name: 'Task 1b',
-        Details: 'Task 1b Details',
+        groupId: group,
+        name: 'Task 1b',
+        details: 'Task 1b Details',
       });
     
       expect(inserted).toBeDefined();
       expect(inserted.length).toBe(1);
-      expect(inserted[0].ID).toBeDefined();
-      expect(inserted[0].CreatedAt).toBeDefined();
+      expect(inserted[0].id).toBeDefined();
+      expect(inserted[0].createdAt).toBeDefined();
     }
     finally
     {
@@ -312,7 +337,7 @@ describe('index', () =>
     expect(first).toBeDefined();
 
     const deleted = await deletes(TaskTable)
-      .where(({ Task }) => Task.ID.eq(first.ID))
+      .where(({ task }) => task.id.eq(first.id))
       .run( getCount )
     ;
 
@@ -320,7 +345,7 @@ describe('index', () =>
 
     const reloaded = await from(TaskTable)
       .select('*')
-      .where(({ Task }) => Task.ID.eq(first.ID))
+      .where(({ task }) => task.id.eq(first.id))
       .first()
       .run( getResult )
     ;
@@ -340,13 +365,13 @@ describe('index', () =>
       .run( getResult )
     ;
 
-    const rootTasks = await insert(TaskTable, ['GroupID', 'Name', 'Details', 'Done'])
-      .returning(({ Task }) => [Task.ID])
+    const rootTasks = await insert(TaskTable, ['groupId', 'name', 'details', 'done'])
+      .returning(({ task }) => [task.id])
       .values([{
-        GroupID: group.ID,
-        Name: 'Task 2',
-        Done: false,
-        Details: 'Task 2 Details',
+        groupId: group.id,
+        name: 'Task 2',
+        done: false,
+        details: 'Task 2 Details',
       }])
       .run( getResult )
     ;
@@ -356,20 +381,20 @@ describe('index', () =>
 
     const rootTask = rootTasks[0];
     
-    const childTasks = await insert(TaskTable, ['GroupID', 'Name', 'Details', 'Done', 'ParentID'])
-      .returning(({ Task }) => [Task.ID])
+    const childTasks = await insert(TaskTable, ['groupId', 'name', 'details', 'done', 'parentId'])
+      .returning(({ task }) => [task.id])
       .values([{
-        GroupID: group.ID,
-        Name: 'Task 3',
-        Done: false,
-        Details: 'Task 3 Details',
-        ParentID: rootTask.ID,
+        groupId: group.id,
+        name: 'Task 3',
+        done: false,
+        details: 'Task 3 Details',
+        parentId: rootTask.id,
       }, {
-        GroupID: group.ID,
-        Name: 'Task 4',
-        Done: false,
-        Details: 'Task 4 Details',
-        ParentID: rootTask.ID,
+        groupId: group.id,
+        name: 'Task 4',
+        done: false,
+        details: 'Task 4 Details',
+        parentId: rootTask.id,
       }])
       .run( getResult )
     ;
@@ -377,23 +402,23 @@ describe('index', () =>
     expect(childTasks).toBeDefined();
     expect(childTasks.length).toBe(2);
 
-    const grandchildTasks = await insert(TaskTable, ['GroupID', 'Name', 'Details', 'ParentID'])
-      .returning(({ Task }) => [Task.ID])
+    const grandchildTasks = await insert(TaskTable, ['groupId', 'name', 'details', 'parentId'])
+      .returning(({ task }) => [task.id])
       .values([{
-        GroupID: group.ID,
-        Name: 'Task 5',
-        Details: 'Task 5 Details',
-        ParentID: childTasks[0].ID,
+        groupId: group.id,
+        name: 'Task 5',
+        details: 'Task 5 Details',
+        parentId: childTasks[0].id,
       }, {
-        GroupID: group.ID,
-        Name: 'Task 6',
-        Details: 'Task 6 Details',
-        ParentID: childTasks[0].ID,
+        groupId: group.id,
+        name: 'Task 6',
+        details: 'Task 6 Details',
+        parentId: childTasks[0].id,
       }, {
-        GroupID: group.ID,
-        Name: 'Task 7',
-        Details: 'Task 7 Details',
-        ParentID: childTasks[1].ID,
+        groupId: group.id,
+        name: 'Task 7',
+        details: 'Task 7 Details',
+        parentId: childTasks[1].id,
       }])
       .run( getCount )
     ;
@@ -403,98 +428,98 @@ describe('index', () =>
     const tasksTree = 
       await withs(
         from(TaskTable)
-          .select(({ Task }, { constant }) => [
-            Task.ID,
-            Task.Name,
-            constant(0).as('Depth'),
+          .select(({ task }, { constant }) => [
+            task.id,
+            task.name,
+            constant(0).as('depth'),
           ])
-          .where(({ Task }) => Task.ID.eq(rootTask.ID))
+          .where(({ task }) => task.id.eq(rootTask.id))
           .as('TasksTree'),
         ({ TasksTree }) =>
           from(TaskTable)
-            .joinInner(TasksTree, ({ Task, TasksTree }) => Task.ParentID.eq(TasksTree.ID))
-            .select(({ Task, TasksTree }) => [
-              Task.ID,
-              Task.Name,
-              TasksTree.Depth.add(1).as('Depth'),
+            .joinInner(TasksTree, ({ task, TasksTree }) => task.parentId.eq(TasksTree.id))
+            .select(({ task, TasksTree }) => [
+              task.id,
+              task.name,
+              TasksTree.depth.add(1).as('depth'),
             ])
       )
       .from('TasksTree')
       .select(({ TasksTree }) => [
-        TasksTree.Name,
-        TasksTree.Depth
+        TasksTree.name,
+        TasksTree.depth
       ])
       .run( getResult )
     ;
 
     expect(tasksTree).toStrictEqual([
-      { Name: 'Task 2', Depth: 0 },
-      { Name: 'Task 3', Depth: 1 },
-      { Name: 'Task 4', Depth: 1 },
-      { Name: 'Task 7', Depth: 2 },
-      { Name: 'Task 5', Depth: 2 },
-      { Name: 'Task 6', Depth: 2 },
+      { name: 'Task 2', depth: 0 },
+      { name: 'Task 3', depth: 1 },
+      { name: 'Task 4', depth: 1 },
+      { name: 'Task 5', depth: 2 },
+      { name: 'Task 6', depth: 2 },
+      { name: 'Task 7', depth: 2 },
     ]);
 
     // JSON test
     
     const allTasks = await from(TaskTable)
-      .select(({ Task  }) => [
-        Task.Name,
+      .select(({ task }) => [
+        task.name,
         // string[]
-        from(TaskTable.as('Children'))
-          .using((sub, { Children }) => sub
-            .where(Children.ParentID.eq(Task.ID))
-            .orderBy(Children.Name)
-            .list(Children.Name)
+        from(TaskTable.as('children'))
+          .using((sub, { children }) => sub
+            .where(children.parentId.eq(task.id))
+            .orderBy(children.name)
+            .list(children.name)
             .json()
           )
-          .as('ChildrenNames'),
-        // { Name: string, Done: boolean }[]
-        from(TaskTable.as('Children'))
-          .using((sub, { Children }) => sub
+          .as('childrenNames'),
+        // { name: string, done: boolean }[]
+        from(TaskTable.as('children'))
+          .using((sub, { children }) => sub
             .select([
-              Children.Name,
-              Children.Done,
+              children.name,
+              children.done,
             ])
-            .where(Children.ParentID.eq(Task.ID))
-            .orderBy(Children.Name)
+            .where(children.parentId.eq(task.id))
+            .orderBy(children.name)
             .json()
           )
-          .as('Children'),
-        // { Name: string, Done: boolean }
-        from(TaskTable.as('Parent'))
-          .using((sub, { Parent }) => sub
+          .as('children'),
+        // { name: string, done: boolean }
+        from(TaskTable.as('parent'))
+          .using((sub, { parent }) => sub
             .select([
-              Parent.Name,
-              Parent.Done,
+              parent.name,
+              parent.done,
             ])
             .where([
-              Task.ParentID.isNotNull(),
-              Task.ParentID.eq(Parent.ID)
+              task.parentId.isNotNull(),
+              task.parentId.eq(parent.id)
             ])
             .first()
             .json()
           )
-          .as('Parent')
+          .as('parent')
       ])
-      .where(({ Task }) => [
-        Task.ID.eq(childTasks[0].ID)
+      .where(({ task }) => [
+        task.id.eq(childTasks[0].id)
       ])
       .first()
       .run( getResult )
     ;
 
     expect(allTasks).toStrictEqual({
-      Name: 'Task 3',
-      ChildrenNames: ['Task 5', 'Task 6'],
-      Children: [{ 
-        Name: 'Task 5', Done: false 
+      name: 'Task 3',
+      childrenNames: ['Task 5', 'Task 6'],
+      children: [{ 
+        name: 'Task 5', done: false 
       }, { 
-        Name: 'Task 6', Done: false 
+        name: 'Task 6', done: false 
       }],
-      Parent: {
-        Name: 'Task 2', Done: false
+      parent: {
+        name: 'Task 2', done: false
       },
     });
   });
@@ -505,24 +530,24 @@ describe('index', () =>
     const getResult = exec(conn, { affectedCount: true });
 
     const { affected, result } = await update(TaskTable)
-      .returning(({ Task }) => [
-        Task.Name
+      .returning(({ task }) => [
+        task.name
       ])
       .set({
-        Done: true,
+        done: true,
       })
       .run( getResult )
     ;
 
     expect(affected).toBe(7);
     expect(result).toStrictEqual([
-      { Name: 'Task 1b' },
-      { Name: 'Task 2' },
-      { Name: 'Task 3' },
-      { Name: 'Task 4' },
-      { Name: 'Task 5' },
-      { Name: 'Task 6' },
-      { Name: 'Task 7' },
+      { name: 'Task 1b' },
+      { name: 'Task 2' },
+      { name: 'Task 3' },
+      { name: 'Task 4' },
+      { name: 'Task 5' },
+      { name: 'Task 6' },
+      { name: 'Task 7' },
     ]);
   });
 
@@ -532,12 +557,12 @@ describe('index', () =>
     const getResult = exec(conn, { arrayMode: true });
 
     const result = await from(TaskTable)
-      .select(({ Task }) => [
-        Task.Name,
-        Task.Done
+      .select(({ task }) => [
+        task.name,
+        task.done
       ])
-      .where(({ Task }) => [
-        Task.Name.gt('Task 4'),
+      .where(({ task }) => [
+        task.name.gt('Task 4'),
       ])
       .run( getResult )
     ;
@@ -555,16 +580,16 @@ describe('index', () =>
     const getStream = stream(conn);
 
     const streamer = from(TaskTable)
-      .select(({ Task }) => [
-        Task.Name,
-        Task.Done
+      .select(({ task }) => [
+        task.name,
+        task.done
       ])
-      .orderBy('Name')
+      .orderBy('name')
       .run( getStream )
     ;
 
     const accum = await streamer((task) => {
-      return task.Name.substring(5);
+      return task.name.substring(5);
     });
 
     expect(accum).toStrictEqual([
@@ -572,81 +597,75 @@ describe('index', () =>
     ]);
   });
 
-  it('select json', async () =>
+  it('geometry distance', async () => 
   {
     const conn = await getConnection();
     const getResult = exec(conn);
 
-    const result = await from(TaskTable)
-      .select(({ Task }) => [
-        Task.Name.as('task.name'),
-        Task.Done.as('task.done')
+    DialectPgsql.gis = true;
+
+    const locations = await insert(LocationsTable, ['name', 'location'])
+      .values([
+        { name: '4 up', location: { x: 0, y: 4 } },
+        { name: '4 down', location: { x: 0, y: -4 } },
+        { name: 'origin', location: { x: 0, y: 0 } },
+        { name: '4 left', location: { x: -4, y: 0 } },
       ])
-      .where(({ Task }) => [
-        Task.Name.gt('Task 4'),
-      ])
-      .json()
       .run( getResult )
     ;
 
-    expect(result).toStrictEqual([
-      { task: { name: 'Task 5', done: true } },
-      { task: { name: 'Task 6', done: true } },
-      { task: { name: 'Task 7', done: true } },
-    ]);
-  });
+    expect(locations).toBeTruthy();
 
-  it('select json nested', async () =>
-  {
-    const conn = await getConnection();
-    const getResult = exec(conn, { detectJson: true, detectAllDates: true });
-
-    const result = await from(TaskTable)
-      .select(({ Task }) => [
-        Task.Name.as('task.name'),
-        Task.Done.as('task.done'),
-        from(TaskTable.as('parent'))
-          .where(({ parent }) => Task.ParentID.eq(parent.ID))
-          .select(({ parent }) => parent.only(['Name', 'CreatedAt']))
-          .first()
-          .json()
-          .as('task.parent')
-      ])
-      .where(({ Task }) => [
-        Task.Name.gt('Task 4'),
-      ])
-      .json()
+    const near = await withs(
+      from(LocationsTable)
+        .select(({ locations }, {}, { geomDistance }) => [
+          locations.name,
+          geomDistance(locations.location.required(), { x: -2.1, y: -2}).as('distance')
+        ])
+        .as('distancedLocations')
+      )
+      .from('distancedLocations')
+      .select('*')
+      .where(({ distancedLocations }) => distancedLocations.distance.lt(3))
+      .orderBy('distance')
       .run( getResult )
     ;
 
-    expect(result).toStrictEqual([
-      { task: { name: 'Task 5', done: true, parent: { Name: 'Task 3', CreatedAt: (result as any)[0].task.parent.CreatedAt } } },
-      { task: { name: 'Task 6', done: true, parent: { Name: 'Task 3', CreatedAt: (result as any)[1].task.parent.CreatedAt } } },
-      { task: { name: 'Task 7', done: true, parent: { Name: 'Task 4', CreatedAt: (result as any)[2].task.parent.CreatedAt } } },
+    expect(near).toStrictEqual([
+      { name: '4 left', distance: 2.758622844826744 },
+      { name: '4 down', distance: 2.9 },
+      { name: 'origin', distance: 2.9 }
     ]);
+
+    DialectPgsql.gis = false;
   });
 
-  it('select json first', async () =>
+  it('geography distance', async () => 
   {
     const conn = await getConnection();
     const getResult = exec(conn);
 
-    const result = await from(TaskTable)
-      .select(({ Task }) => [
-        Task.Name.as('task.name'),
-        Task.Done.as('task.done')
+    DialectPgsql.gis = true;
+
+    const near = await from(LocationsTable)
+      .select(({ locations }, { cast }, { geomDistance }) => [
+        locations.name,
+        geomDistance([locations.location.required(), 4326], cast('GEOGRAPHY', { x: -2.1, y: -2})).as('distance')
       ])
-      .where(({ Task }) => [
-        Task.Name.gt('Task 4'),
+      .where(({}, {}, {}, { distance }) => [
+        distance.lt(3)
       ])
-      .first()
-      .json()
+      .orderBy('distance')
       .run( getResult )
     ;
+    
+    expect(near).toStrictEqual([
+      { name: '4 left', distance: 2.758622844826744 },
+      { name: '4 down', distance: 2.9 },
+      { name: 'origin', distance: 2.9 }
+    ]);
 
-    expect(result).toStrictEqual(
-      { task: { name: 'Task 5', done: true } }
-    );
+    DialectPgsql.gis = false;
   });
 
 });

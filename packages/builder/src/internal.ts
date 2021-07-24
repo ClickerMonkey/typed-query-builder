@@ -13,6 +13,7 @@ export * from './Functions';
 export * from './exprs/Kind';
 export * from './query/Order';
 export * from './Traverser';
+export * from './Database';
 
 export * from './exprs/Expr';
 export * from './exprs/Scalar';
@@ -58,6 +59,7 @@ export * from './sources/Table';
 export * from './sources/Unspecified';
 export * from './sources/Values';
 export * from './sources/Virtual';
+export * from './sources/Function';
 
 export * from './query/Criteria';
 export * from './query/Statement';

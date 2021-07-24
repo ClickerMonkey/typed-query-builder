@@ -3,10 +3,11 @@ import { RunExpr } from './Compiler';
 
 
 
-export interface RunStateOptions
+export interface RunStateOptions<D extends RunInput>
 {
+
    // All sources, given and virtual
-   sources: RunInput;
+   sources: D;
 
    // Any parameters passed in
    params?: Record<string, any>;
@@ -16,6 +17,10 @@ export interface RunStateOptions
 
    // Use the column/table names instead of the aliases?
    useNames?: boolean;
+
+   // Functions that return tables.
+   funcs?: Record<string, (data: D, params: Record<string, any>) => any>;
+
 }
 
 
@@ -103,11 +108,11 @@ export interface RunResult
 
 
 
-export class RunState 
+export class RunState<D extends RunInput>
 {
 
   // All sources, given and virtual
-  public sources!: RunInput;
+  public sources!: D;
 
   // Any parameters passed in
   public params: Record<string, any> = {};
@@ -117,6 +122,9 @@ export class RunState
 
   // Use the column/table names instead of the aliases?
   public useNames: boolean = false;
+
+  // Functions that return tables.
+  public funcs: Record<string, (data: D, params: Record<string, any>) => any>;
 
   // Built by sources
   public sourceOutput: RunRow[] = [];
@@ -140,12 +148,13 @@ export class RunState
   public affected: number = 0;
 
 
-  public constructor(options: RunStateOptions) 
+  public constructor(options: RunStateOptions<D>) 
   {
     this.sources = { ...options.sources };
     this.params = options.params || {};
     this.ignoreCase = !!options.ignoreCase;
     this.useNames = !!options.useNames;
+    this.funcs = options.funcs || {};
   }
 
   public extend()
@@ -181,7 +190,7 @@ export class RunState
 
     if (!(expr.id in cached)) 
     {
-      cached[expr.id] = cachedValue = expr.get(this);
+      cached[expr.id] = cachedValue = expr.get(this as any);
     }
     
     if (expr.select && !(expr.select in selects))
@@ -221,6 +230,24 @@ export class RunState
     this.row = row;
 
     return contextResult;
+  }
+
+  public static emptyResult(): RunResult
+  {
+    return {
+      row: {},
+      group: [],
+      cached: {},
+      selects: {},
+      partitionValues: [],
+      partition: 0,
+      partitionIndex: 0,
+      partitionSize: 0,
+      peerValues: [],
+      peer: 0,
+      peerIndex: 0,
+      peerSize: 0,
+    };
   }
 
 }

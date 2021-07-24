@@ -28,6 +28,7 @@ export enum ExprKind {
     VALUES                  = 'values',
     TABLE                   = 'table',
     TABLE_UNSPECIFIED       = 'table?',
+    TABLE_FUNCTION          = 'tablef',
     QUERY_SELECT            = 'sel',
     QUERY_EXISTENTIAL       = '1',
     QUERY_FIRST             = 'first',

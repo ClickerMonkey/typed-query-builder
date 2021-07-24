@@ -1,4 +1,5 @@
 import { QueryFirstValue } from '@typed-query-builder/builder';
+import { RunState } from '../State';
 import { RunTransformers } from '../Transformers';
 import { rowsFromSources, rowsGrouping, rowsOrdered, rowsWhere } from '../util';
 
@@ -23,13 +24,12 @@ RunTransformers.setTransformer(
       // TODO instead of full sort, get min
       orderer(innerState);
 
-      const first = innerState.results[0]
-      innerState.result = first;
+      innerState.result = innerState.results[0] || RunState.emptyResult();
       innerState.resultIndex = 0;
-      innerState.row = first.row;
+      innerState.row = innerState.result.row;
 
       const value = innerState.getRowValue(getValue);
-
+      
       state.affected += innerState.affected;
 
       return value;

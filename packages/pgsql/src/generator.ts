@@ -1,4 +1,4 @@
-import { ConnectionPool } from 'mssql';
+import { Client, Pool } from 'pg';
 import { DataTypeInputs } from '@typed-query-builder/builder';
 import '@typed-query-builder/sql-mssql';
 
@@ -23,6 +23,8 @@ export interface GeneratorOptions
   tableNameAlias: (name: string) => string;
   tableVariableAlias: (name: string) => string;
   columnNameAlias: (name: string) => string;
+  ignore: string[];
+  types: 'tables' | 'views' | 'all',
   tab: string;
   tabDepth: number;
   newline: string;
@@ -31,46 +33,91 @@ export interface GeneratorOptions
 interface SysTable
 {
   name: string;
-  object_id: number;
+  schema: string;
 }
+
+type SysColumnTypes = 
+  'any' | 
+  'bit' | 
+  'bool' |
+  'box' |
+  'bytea' | 
+  'char' | 
+  'cid' | 
+  'cidr' | 
+  'circle' | 
+  'date' | 
+  'float4' | 
+  'float8' |
+  'geometry' | 
+  'geography' |
+  'inet' | 
+  'int2' | 
+  'int4' |
+  'int8' | 
+  'json' | 
+  'jsonb' | 
+  'line' | 
+  'lseg' | 
+  'macaddr' |
+  'money' |
+  'name' |
+  'numeric' |
+  'path' | 
+  'point' |
+  'polygon' | 
+  'text' | 
+  'time' | 
+  'timestamp' | 
+  'uuid' |
+  'varchar' | 
+  'xml'
+;
 
 interface SysColumn
 {
   name: string;
-  system_type_id: number;
   max_length: number;
   precision: number;
   scale: number;
   is_nullable: boolean;
-  type: string;
-  type_max_length: number;
-  type_precision: number;
-  type_scale: number;
-  primary: number;
+  type: SysColumnTypes;
+  primary: boolean;
 }
 
-export async function generate(conn: ConnectionPool, options: Partial<GeneratorOptions> = {}): Promise<GeneratorTable[]>
+export async function generate(conn: Client | Pool, options: Partial<GeneratorOptions> = {}): Promise<GeneratorTable[]>
 {
-  const inTables = await conn.query<SysTable>(`
-    SELECT 
-      name, 
-      object_id 
-    FROM sys.Tables
-  `);
-
   const opt: GeneratorOptions = {
     tableNameAlias: x => x,
     tableVariableAlias: x => x,
     columnNameAlias: x => x,
+    ignore: [],
+    types: 'all',
     tab: '\\t',
     tabDepth: 0,
     newline: '\n',
     ...options,
   };
 
+  const inTables = await conn.query<SysTable>(`
+    SELECT 
+      table_schema AS "schema", 
+      table_name AS "name" 
+    FROM information_schema.tables
+    WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
+      ${opt.ignore.length > 0
+        ? `AND table_name NOT IN (${opt.ignore.map(n => `'${n}'`).join(',')})`
+        : ``
+      }
+      ${opt.types !== 'all'
+        ? `AND table_type = ${opt.types === 'tables' ? "'BASE TABLE'" : "'VIEW'"}`
+        : ``
+      }
+  `);
+
   const outTables: GeneratorTable[] = [];
 
-  for (const inTable of inTables.recordset)
+  for (const inTable of inTables.rows)
   {
     const outTable: GeneratorTable = {
       table: inTable.name,
@@ -82,40 +129,29 @@ export async function generate(conn: ConnectionPool, options: Partial<GeneratorO
     };
 
     const inColumns = await conn.query<SysColumn>(`
-      SELECT 
-        c.name, 
-        CASE 
-          WHEN c.max_length <> -1 AND t.name IN ('nchar', 'nvarchar') 
-          THEN c.max_length / 2
-          ELSE c.max_length
-        END AS max_length,
-        c.user_type_id, 
-        c.precision, 
-        c.scale, 
-        c.is_nullable,
-        t.name AS type,
-        CASE 
-          WHEN t.max_length <> -1 AND t.name IN ('nchar', 'nvarchar') 
-          THEN t.max_length / 2
-          ELSE t.max_length
-        END AS type_max_length,
-        t.precision AS type_precision,
-        t.scale AS type_scale,
-        (SELECT COUNT(*) 
-          FROM sys.Index_Columns AS ic 
-          INNER JOIN sys.Indexes AS i 
-            ON i.index_id = ic.index_id 
-            AND i.object_id = c.object_id
-          WHERE ic.column_id = c.column_id 
-            AND i.is_primary_key = 1 
-            AND ic.object_id = c.object_id
-        ) AS [primary]
-      FROM sys.Columns AS c
-      INNER JOIN sys.Types AS t ON t.user_type_id = c.user_type_id
-      WHERE object_id = ${inTable.object_id}
+      SELECT
+        c.column_name AS "name",
+        c.character_maximum_length AS "max_length",
+        c.numeric_precision AS "precision",
+        c.numeric_scale AS "scale",
+        (c.is_nullable = 'YES') AS "is_nullable",
+        c.udt_name as "type",
+        COALESCE((
+          SELECT true
+          FROM information_schema.key_column_usage k
+          INNER JOIN information_schema.table_constraints t 
+            ON t.constraint_name = k.constraint_name
+            AND t.constraint_type = 'PRIMARY KEY'
+          WHERE k.table_schema = c.table_schema
+            AND k.table_name = c.table_name
+            AND k.column_name = c.column_name
+        ), false) as "primary"
+      FROM information_schema.columns c 
+      WHERE c.table_schema = '${inTable.schema}'
+          AND c.table_name = '${inTable.name}'
     `);
 
-    for (const inColumn of inColumns.recordset)
+    for (const inColumn of inColumns.rows)
     {
       const outColumn = {
         column: inColumn.name,
@@ -174,47 +210,39 @@ export function getColumnType(col: SysColumn): DataTypeInputs
 export function getColumnTypePlain(col: SysColumn): DataTypeInputs
 {
   switch (col.type) {
-    case 'bigint': return 'BIGINT';
-    case 'binary': return ['BINARY', col.max_length];
     case 'bit': return 'BIT';
     case 'char': return ['CHAR', col.max_length];
-    case 'date': return 'DATE';
-    case 'datetime': return 'TIMESTAMP';
-    case 'datetime2': return 'TIMESTAMP';
-    case 'datetimeoffset': return { timezoned: 'TIMESTAMP' };
-    case 'decimal': return ['DECIMAL', col.scale, col.precision];
-    case 'float': return 'FLOAT';
-    case 'geography': return 'GEOMETRY';
-    case 'geometry': return 'GEOMETRY';
-    case 'image': return 'BLOB';
-    case 'int': return col.max_length === col.type_max_length
-      ? 'INT'
-      : ['INT', col.max_length];
-    case 'money': return 'MONEY';
-    case 'nchar': return ['NCHAR', col.max_length];
-    case 'ntext': return 'NTEXT';
-    case 'numeric': return col.scale !== col.type_scale && col.precision !== col.type_precision
-      ? 'NUMERIC'
-      : col.precision !== col.type_precision
-        ? ['NUMERIC', col.scale]
-        : ['NUMERIC', col.scale, col.precision];
-    case 'nvarchar': return col.max_length === -1 ? 'NTEXT' : ['NVARCHAR', col.max_length];
-    case 'real': return 'FLOAT';
-    case 'smalldatetime': return 'TIMESTAMP';
-    case 'smallint': return col.max_length === col.type_max_length
-      ? 'SMALLINT'
-      : ['SMALLINT', col.max_length];
-    case 'smallmoney': return 'SMALLMONEY';
+    case 'varchar': return ['VARCHAR', col.max_length];
     case 'text': return 'TEXT';
+    case 'date': return 'DATE';
     case 'time': return 'TIME';
     case 'timestamp': return 'TIMESTAMP';
-    case 'tinyint': return col.max_length === col.type_max_length
-      ? 'TINYINT'
-      : ['TINYINT', col.max_length];
-    case 'uniqueidentifier': return 'UUID';
-    case 'varbinary': return ['VARBINARY', col.max_length];
-    case 'varchar': return col.max_length === -1 ? 'TEXT' : ['VARCHAR', col.max_length];
+    case 'int2': return 'SMALLINT';
+    case 'int4': return 'INT';
+    case 'int8': return 'BIGINT';
+    case 'money': return 'MONEY';
+    case 'numeric': return ['NUMERIC', col.scale, col.precision];
+    case 'float4': return 'FLOAT';
+    case 'float8': return 'DOUBLE';
+    case 'uuid': return 'UUID';
     case 'xml': return 'XML';
+    case 'inet': return 'INET';
+    case 'json': return 'JSON';
+    case 'jsonb': return 'JSON';
+    case 'line': return 'LINE';
+    case 'lseg': return 'SEGMENT';
+    case 'macaddr': return 'MACADDR';
+    case 'name': return ['VARCHAR', 64];
+    case 'path': return 'PATH';
+    case 'point': return 'POINT';
+    case 'polygon': return 'POLYGON';
+    case 'bool': return 'BOOLEAN';
+    case 'box': return 'BOX';
+    case 'bytea': return col.max_length > 0 ? ['VARCHAR', col.max_length] : 'TEXT';
+    case 'cidr': return 'CIDR';
+    case 'circle': return 'CIRCLE';
+    case 'geometry': return 'GEOMETRY';
+    case 'geography': return 'GEOGRAPHY';
   }
 
   return 'ANY';

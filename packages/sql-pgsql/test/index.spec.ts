@@ -1,4 +1,5 @@
 import { exprs, table, from, DataTypePoint, insert, deletes, update } from '@typed-query-builder/builder';
+import { DialectPgsql } from '../src';
 import { expectText, sql, sqlWithOptions } from './helper';
 
 
@@ -29,7 +30,7 @@ describe('index', () =>
     const x = exprs().param('userId').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT $0
+      SELECT $1
     `);
   });
 
@@ -247,7 +248,7 @@ describe('index', () =>
     const x = deep({x: param('x'), y: 2}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT point ($0, 2)
+      SELECT point ($1, 2)
     `);
   });
 
@@ -372,7 +373,7 @@ describe('index', () =>
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
         CEIL(id) AS "ceil",
-        LTRIM("name") AS trimmedName
+        LTRIM("name") AS "trimmedName"
       FROM task
     `);
   });
@@ -388,7 +389,7 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        (CURRENT_DATE + interval '1 year') AS yearFromNow
+        (CURRENT_DATE + interval '1 year') AS "yearFromNow"
       FROM task
     `);
   });
@@ -420,7 +421,7 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        MIN("name") AS firstName
+        MIN("name") AS "firstName"
       FROM task
     `);
   });
@@ -438,9 +439,9 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        TRUNC(id * 1.3) AS truncated, 
+        TRUNC(id * 1.3) AS truncated,
         CURRENT_TIMESTAMP AS now, 
-        EXTRACT(EPOCH FROM doneAt) AS doneAtSeconds
+        EXTRACT(EPOCH FROM doneAt) AS "doneAtSeconds"
       FROM task
     `);
   });
@@ -458,9 +459,9 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        BOOL_AND(done) AS boolAnd,
-        BOOL_OR(done) AS boolOr,
-        COUNT(CASE WHEN (done) = 1 THEN 1 ELSE NULL END) AS countIf
+        BOOL_AND(done) AS "boolAnd",
+        BOOL_OR(done) AS "boolOr",
+        COUNT(CASE WHEN (done) = 1 THEN 1 ELSE NULL END) AS "countIf"
       FROM task
     `);
   });
@@ -535,8 +536,8 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        ROUND(id) AS roundToNearestWhole,
-        ROUND(id, 2) AS roundTo2
+        ROUND(id) AS "roundToNearestWhole",
+        ROUND(id, 2) AS "roundTo2"
       FROM task
     `);
   });
@@ -553,8 +554,8 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        LPAD(\"name\", 10) AS padLeftSpaces,
-        LPAD(\"name\", 8, '_') AS padLeftScores
+        LPAD(\"name\", 10) AS "padLeftSpaces",
+        LPAD(\"name\", 8, '_') AS "padLeftScores"
       FROM task
     `);
   });
@@ -571,8 +572,8 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        RPAD(\"name\", 10) AS padRightSpaces,
-        RPAD(\"name\", 8, '_') AS padRightScores
+        RPAD(\"name\", 10) AS "padRightSpaces",
+        RPAD(\"name\", 8, '_') AS "padRightScores"
       FROM task
     `);
   });
@@ -590,9 +591,9 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        RANDOM() AS defaultSpan,
-        (RANDOM() * (5)) AS zeroToFivish,
-        (RANDOM() * ((6) - (3)) + (3)) AS threeToSixish
+        RANDOM() AS "defaultSpan",
+        (RANDOM() * (5)) AS "zeroToFivish",
+        (RANDOM() * ((6) - (3)) + (3)) AS "threeToSixish"
       FROM task
     `);
   });
@@ -626,7 +627,7 @@ describe('index', () =>
       DELETE FROM task
       WHERE 
         done
-      RETURNING id, doneAt
+      RETURNING id, doneAt as "doneAt"
     `);
   });
 
@@ -645,7 +646,7 @@ describe('index', () =>
         done = false
       WHERE 
         done
-      RETURNING id, doneAt
+      RETURNING id, doneAt AS "doneAt"
     `);
   });
 
@@ -697,7 +698,7 @@ describe('index', () =>
         id, 
         "name", 
         done, 
-        (SELECT json_agg(row_to_json(t)) FROM (SELECT subtask.id AS id, subtask."name" AS "name", parentId FROM subtask WHERE parentId = task.id) as t) AS subtasks 
+        (SELECT json_agg(row_to_json(t)) FROM (SELECT subtask.id AS id, subtask."name" AS "name", parentId AS "parentId" FROM subtask WHERE parentId = task.id) as t) AS subtasks 
       FROM task
     `);
   });
@@ -722,7 +723,7 @@ describe('index', () =>
       SELECT 
         id, 
         "name", 
-        (SELECT row_to_json(t) FROM (SELECT task.id AS id, task."name" AS "name", done, doneAt FROM task WHERE task.id = parentId LIMIT 1) as t) AS parent
+        (SELECT row_to_json(t) FROM (SELECT task.id AS id, task."name" AS "name", done, doneAt AS "doneAt" FROM task WHERE task.id = parentId LIMIT 1) as t) AS parent
       FROM subtask
     `);
   });
@@ -839,33 +840,71 @@ describe('index', () =>
 
     expectText({ condenseSpace: true }, SearchSql, `
       SELECT 
-        neighbor.relatedId AS relatedId, 
-        interestCount, 
-        primaryCount, 
-        scoreRaw, 
+        neighbor.relatedId AS "relatedId", 
+        interestCount AS "interestCount", 
+        primaryCount AS "primaryCount", 
+        scoreRaw AS "scoreRaw", 
         distance, 
-        (scoreRaw * greatest(1, (CASE WHEN boostExpires > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * $0)) AS score 
+        (scoreRaw * greatest(1, (CASE WHEN boostExpires > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * $1)) AS score 
       FROM (SELECT 
-          party_id AS relatedId, 
-          COUNT(*) AS interestCount, 
-          COUNT(CASE WHEN (("status" = $1)) = 1 THEN 1 ELSE NULL END) AS primaryCount, 
-          SUM(("status" + 1)) AS scoreRaw, ((MIN(search_location))<->(point ($2, $3))) AS distance 
+          party_id AS "relatedId", 
+          COUNT(*) AS "interestCount", 
+          COUNT(CASE WHEN (("status" = $2)) = 1 THEN 1 ELSE NULL END) AS "primaryCount", 
+          SUM(("status" + 1)) AS "scoreRaw",
+          ((MIN(search_location))<->(point ($3, $4))) AS distance 
         FROM party_interest 
-        WHERE ((search_location)<->(point ($2, $3))) <= $4
+        WHERE ((search_location)<->(point ($3, $4))) <= $5
           AND interest_id IN (1, 2, 3, 4) 
-          AND party_id <> $5 
+          AND party_id <> $6 
         GROUP BY party_id) AS neighbor 
       INNER JOIN party 
         ON id = relatedId 
       LEFT JOIN party_relation 
         ON party_relation.relatedId = neighbor.relatedId 
-      WHERE partyId = $5 
-        AND (party_relation."status" IS NULL OR (party_relation."status" & $6) <> 0) 
-        AND visibility > $7 
-        AND (visibility <> $8 OR primaryCount > 0) 
-        AND party."status" <= $9 
-      ORDER BY (scoreRaw * greatest(1, (CASE WHEN boostExpires > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * $0))
+      WHERE partyId = $6 
+        AND (party_relation."status" IS NULL OR (party_relation."status" & $7) <> 0) 
+        AND visibility > $8 
+        AND (visibility <> $9 OR primaryCount > 0) 
+        AND party."status" <= $10 
+      ORDER BY (scoreRaw * greatest(1, (CASE WHEN boostExpires > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * $1))
     `);
+
+    DialectPgsql.gis = true;
+
+    const SearchSqlGis = Search.run(sqlWithOptions({ simplifyReferences: true }));
+
+    expectText({ condenseSpace: true }, SearchSqlGis, `
+      SELECT 
+        neighbor.relatedId AS "relatedId", 
+        interestCount AS "interestCount", 
+        primaryCount AS "primaryCount", 
+        scoreRaw AS "scoreRaw", 
+        distance, 
+        (scoreRaw * greatest(1, (CASE WHEN boostExpires > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * $1)) AS score 
+      FROM (SELECT 
+          party_id AS "relatedId", 
+          COUNT(*) AS "interestCount", 
+          COUNT(CASE WHEN (("status" = $2)) = 1 THEN 1 ELSE NULL END) AS "primaryCount", 
+          SUM(("status" + 1)) AS "scoreRaw",
+          ST_Distance(MIN(search_location), ST_Point($3, $4)) AS distance 
+        FROM party_interest 
+        WHERE ST_DWithin(search_location, ST_Point($3, $4), $5)
+          AND interest_id IN (1, 2, 3, 4) 
+          AND party_id <> $6 
+        GROUP BY party_id) AS neighbor 
+      INNER JOIN party 
+        ON id = relatedId 
+      LEFT JOIN party_relation 
+        ON party_relation.relatedId = neighbor.relatedId 
+      WHERE partyId = $6 
+        AND (party_relation."status" IS NULL OR (party_relation."status" & $7) <> 0) 
+        AND visibility > $8 
+        AND (visibility <> $9 OR primaryCount > 0) 
+        AND party."status" <= $10 
+      ORDER BY (scoreRaw * greatest(1, (CASE WHEN boostExpires > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * $1))
+    `);
+
+    DialectPgsql.gis = false;
   });
 
 

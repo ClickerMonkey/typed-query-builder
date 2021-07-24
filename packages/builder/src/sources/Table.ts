@@ -1,7 +1,7 @@
 import { 
   DataTypeInputMap, DataTypeInputMapSelects, TupleAppend, Name, Selects, MergeObjects, SourceFieldsFromSelects, 
   SourceFieldsFunctions, SourceFieldsFactory, SelectsKey, SelectsWithKey, SelectsMap, Source, NamedSource, ExprKind, 
-  ExprField, SelectAliased, SelectsWithKeyPrefixed, TextModifyType, modifyText
+  ExprField, SelectAliased, SelectsWithKeyPrefixed, TextModifyType, modifyText, SourceFunction, toExprDeep, ExprInput
 } from '../internal';
 
 
@@ -185,6 +185,11 @@ export class SourceTable<N extends Name, S extends Selects, F extends DataTypeIn
     }
 
     return out as any;
+  }
+
+  public call(params: Record<string, ExprInput<any>>): SourceFunction<N, S, F>
+  {
+    return new SourceFunction(this, toExprDeep(params));
   }
   
 }

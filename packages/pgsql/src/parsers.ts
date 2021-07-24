@@ -1,8 +1,8 @@
 import { isArray, isString, isValue, QueryFirst, QueryFirstValue, QueryJson, QueryList, QuerySelect } from '@typed-query-builder/builder';
-import { DialectMssql } from '@typed-query-builder/sql-mssql';
+import { DialectPgsql } from '@typed-query-builder/sql-pgsql';
 
 
-DialectMssql.setResultParser(QueryJson, (result, q) => 
+DialectPgsql.setResultParser(QueryJson, (result, q) => 
 {
   if (isString(result)) 
   {
@@ -11,13 +11,13 @@ DialectMssql.setResultParser(QueryJson, (result, q) =>
 
   if (isValue(result)) 
   {
-    result = DialectMssql.getResult(q.json, result);
+    result = DialectPgsql.getResult(q.json, result);
   }
 
   return result;
 });
 
-DialectMssql.setResultParser(QuerySelect, (records, q) => 
+DialectPgsql.setResultParser(QuerySelect, (records, q) => 
 {
   for (const record of records) 
   {
@@ -25,7 +25,7 @@ DialectMssql.setResultParser(QuerySelect, (records, q) =>
     {
       if (isValue(record[select.alias]))
       {
-        record[select.alias] = DialectMssql.getResult(select.getExpr(), record[select.alias]);
+        record[select.alias] = DialectPgsql.getResult(select.getExpr(), record[select.alias]);
       }
     }
   }
@@ -33,7 +33,7 @@ DialectMssql.setResultParser(QuerySelect, (records, q) =>
   return records;
 });
 
-DialectMssql.setResultParser(QueryFirst, (record, q) => 
+DialectPgsql.setResultParser(QueryFirst, (record, q) => 
 {
   if (record)
   {
@@ -41,7 +41,7 @@ DialectMssql.setResultParser(QueryFirst, (record, q) =>
     {
       if (isValue(record[select.alias]))
       {
-        record[select.alias] = DialectMssql.getResult(select.getExpr(), record[select.alias]);
+        record[select.alias] = DialectPgsql.getResult(select.getExpr(), record[select.alias]);
       }
     }
   }
@@ -49,21 +49,21 @@ DialectMssql.setResultParser(QueryFirst, (record, q) =>
   return record;
 });
 
-DialectMssql.setResultParser(QueryFirstValue, (result, q) => 
+DialectPgsql.setResultParser(QueryFirstValue, (result, q) => 
 {
   if (isValue(result))
   {
-    result = DialectMssql.getResult(q.value, result);
+    result = DialectPgsql.getResult(q.value, result);
   }
 
   return result;
 });
 
-DialectMssql.setResultParser(QueryList, (result, q) => 
+DialectPgsql.setResultParser(QueryList, (result, q) => 
 {
   if (isArray(result))
   {
-    result = result.map((item) => DialectMssql.getResult(q.item, item));
+    result = result.map((item) => DialectPgsql.getResult(q.item, item));
   }
 
   return result;

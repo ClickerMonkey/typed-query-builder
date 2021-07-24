@@ -1,11 +1,16 @@
 
-import { getDataTypeMeta, DataTypeInputs, isString, QueryJson, QueryFirst, QuerySelect, QueryList } from '@typed-query-builder/builder';
+import { getDataTypeMeta, DataTypeInputs, isString, QueryJson, QueryFirst, QuerySelect, QueryList, ExprCast } from '@typed-query-builder/builder';
 import { Dialect, addExprs, addFeatures, addQuery, ReservedWords, addSources, DialectFeatures } from '@typed-query-builder/sql';
 
 import './types';
 
 
-export const DialectPgsql = new Dialect();
+class PostgresDialect extends Dialect {
+  public gis: boolean = false;
+  public colonCasting: boolean = false;
+}
+
+export const DialectPgsql = new PostgresDialect();
 
 DialectPgsql.removeSupport(
   DialectFeatures.UNSIGNED | 
@@ -15,6 +20,8 @@ DialectPgsql.removeSupport(
 DialectPgsql.addReservedWords(ReservedWords);
 
 DialectPgsql.implicitPredicates = true;
+
+DialectPgsql.aliasQuotesOptional = /^[a-z\d]+$/;
 
 DialectPgsql.predicateBinary.alias('!=', '<>');
 
@@ -102,18 +109,50 @@ DialectPgsql.valueFormatterMap.JSON = (v) => "'" + JSON.stringify(v) + "'::json"
 
 DialectPgsql.valueFormatterMap.XML = Dialect.FormatString;
 
-DialectPgsql.valueFormatterMap.POINT = ({x, y}, d, t) => `point (${x}, ${y})`;
+
+DialectPgsql.valueFormatterMap.POINT = ({x, y, srid}, d, t) => 
+  formatGeometry(srid, 
+    () => `ST_Point(${x}, ${y})`,
+    () => `point (${x}, ${y})`,
+  )
+;
 
 DialectPgsql.setDataTypeFormat('SEGMENT', { constant: 'LSEG' });
-DialectPgsql.valueFormatterMap.SEGMENT = ({x1, y1, x2, y2}, d, t) => `lseg [(${x1}, ${y1}), (${x2}, ${y2})]`;
+DialectPgsql.valueFormatterMap.SEGMENT = ({x1, y1, x2, y2, srid}, d, t) => 
+  formatGeometry(srid, 
+    () => `ST_MakeLine(ST_Point(${x1}, ${y1}), ST_Point(${x2}, ${y2}))`,
+    () => `lseg [(${x1}, ${y1}), (${x2}, ${y2})]`,
+  )
+;
 
 DialectPgsql.valueFormatterMap.CIRCLE = ({ x, y, r}, d, t) => `circle <(${x}, ${y}), ${r}>`;
-DialectPgsql.valueFormatterMap.PATH = ({ points }, d, t) => `path [${points.map(({x, y}: any) => `(${x}, ${y})`).join(', ')}]`;
-DialectPgsql.valueFormatterMap.POLYGON = ({ corners }, d, t) => `polygon (${corners.map(({x, y}: any) => `(${x}, ${y})`).join(', ')})`;
 
-DialectPgsql.setDataTypeFormat('BOX', { constant: 'GEOMETRY' });
-DialectPgsql.valueFormatterMap.BOX = ({ l, t, r, b }, d, i) => `box ((${l}, ${t}), (${r}, ${b}))`;
+DialectPgsql.valueFormatterMap.PATH = ({ points, srid }, d, t) => 
+  formatGeometry(srid, 
+    () => `ST_MakeLine(ARRAY[${points.map(({x, y}: any) => `ST_Point(${x}, ${y})`).join(', ')}])`,
+    () => `path [${points.map(({x, y}: any) => `(${x}, ${y})`).join(', ')}]`,
+  )
+;
 
+DialectPgsql.valueFormatterMap.POLYGON = ({ corners, srid }, d, t) => 
+  formatGeometry(srid, 
+    () => `ST_Polygon(ST_MakeLine(ARRAY[${corners.map(({x, y}: any) => `ST_Point(${x}, ${y})`).join(', ')}]))`,
+    () => `polygon (${corners.map(({x, y}: any) => `(${x}, ${y})`).join(', ')})`,
+  )
+;
+
+DialectPgsql.valueFormatterMap.BOX = ({ l, t, r, b, srid }, d, i) => 
+  formatGeometry(srid, 
+    () => `ST_Polygon(ST_MakeLine(ARRAY[ ST_Point(${l}, ${t}), ST_Point(${r}, ${t}), ST_Point(${r}, ${b}), ST_Point(${l}, ${b}) ]))`,
+    () => `box ((${l}, ${t}), (${r}, ${b}))`,
+  )
+;
+
+DialectPgsql.dataTypeFormatter.GEOGRAPHY = (dataType: DataTypeInputs) => {
+  return dataType[1] && dataType[1] !== 4326
+    ? `GEOGRAPHY(${dataType[0]}, ${dataType[1]})`
+    : `GEOGRAPHY(${dataType[0]})`;
+};
 
 function FormatDecimal(value: number, dialect: Dialect, dataType?: DataTypeInputs)
 {
@@ -138,6 +177,14 @@ function FormatBinary(value: any, dialect: Dialect)
   }
 
   return value;
+}
+
+function formatGeometry(srid: number | undefined, getGis: () => string, getNormal: () => string) {
+  return DialectPgsql.gis
+    ? srid
+      ? `ST_SetSRID(${getGis()}, ${srid})`
+      : getGis()
+    : getNormal();
 }
 
 function escapeBinary(x: string)
@@ -171,13 +218,6 @@ DialectPgsql.valueFormatter.push(
 // =========================================================
 // Functions
 // =========================================================
-DialectPgsql.functions.setUnsupported([
-  'geomPoint', 'geomPointX', 'geomPointY'
-]);
-DialectPgsql.aggregates.setUnsupported([
-  'variance'
-]);
-
 DialectPgsql.functions.aliases({
   minScale: 'MIN_SCALE',
   trimScale: 'TRIM_SCALE',
@@ -209,9 +249,6 @@ DialectPgsql.functions.aliases({
   createTime: 'MAKE_TIME',
   createTimestamp: 'MAKE_TIMESTAMP',
   timestampFromSeconds: 'TO_TIMESTAMP',
-  geomCenter: 'CENTER',
-  geomLength: 'LENGTH',
-  geomPoints: 'NPOINTS',
   uuid: 'GEN_RANDOM_UUID',
 });
 
@@ -226,18 +263,64 @@ DialectPgsql.functions.setFormats({
   timestampToSeconds: 'EXTRACT(EPOCH FROM {0})',
   datesOverlap: '(({0}, {1}) OVERLAPS ({2}, {3}))',
   timestampsOverlap: '(({0}, {1}) OVERLAPS ({2}, {3}))',
-  geomContains: '(({0})@>({1}))',
-  geomDistance: '(({0})<->({1}))',
-  geomIntersection: '(({0})#({1}))',
-  geomIntersects: '(({0})?#({1}))',
-  geomTouches: '(({0})&&({1}))',
-  geomWithinDistance: '(({0})<->({1})) <= {2}',
   geomTranslate: '(({0})+({1}))',
   geomPathConcat: '(({0})+({1}))',
-  geomScale: '(({0})*({1}))',
   geomDivide: '(({0})/({1}))',
   geomSame: '(({0})~=({1}))',
 });
+
+DialectPgsql.functions.formats.geomContains = ([a, b]: any) => DialectPgsql.gis
+  ? `ST_Contains(${a}, ${b})`
+  : `((${a})@>(${b}))`
+;
+DialectPgsql.functions.formats.geomDistance = ([a, b]: any) => DialectPgsql.gis
+  ? `ST_Distance(${a}, ${b})`
+  : `((${a})<->(${b}))`
+;
+DialectPgsql.functions.formats.geomIntersection = ([a, b]: any) => DialectPgsql.gis
+  ? `ST_Intersection(${a}, ${b})`
+  : `((${a})#(${b}))`
+;
+DialectPgsql.functions.formats.geomIntersects = ([a, b]: any) => DialectPgsql.gis
+  ? `ST_Intersects(${a}, ${b})`
+  : `((${a})?#(${b}))`
+;
+DialectPgsql.functions.formats.geomTouches = ([a, b]: any) => DialectPgsql.gis
+  ? `ST_Touches(${a}, ${b})`
+  : `((${a})&&(${b}))`
+;
+DialectPgsql.functions.formats.geomWithinDistance = ([a, b, c]: any) => DialectPgsql.gis
+  ? `ST_DWithin(${a}, ${b}, ${c})`
+  : `((${a})<->(${b})) <= ${c}`
+;
+DialectPgsql.functions.formats.geomScale = ([a, b]: any) => DialectPgsql.gis
+  ? `ST_Scale(${a}, ${b})`
+  : `((${a})*(${b}))`
+;
+DialectPgsql.functions.formats.geomPointX = ([a]: any) => DialectPgsql.gis
+  ? `ST_X(${a})`
+  : `${a}[0]`
+;
+DialectPgsql.functions.formats.geomPointY = ([a]: any) => DialectPgsql.gis
+  ? `ST_Y(${a})`
+  : `${a}[1]`
+;
+DialectPgsql.functions.formats.geomPoints = ([a]: any) => DialectPgsql.gis
+  ? `ST_NPoints(${a})`
+  : `NPOINTS(${a})`
+;
+DialectPgsql.functions.formats.geomPoint = ([a, b]: any) => DialectPgsql.gis
+  ? `ST_PointN(${a}, ${b})`
+  : `ST_PointN(${a}, ${b})`
+;
+DialectPgsql.functions.formats.geomLength = ([a]: any) => DialectPgsql.gis
+  ? `ST_Length(${a})`
+  : `LENGTH(${a})`
+;
+DialectPgsql.functions.formats.geomCenter = ([a]: any) => DialectPgsql.gis
+  ? `ST_Centroid(${a})`
+  : `CENTER(${a})`
+;
 
 DialectPgsql.aggregates.aliases({
   bitAnd: 'BIT_AND',
@@ -252,6 +335,7 @@ DialectPgsql.aggregates.aliases({
   firstValue: 'FIRST_VALUE',
   lastValue: 'LAST_VALUE',
   nthValue: 'NTH_VALUE',
+  deviation: 'STDDEV',
 });
 
 DialectPgsql.aggregates.setFormats({
@@ -301,5 +385,34 @@ DialectPgsql.transformer.setTransformer<QueryJson<any, any>>(
     {
       throw new Error('Converting the request operation to JSON is not supported.');
     }
+  }
+);
+
+DialectPgsql.transformer.setTransformer<ExprCast<any>>(
+  ExprCast,
+  (expr, transform, out) => 
+  {
+    const { value, type } = expr;
+
+    let x = '';
+    const v = out.wrap(value);
+    const t = out.dialect.getDataTypeString(type);
+
+    if (DialectPgsql.colonCasting)
+    {
+      x += v;
+      x += '::';
+      x += t;
+    }
+    else
+    {
+      x += 'CAST(';
+      x += v;
+      x += ' AS ';
+      x += t;
+      x += ')';
+    }
+
+    return x;
   }
 );

@@ -1,5 +1,4 @@
-CREATE DATABASE tqb;
-USE tqb;
+CREATE EXTENSION postgis;
 CREATE TABLE "group" (
   "id" SERIAL,
   "name" VARCHAR(128) NOT NULL,
@@ -24,7 +23,7 @@ CREATE TABLE "task" (
   "id" SERIAL,
   "group_id" INT NOT NULL,
   "name" VARCHAR(128) NOT NULL,
-  "details" VARCHAR(MAX) NOT NULL,
+  "details" TEXT NOT NULL,
   "done" BOOLEAN NOT NULL DEFAULT FALSE,
   "done_at" TIMESTAMP NULL,
   "parent_id" INT NULL,
@@ -38,3 +37,10 @@ CREATE TABLE "task" (
   FOREIGN KEY ("assigned_to") REFERENCES "person" ON DELETE SET NULL,
   FOREIGN KEY ("created_by") REFERENCES "person" ON DELETE NO ACTION
 );
+CREATE TABLE "locations" (
+  "id" SERIAL,
+  "location" GEOMETRY,
+  "name" TEXT,
+  PRIMARY KEY ("id")
+);
+CREATE INDEX "locations_index" ON "locations" USING GIST (geography("location"));

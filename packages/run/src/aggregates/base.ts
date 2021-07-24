@@ -1,6 +1,6 @@
 import { AggregateFunctions, ExprAggregate, QueryWindow } from '@typed-query-builder/builder';
 import { RunTransformerFunction } from '../Transformers';
-import { RunResult, RunState } from "../State";
+import { RunInput, RunResult, RunState } from "../State";
 import { RunCompiler, RunExpr } from "../Compiler";
 import { compare, orderByCompile, removeDuplicates, rowsPeerComparator } from '../util';
 
@@ -84,7 +84,7 @@ export function getWindowFrame(result: RunResult, win?: QueryWindow<any, any, an
   return [ start, end ];
 }
 
-export function initializeWindowless(expr: ExprAggregate<{}, [], never, keyof AggregateFunctions, AggregateFunctions, any>, state: RunState): void
+export function initializeWindowless(expr: ExprAggregate<{}, [], never, keyof AggregateFunctions, AggregateFunctions, any>, state: RunState<RunInput>): void
 {
   if (!expr._overWindow && !expr._overWindowDefinition)
   {

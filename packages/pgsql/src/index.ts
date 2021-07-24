@@ -1,8 +1,7 @@
 import { ExprValueTuples, Expr, ExprValueObjects, QueryFirst, QueryFirstValue, QueryList, QueryJson, isArray, isString, isPlainObject, isFunction } from '@typed-query-builder/builder';
 import { DialectPgsql } from '@typed-query-builder/sql-pgsql';
 import { Client, Pool, QueryConfig, QueryArrayConfig, QueryResult } from 'pg';
-import { Cursor } from 'pg-cursor';
-
+import Cursor from 'pg-cursor';
 
 import './parsers';
 

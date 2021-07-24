@@ -9,7 +9,7 @@
     "sourceMap": true,
     "composite": true,
     "outDir": "dist",
-    "baseUrl": "src"
+    "baseUrl": "src",
   },
   "include": ["src"],
   "references": [

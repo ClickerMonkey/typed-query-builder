@@ -1,13 +1,13 @@
 import { Expr, Transformer } from '@typed-query-builder/builder';
 import { RunCompiler } from './Compiler';
-import { RunState } from './State';
+import { RunState, RunInput } from './State';
 
 
 
 
 export interface RunTransformerFunction<T> 
 {
-  (state: RunState): T;
+  (state: RunState<RunInput>): T;
 }
 
 export interface RunTransformerTransformer

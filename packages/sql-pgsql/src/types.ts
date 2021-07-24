@@ -1,4 +1,4 @@
-import { DataTypePoint, DataTypePath, DataTypeGeometry } from '@typed-query-builder/builder';
+import { DataTypePoint, DataTypePath, DataTypeGeometry, DataTypeLine, DataTypeSegment, DataTypePolygon, DataTypeBox, DataTypeCircle } from '@typed-query-builder/builder';
 
 
 declare module "@typed-query-builder/builder"
@@ -16,6 +16,16 @@ declare module "@typed-query-builder/builder"
     SERIAL: number;
     BIGSERIAL: number;
   }
+
+  export interface DataTypePointTypes { srid: DataTypePoint & { srid: number }; }
+  export interface DataTypeLineTypes { srid: DataTypeLine & { srid: number }; }
+  export interface DataTypeSegmentTypes { srid: DataTypeSegment & { srid: number }; }
+  export interface DataTypePathTypes { srid: DataTypePath & { srid: number }; }
+  export interface DataTypePolygonTypes { srid: DataTypePolygon & { srid: number }; }
+  export interface DataTypeBoxTypes { srid: DataTypeBox & { srid: number }; }
+  export interface DataTypeCircleTypes { srid: DataTypeCircle & { srid: number }; }
+  export interface DataTypeGeometryTypes { srid: DataTypeGeometry & { srid: number }; }
+
 
   export interface Functions
   {
@@ -43,25 +53,5 @@ declare module "@typed-query-builder/builder"
     geomDivide<T extends DataTypeGeometry>(a: T, by: DataTypePoint): T;
     geomSame(a: DataTypePath, b: DataTypePath): boolean;
     uuid(): string;
-    
   }
-}
-
-declare module "@typed-query-builder/sql"
-{
-
-  export interface DialectParamsInsert
-  {
-    override: string;
-  }
-
-  export interface DialectParamsDelete
-  {
-  }
-
-  export interface DialectParamsSelect
-  {
-    into: string;
-  }
-  
 }

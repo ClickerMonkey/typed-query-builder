@@ -6,8 +6,6 @@ import {
 export class ExprFunction<F extends keyof Funcs, Funcs = Functions> extends ExprScalar<FunctionResult<F, Funcs>> 
 {
   
-  
-  
   public static readonly id = ExprKind.FUNCTION;
 
   public constructor(

@@ -7,6 +7,7 @@ export * from './Compiler';
 export * from './State';
 export * from './Functions';
 export * from './Aggregates';
+export * from './Database';
 
 import './aggregates/array';
 import './aggregates/avg';

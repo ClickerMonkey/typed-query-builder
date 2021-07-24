@@ -5,7 +5,7 @@ afterAll(async () =>
 {
   const conn = await getConnection();
 
-  await conn.close();
+  await conn.end();
 });
 
 
@@ -13,8 +13,9 @@ beforeAll(async () =>
 {
   const conn = await getConnection();
 
-  await conn.query(`DELETE FROM [Task]`);
-  await conn.query(`DELETE FROM [PersonGroup]`);
-  await conn.query(`DELETE FROM [Person]`);
-  await conn.query(`DELETE FROM [Group]`);
+  await conn.query(`DELETE FROM "task"`);
+  await conn.query(`DELETE FROM "person_group"`);
+  await conn.query(`DELETE FROM "person"`);
+  await conn.query(`DELETE FROM "group"`);
+  await conn.query(`DELETE FROM "locations"`);
 });

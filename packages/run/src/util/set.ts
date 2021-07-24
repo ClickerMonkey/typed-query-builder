@@ -1,6 +1,6 @@
 import { Expr, isArray, Name, Select, SourceTable, StatementSet } from '@typed-query-builder/builder';
 import { isRunExpr, RunCompiler } from '../Compiler';
-import { RunState } from '../State';
+import { RunInput, RunState } from '../State';
 
 
 export function buildsSetter(statementSets: StatementSet<any>[], target: SourceTable<Name, Select<Name, any>[], any>, compiler: RunCompiler)
@@ -14,7 +14,7 @@ export function buildsSetter(statementSets: StatementSet<any>[], target: SourceT
         : []
   }));
 
-  return (state: RunState, row: any) =>
+  return (state: RunState<RunInput>, row: any) =>
   {
     for (const set of sets)
     {

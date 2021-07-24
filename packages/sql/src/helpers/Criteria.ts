@@ -147,7 +147,7 @@ export function getCriteria(criteria: QueryCriteria<any, any, any>, transform: D
           x += ', ';
         }
 
-        x += out.dialect.quoteAlias(windowName);
+        x += out.dialect.quoteName(windowName);
         x += ' AS (';
         x += getWindow(windows[windowName], out);
         x += ')';
