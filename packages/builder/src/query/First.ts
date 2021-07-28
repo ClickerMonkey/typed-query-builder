@@ -1,6 +1,6 @@
 import { 
   isArray, ExprInputTuple, ExprScalar, SelectsNameless, SelectsValues, PredicateRowType, Name, Expr, ExprKind, Selects, 
-  Sources, QueryCriteria, ExprPredicateRow, toExpr, ObjectFromSelects, QueryJson
+  Sources, QueryCriteria, ExprPredicateRow, toExpr, ObjectFromSelects, QueryJson, _Boolean
 } from '../internal';
 
 
@@ -25,7 +25,7 @@ export class QueryFirst<T extends Sources, S extends Selects, W extends Name> ex
     return true;
   }
 
-  public is(type: PredicateRowType, row: Expr<SelectsValues<S>> | Expr<SelectsNameless<S>> | ExprInputTuple<SelectsValues<S>>): ExprScalar<boolean> 
+  public is(type: PredicateRowType, row: Expr<SelectsValues<S>> | Expr<SelectsNameless<S>> | ExprInputTuple<SelectsValues<S>>): ExprScalar<_Boolean> 
   {
     return new ExprPredicateRow<SelectsValues<S>>(type, this as any, isArray(row) ? row.map( toExpr ) : row as any);
   }

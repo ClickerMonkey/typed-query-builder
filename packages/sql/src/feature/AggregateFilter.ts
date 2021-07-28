@@ -1,4 +1,4 @@
-import { ExprScalar } from '@typed-query-builder/builder';
+import { ExprScalar, _Boolean } from '@typed-query-builder/builder';
 import { Dialect } from '../Dialect';
 import { DialectFeatures } from '../Features';
 import { getPredicate } from '../helpers/Predicate';
@@ -6,7 +6,7 @@ import { getPredicate } from '../helpers/Predicate';
 
 export function addAggregateFilterFeature(dialect: Dialect)
 {
-  dialect.featureFormatter[DialectFeatures.AGGREGATE_FILTER] = (filter: ExprScalar<boolean>, transform, out) => 
+  dialect.featureFormatter[DialectFeatures.AGGREGATE_FILTER] = (filter: ExprScalar<_Boolean>, transform, out) => 
   {
     return `FILTER (WHERE ${getPredicate(filter, transform, out)})`;
   }; 

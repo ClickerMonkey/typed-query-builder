@@ -1,4 +1,4 @@
-import { ExprScalar, StatementSet } from '@typed-query-builder/builder';
+import { ExprScalar, StatementSet, _Boolean } from '@typed-query-builder/builder';
 import { Dialect } from '../Dialect';
 import { DialectFeatures } from '../Features';
 import { getPredicates } from '../helpers/Predicates';
@@ -6,7 +6,7 @@ import { getStatementSet } from '../helpers/Set';
 
 export function addInsertUpdateDuplicateFeature(dialect: Dialect)
 {
-  dialect.featureFormatter[DialectFeatures.INSERT_SET_ON_DUPLICATE] = ({ sets, where }: { sets: StatementSet<any>[], where: ExprScalar<boolean>[] }, transform, out) => 
+  dialect.featureFormatter[DialectFeatures.INSERT_SET_ON_DUPLICATE] = ({ sets, where }: { sets: StatementSet<any>[], where: ExprScalar<_Boolean>[] }, transform, out) => 
   {
     let x = '';
 

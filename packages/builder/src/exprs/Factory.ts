@@ -5,7 +5,8 @@ import {
   ExprCase, ExprCast, ExprPredicateBinary, ExprPredicates, ExprPredicateUnary, ExprConstant, ExprExists, ExprFunction, fns,
   ExprIn, ExprNot, ExprOperationBinary, ExprOperationUnary, ExprParam, Expr, ExprTypeMap, ExprField, ExprRaw, ExprRow,
   ExprDefault, ExprPredicateBinaryList, ExprScalar, ExprInput, Select, SourceUnspecified, QuerySelectScalarInput, ExprNull,
-  QuerySelectScalar, isString, Cast, toExpr, ExprInputType, toAnyExpr, ExprDeep, ExprInputDeep, toExprDeep, QueryWindow
+  QuerySelectScalar, isString, Cast, toExpr, ExprInputType, toAnyExpr, ExprDeep, ExprInputDeep, toExprDeep, QueryWindow, 
+  _Boolean, _Numbers, _Ints, _Floats, _Int
 } from '../internal';
 
 
@@ -23,31 +24,31 @@ export interface ExprFactory<T extends Sources, S extends Selects, W extends Nam
   param<V>(param: string, dataType?: DataTypeInputs, defaultValue?: V): ExprScalar<V>;
   row<E extends ExprInput<any | any[]>[]>(...elements: E): ExprRow<Cast<ExprTypeMap<TuplesJoin<E>>, any[]>>;
   deep<V>(input: ExprInputDeep<V>): ExprScalar<V>;
-  inspect<R>(): ExprCase<boolean, R>;
+  inspect<R>(): ExprCase<_Boolean, R>;
   inspect<R, V>(value: ExprInput<V>): ExprCase<V, R>;
   inspect<R>(value?: ExprInput<any>): ExprCase<any, R>;
-  cases<R>(): ExprCase<boolean, R>;
+  cases<R>(): ExprCase<_Boolean, R>;
   cases<R, V>(value: ExprInput<V>): ExprCase<V, R>;
   cases<R>(value?: ExprInput<any>): ExprCase<any, R>;
   constant<V>(value: V, dataType?: DataTypeInputs): ExprScalar<V>;
   func<F extends keyof Funcs, Funcs = Functions>(func: F, ...args: FunctionArgumentInputs<F, Funcs>): ExprScalar<FunctionResult<F, Funcs>>;
   cast<I extends DataTypeInputs>(type: I, value: any): ExprScalar<DataTypeInputType<I>>;
   query(): QuerySelect<{}, [], never>;
-  not(value: ExprInput<boolean>): ExprScalar<boolean>;
-  exists(query: Expr<[Select<any, 1 | null>]> | Expr<1 | null>): ExprScalar<boolean>;
-  notExists(query: Expr<[Select<any, 1 | null>]>): ExprScalar<boolean>;
-  between<V>(value: ExprInput<V>, low: ExprInput<V>, high: ExprInput<V>): ExprScalar<boolean>;
-  and(...conditions: ExprScalar<boolean>[]): ExprScalar<boolean>;
-  and(getConditions: ExprProvider<T, S, W, ExprScalar<boolean>[]>): ExprScalar<boolean>;
-  and(...conditions: any[]): Expr<boolean>;
-  or(...conditions: Expr<boolean>[]): ExprScalar<boolean>;
-  or(getConditions: ExprProvider<T, S, W, ExprScalar<boolean>[]>): ExprScalar<boolean>;
-  or(...conditions: any[]): ExprScalar<boolean>;
+  not(value: ExprInput<_Boolean>): ExprScalar<_Boolean>;
+  exists(query: Expr<[Select<any, 1 | null>]> | Expr<1 | null>): ExprScalar<_Boolean>;
+  notExists(query: Expr<[Select<any, 1 | null>]>): ExprScalar<_Boolean>;
+  between<V>(value: ExprInput<V>, low: ExprInput<V>, high: ExprInput<V>): ExprScalar<_Boolean>;
+  and(...conditions: ExprScalar<_Boolean>[]): ExprScalar<_Boolean>;
+  and(getConditions: ExprProvider<T, S, W, ExprScalar<_Boolean>[]>): ExprScalar<_Boolean>;
+  and(...conditions: any[]): Expr<_Boolean>;
+  or(...conditions: Expr<_Boolean>[]): ExprScalar<_Boolean>;
+  or(getConditions: ExprProvider<T, S, W, ExprScalar<_Boolean>[]>): ExprScalar<_Boolean>;
+  or(...conditions: any[]): ExprScalar<_Boolean>;
   aggregate<A extends keyof Aggs, Aggs = AggregateFunctions, V = FunctionResult<A, Aggs>>(type: A, ...args: FunctionArgumentInputs<A, Aggs>): ExprAggregate<T, S, W, A, Aggs, V>;
   count(value?: ExprScalar<any>): ExprAggregate<T, S, W, 'count'>;
-  countIf(condition: ExprScalar<boolean>): ExprAggregate<T, S, W, 'countIf'>;
-  sum(value: ExprScalar<number>): ExprAggregate<T, S, W, 'sum'>;
-  avg(value: ExprScalar<number>): ExprAggregate<T, S, W, 'avg'>;
+  countIf(condition: ExprScalar<_Boolean>): ExprAggregate<T, S, W, 'countIf'>;
+  sum(value: ExprScalar<_Numbers>): ExprAggregate<T, S, W, 'sum'>;
+  avg(value: ExprScalar<_Numbers>): ExprAggregate<T, S, W, 'avg'>;
   min<V>(value: Expr<V>): ExprAggregate<T, S, W, 'min', AggregateFunctions, ExprInputType<V>>;
   max<V>(value: Expr<V>): ExprAggregate<T, S, W, 'max', AggregateFunctions, ExprInputType<V>>;
   rowNumber(): ExprAggregate<T, S, W, 'rowNumber'>;
@@ -58,25 +59,25 @@ export interface ExprFactory<T extends Sources, S extends Selects, W extends Nam
   lead<V>(value: ExprInput<V>, offset?: number, defaultValue?: ExprInput<V>): ExprAggregate<T, S, W, 'lead', AggregateFunctions, ExprInputType<V>>;
   firstValue<V>(value: ExprInput<V>): ExprAggregate<T, S, W, 'firstValue', AggregateFunctions, V>;
   lastValue<V>(value: ExprInput<V>): ExprAggregate<T, S, W, 'lastValue', AggregateFunctions, V>;
-  nthValue<V>(value: ExprInput<V>, n: number): ExprAggregate<T, S, W, 'nthValue', AggregateFunctions, V>;
-  op(first: ExprInput<number>, op: OperationUnaryType): ExprScalar<number>;
-  op(first: ExprInput<number>, op: OperationBinaryType, second: ExprInput<number>): ExprScalar<number>;
-  op(first: ExprInput<number>, op: OperationBinaryType | OperationUnaryType, second?: ExprInput<number>): ExprScalar<number>;
-  is<V>(value: ExprInput<V>, op: PredicateBinaryType, test: ExprInput<V>): ExprScalar<boolean>;
-  is<V>(op: PredicateUnaryType, value: ExprInput<V>): ExprScalar<boolean>;
-  is(a1: any, a2: any, a3?: any): ExprScalar<boolean>;
-  any<V>(value: ExprInput<V>, op: PredicateBinaryListType, values: ExprInput<V>[] | ExprInput<V[]> | Expr<V[]> | Expr<[Select<any, V>][]>): ExprScalar<boolean>;
-  all<V>(value: ExprInput<V>, op: PredicateBinaryListType, values: ExprInput<V>[] | ExprInput<V[]> | Expr<V[]> | Expr<[Select<any, V>][]>): ExprScalar<boolean>;
-  isNull<V>(value: ExprInput<V>): ExprScalar<boolean>;
-  isNotNull<V>(value: ExprInput<V>): ExprScalar<boolean>;
-  isTrue(value: ExprInput<boolean>): ExprScalar<boolean>;
-  isFalse(value: ExprInput<boolean>): ExprScalar<boolean>;
-  in<V>(value: ExprInput<V>, values: ExprInput<V[]> | ExprInput<V>[] | Expr<V[]> | Expr<[Select<any, V>][]>): ExprScalar<boolean>;
-  in<V>(value: ExprInput<V>, ...values: ExprInput<V>[]): ExprScalar<boolean> ;
-  in<V>(value: ExprInput<V>, ...values: any[]): ExprScalar<boolean>;
-  notIn<V>(value: ExprInput<V>, values: ExprInput<V[]> | ExprInput<V>[] | Expr<V[]> | Expr<[Select<any, V>][]>): ExprScalar<boolean>;
-  notIn<V>(value: ExprInput<V>, ...values: ExprInput<V>[]): ExprScalar<boolean>;
-  notIn<V>(value: ExprInput<V>, ...values: any[]): ExprScalar<boolean>;
+  nthValue<V>(value: ExprInput<V>, n: _Ints): ExprAggregate<T, S, W, 'nthValue', AggregateFunctions, V>;
+  op(first: ExprInput<_Numbers>, op: OperationUnaryType): ExprScalar<_Numbers>;
+  op(first: ExprInput<_Numbers>, op: OperationBinaryType, second: ExprInput<_Numbers>): ExprScalar<_Numbers>;
+  op(first: ExprInput<_Numbers>, op: OperationBinaryType | OperationUnaryType, second?: ExprInput<_Numbers>): ExprScalar<_Numbers>;
+  is<V>(value: ExprInput<V>, op: PredicateBinaryType, test: ExprInput<V>): ExprScalar<_Boolean>;
+  is<V>(op: PredicateUnaryType, value: ExprInput<V>): ExprScalar<_Boolean>;
+  is(a1: any, a2: any, a3?: any): ExprScalar<_Boolean>;
+  any<V>(value: ExprInput<V>, op: PredicateBinaryListType, values: ExprInput<V>[] | ExprInput<V[]> | Expr<V[]> | Expr<[Select<any, V>][]>): ExprScalar<_Boolean>;
+  all<V>(value: ExprInput<V>, op: PredicateBinaryListType, values: ExprInput<V>[] | ExprInput<V[]> | Expr<V[]> | Expr<[Select<any, V>][]>): ExprScalar<_Boolean>;
+  isNull<V>(value: ExprInput<V>): ExprScalar<_Boolean>;
+  isNotNull<V>(value: ExprInput<V>): ExprScalar<_Boolean>;
+  isTrue(value: ExprInput<_Boolean>): ExprScalar<_Boolean>;
+  isFalse(value: ExprInput<_Boolean>): ExprScalar<_Boolean>;
+  in<V>(value: ExprInput<V>, values: ExprInput<V[]> | ExprInput<V>[] | Expr<V[]> | Expr<[Select<any, V>][]>): ExprScalar<_Boolean>;
+  in<V>(value: ExprInput<V>, ...values: ExprInput<V>[]): ExprScalar<_Boolean> ;
+  in<V>(value: ExprInput<V>, ...values: any[]): ExprScalar<_Boolean>;
+  notIn<V>(value: ExprInput<V>, values: ExprInput<V[]> | ExprInput<V>[] | Expr<V[]> | Expr<[Select<any, V>][]>): ExprScalar<_Boolean>;
+  notIn<V>(value: ExprInput<V>, ...values: ExprInput<V>[]): ExprScalar<_Boolean>;
+  notIn<V>(value: ExprInput<V>, ...values: any[]): ExprScalar<_Boolean>;
 }
 
 export function createExprFactory<T extends Sources, S extends Selects, W extends Name>(sources: SourcesFieldsFactory<T>, selects: SelectsExprs<S>, windows: { [K in W]: QueryWindow<K, T, S, W> }): ExprFactory<T, S, W>
@@ -160,20 +161,20 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
       return new QuerySelect();
     },
 
-    not(value: ExprInput<boolean>): ExprScalar<boolean> {
+    not(value: ExprInput<_Boolean>): ExprScalar<_Boolean> {
       return new ExprNot(toExpr(value));
     },
-    exists(query: Expr<[Select<any, 1 | null>]> | Expr<1 | null>): ExprScalar<boolean> {
+    exists(query: Expr<[Select<any, 1 | null>]> | Expr<1 | null>): ExprScalar<_Boolean> {
       return new ExprExists(query, false);
     },
-    notExists(query: Expr<[Select<any, 1 | null>]>): ExprScalar<boolean> {
+    notExists(query: Expr<[Select<any, 1 | null>]>): ExprScalar<_Boolean> {
       return new ExprExists(query, true);
     },
-    between<V>(value: ExprInput<V>, low: ExprInput<V>, high: ExprInput<V>): ExprScalar<boolean> {
+    between<V>(value: ExprInput<V>, low: ExprInput<V>, high: ExprInput<V>): ExprScalar<_Boolean> {
       return new ExprBetween(toExpr(value), toExpr(low), toExpr(high));
     },
 
-    and(...conditions: any[]): Expr<boolean> {
+    and(...conditions: any[]): Expr<_Boolean> {
       return new ExprPredicates('AND', 
         isArray(conditions[0])
           ? conditions[0]
@@ -183,7 +184,7 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
       );
     },
 
-    or(...conditions: any[]): ExprScalar<boolean> {
+    or(...conditions: any[]): ExprScalar<_Boolean> {
       return new ExprPredicates('OR', 
         isArray(conditions[0])
           ? conditions[0]
@@ -200,13 +201,13 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
     count(nonNullValues?: ExprScalar<any>): ExprAggregate<T, S, W, 'count'> {
       return exprs.aggregate('count', nonNullValues);
     },
-    countIf(condition: ExprScalar<boolean>): ExprAggregate<T, S, W, 'countIf'> {
+    countIf(condition: ExprScalar<_Boolean>): ExprAggregate<T, S, W, 'countIf'> {
       return exprs.aggregate('countIf', condition);
     },
-    sum(value: ExprScalar<number>): ExprAggregate<T, S, W, 'sum'> {
+    sum(value: ExprScalar<_Floats>): ExprAggregate<T, S, W, 'sum'> {
       return exprs.aggregate('sum', value);
     },
-    avg(value: ExprScalar<number>): ExprAggregate<T, S, W, 'avg'> {
+    avg(value: ExprScalar<_Floats>): ExprAggregate<T, S, W, 'avg'> {
       return exprs.aggregate('avg', value);
     },
     min<V>(value: ExprScalar<V>): ExprAggregate<T, S, W, 'min', AggregateFunctions, V> {
@@ -227,10 +228,10 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
     percentRank(): ExprAggregate<T, S, W, 'percentRank'> {
       return exprs.aggregate('percentRank');
     },
-    lag<V>(value: ExprInput<V>, offset?: number, defaultValue?: ExprInput<V>): ExprAggregate<T, S, W, 'lag', AggregateFunctions, V> {
+    lag<V>(value: ExprInput<V>, offset?: _Int, defaultValue?: ExprInput<V>): ExprAggregate<T, S, W, 'lag', AggregateFunctions, V> {
       return exprs.aggregate('lag', value, offset, defaultValue);
     },
-    lead<V>(value: ExprInput<V>, offset?: number, defaultValue?: ExprInput<V>): ExprAggregate<T, S, W, 'lead', AggregateFunctions, V> {
+    lead<V>(value: ExprInput<V>, offset?: _Int, defaultValue?: ExprInput<V>): ExprAggregate<T, S, W, 'lead', AggregateFunctions, V> {
       return exprs.aggregate('lead', value, offset, defaultValue);
     },
     firstValue<V>(value: ExprInput<V>): ExprAggregate<T, S, W, 'firstValue', AggregateFunctions, V> {
@@ -239,17 +240,17 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
     lastValue<V>(value: ExprInput<V>): ExprAggregate<T, S, W, 'lastValue', AggregateFunctions, V> {
       return exprs.aggregate('lastValue', value);
     },
-    nthValue<V>(value: ExprInput<V>, n: number): ExprAggregate<T, S, W, 'nthValue', AggregateFunctions, V> {
+    nthValue<V>(value: ExprInput<V>, n: _Int): ExprAggregate<T, S, W, 'nthValue', AggregateFunctions, V> {
       return exprs.aggregate('nthValue', value, n);
     },
 
-    op(first: ExprInput<number>, op: OperationBinaryType | OperationUnaryType, second?: ExprInput<number>): ExprScalar<number> {
+    op(first: ExprInput<_Numbers>, op: OperationBinaryType | OperationUnaryType, second?: ExprInput<_Numbers>): ExprScalar<_Numbers> {
       return second === undefined
         ? new ExprOperationUnary(op as OperationUnaryType, toExpr(first))
         : new ExprOperationBinary(op as OperationBinaryType, toExpr(first), toExpr(second));
     },
 
-    is(a1: any, a2: any, a3?: any): ExprScalar<boolean> {
+    is(a1: any, a2: any, a3?: any): ExprScalar<_Boolean> {
       if (a3 === undefined) {
         return new ExprPredicateUnary(a1, toExpr(a2));
       } else {
@@ -257,7 +258,7 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
       }
     },
 
-    any<V>(value: ExprInput<V>, op: PredicateBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): ExprScalar<boolean> {
+    any<V>(value: ExprInput<V>, op: PredicateBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): ExprScalar<_Boolean> {
       return new ExprPredicateBinaryList(op, 'ANY', 
       toExpr( value ),
         isArray(values) 
@@ -266,7 +267,7 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
       );
     },
 
-    all<V>(value: ExprInput<V>, op: PredicateBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): ExprScalar<boolean> {
+    all<V>(value: ExprInput<V>, op: PredicateBinaryListType, values: ExprInput<V>[] | ExprInput<V[]>): ExprScalar<_Boolean> {
       return new ExprPredicateBinaryList(op, 'ALL', 
         toExpr( value ),
         isArray(values) 
@@ -275,20 +276,20 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
       );
     },
 
-    isNull<V>(value: ExprInput<V>): ExprScalar<boolean> {
+    isNull<V>(value: ExprInput<V>): ExprScalar<_Boolean> {
       return new ExprPredicateUnary('NULL', toExpr(value));
     },
-    isNotNull<V>(value: ExprInput<V>): ExprScalar<boolean> {
+    isNotNull<V>(value: ExprInput<V>): ExprScalar<_Boolean> {
       return new ExprPredicateUnary('NOT NULL', toExpr(value));
     },
-    isTrue(value: ExprInput<boolean>): ExprScalar<boolean> {
+    isTrue(value: ExprInput<_Boolean>): ExprScalar<_Boolean> {
       return new ExprPredicateUnary('TRUE', toExpr(value));
     },
-    isFalse(value: ExprInput<boolean>): ExprScalar<boolean> {
+    isFalse(value: ExprInput<_Boolean>): ExprScalar<_Boolean> {
       return new ExprPredicateUnary('FALSE', toExpr(value));
     },
 
-    in<V>(value: ExprInput<V>, ...values: any[]): ExprScalar<boolean> {
+    in<V>(value: ExprInput<V>, ...values: any[]): ExprScalar<_Boolean> {
       return new ExprIn(toExpr(value), 
         values.length !== 1 
         ? values.map( toExpr )
@@ -298,7 +299,7 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
       );
     },
 
-    notIn<V>(value: ExprInput<V>, ...values: any[]): ExprScalar<boolean> {
+    notIn<V>(value: ExprInput<V>, ...values: any[]): ExprScalar<_Boolean> {
       return new ExprIn(toExpr(value), 
         values.length !== 1 
         ? values.map( toExpr )

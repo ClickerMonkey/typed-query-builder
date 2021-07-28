@@ -1,7 +1,7 @@
-import { isArray, ExprKind, Traverser, Expr, ExprScalar, Select } from '../internal';
+import { isArray, ExprKind, Traverser, Expr, ExprScalar, Select, _Boolean } from '../internal';
 
 
-export class ExprIn<T> extends ExprScalar<boolean> 
+export class ExprIn<T> extends ExprScalar<_Boolean> 
 {
   
   public static readonly id = ExprKind.IN;

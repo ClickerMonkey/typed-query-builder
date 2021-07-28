@@ -4,7 +4,7 @@ import sql from 'mssql';
 export const pool = new sql.ConnectionPool({
   server: 'localhost',
   database: 'tqb',
-  user: 'test',
+  user: 'sa',
   password: 'password#1',
   parseJSON: true,
   options: {

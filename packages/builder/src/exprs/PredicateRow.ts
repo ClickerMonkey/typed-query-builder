@@ -1,7 +1,7 @@
-import { isArray, ExprScalarTuple, ExprKind, ExprScalar, Traverser, Expr, PredicateRowType, SelectsFromValues } from '../internal';
+import { isArray, ExprScalarTuple, ExprKind, ExprScalar, Traverser, Expr, PredicateRowType, SelectsFromValues, _Boolean } from '../internal';
 
 
-export class ExprPredicateRow<T extends any[]> extends ExprScalar<boolean> 
+export class ExprPredicateRow<T extends any[]> extends ExprScalar<_Boolean> 
 {
   
   public static readonly id = ExprKind.PREDICATE_ROW;

@@ -1,7 +1,7 @@
-import { ExprKind, ExprScalar, Traverser, Expr } from '../internal';
+import { ExprKind, ExprScalar, Traverser, Expr, _Boolean } from '../internal';
 
 
-export class ExprBetween<T> extends ExprScalar<boolean> 
+export class ExprBetween<T> extends ExprScalar<_Boolean> 
 {
   
   public static readonly id = ExprKind.BETWEEN;

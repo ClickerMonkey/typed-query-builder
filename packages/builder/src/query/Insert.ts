@@ -3,7 +3,7 @@ import {
   SelectsRecordExprs, JoinedInner, Tuple, Expr, ExprInput, ExprProvider, NamedSource, Source, SourceTable, SelectValueWithKey,
   ExprKind, Statement, StatementReturningColumns, StatementReturningExpressions, Select, toExpr, StatementSet, SelectsNameless,
   ObjectExprFromSelects, isString, isArray, SelectsValuesExprs, SelectsFromKeys, InsertPriority, ExprScalar, 
-  QuerySelectScalarInput, SourceCompatible, WithProvider
+  QuerySelectScalarInput, SourceCompatible, WithProvider, _Boolean
 } from '../internal';
 import { toAnyExpr } from '../Parse';
 
@@ -55,7 +55,7 @@ export class StatementInsert<
   public _columns: C;
   public _values: StatementInsertValuesResolved<S, C>[];
   public _sets: StatementSet<any>[];
-  public _setsWhere: ExprScalar<boolean>[];
+  public _setsWhere: ExprScalar<_Boolean>[];
   public _ignoreDuplicate: boolean;
   public _priority?: InsertPriority;
   
@@ -168,7 +168,7 @@ export class StatementInsert<
     return this;
   }
 
-  public setOnDuplicateWhere(...values: QuerySelectScalarInput<T, S, never, boolean>): this 
+  public setOnDuplicateWhere(...values: QuerySelectScalarInput<T, S, never, _Boolean>): this 
   {
     const exprs = this._exprs.parse(values);
 

@@ -1,7 +1,7 @@
-import { ExprKind, ExprScalar, Traverser, Expr, PredicateBinaryType } from '../internal';
+import { ExprKind, ExprScalar, Traverser, Expr, PredicateBinaryType, _Boolean } from '../internal';
 
 
-export class ExprPredicateBinary<T> extends ExprScalar<boolean> 
+export class ExprPredicateBinary<T> extends ExprScalar<_Boolean> 
 {
   
   public static readonly id = ExprKind.PREDICATE_BINARY;

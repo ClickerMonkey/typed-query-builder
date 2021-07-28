@@ -1,14 +1,14 @@
-import { ExprKind, Traverser, Expr, ExprScalar, OperationUnaryType } from '../internal';
+import { ExprKind, Traverser, Expr, ExprScalar, OperationUnaryType, _Numbers } from '../internal';
 
 
-export class ExprOperationUnary extends ExprScalar<number> 
+export class ExprOperationUnary extends ExprScalar<_Numbers> 
 {
   
   public static readonly id = ExprKind.OPERATION_UNARY;
   
   public constructor(
     public type: OperationUnaryType,
-    public value: ExprScalar<number>
+    public value: ExprScalar<_Numbers>
   ) {
     super();
   }

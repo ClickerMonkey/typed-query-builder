@@ -43,6 +43,14 @@ describe('Select', () =>
     },
   });
 
+  const GetRoles = table({
+    name: 'getRoles',
+    fields: {
+      id: 'INT',
+      name: 'TEXT',
+    },
+  });
+
   it('all', () =>
   {
     const x = from(Task)
@@ -1052,6 +1060,42 @@ describe('Select', () =>
         people.id AS id,
         people."name" AS "name"
       FROM Persons AS people
+    `);
+  });
+
+  it('function table', () =>
+  {
+    const x = from((_, __, { currentTimestamp }) => GetRoles.call({
+        0: 'Hello', 
+        1: currentTimestamp()
+      }))
+      .select('*')
+      .run(sql)
+    ;
+
+    expectText({ ignoreSpace: true, ignoreCase: true }, x, `
+      SELECT
+        getRoles.id AS id,
+        getRoles."name" AS "name"
+      FROM getRoles('Hello', currentTimestamp())
+    `);
+  });
+
+  it('function table named parameters', () =>
+  {
+    const x = from((_, __, { currentTimestamp }) => GetRoles.call({
+        name: 'Hello', 
+        time: currentTimestamp()
+      }))
+      .select('*')
+      .run(sql)
+    ;
+
+    expectText({ ignoreSpace: true, ignoreCase: true }, x, `
+      SELECT
+        getRoles.id AS id,
+        getRoles."name" AS "name"
+      FROM getRoles("name" => 'Hello', "time" => currentTimestamp())
     `);
   });
 

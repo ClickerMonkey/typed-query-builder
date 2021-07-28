@@ -6,7 +6,11 @@ import {
   ExprFactory, Expr, ExprType, QueryExistential, QueryFirst, QueryFirstValue, QueryList, Source, SourceTable, SourceVirtual,
   SourceJoin, OrderBy, Select, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions, QueryCriteria, ExprKind, 
   NamedSource, SourceRecursive, ExprInput, ExprScalar, fns, QueryGroup, toExpr, GroupingSetType, LockRowLock, LockStrength,
-  WithProvider
+  WithProvider,
+  _Boolean,
+  _BigInt,
+  _Numbers,
+  _Floats
 } from '../internal';
 
 
@@ -94,10 +98,10 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     return this as never;
   }
 
-  public join<JN extends Name, JT extends Selects>(type: 'INNER', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S, W>
-  public join<JN extends Name, JT extends Selects>(type: 'LEFT', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S, W>
-  public join<JN extends Name, JT extends Selects>(type: 'RIGHT', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W>
-  public join<JN extends Name, JT extends Selects>(type: 'FULL', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W>
+  public join<JN extends Name, JT extends Selects>(type: 'INNER', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S, W>
+  public join<JN extends Name, JT extends Selects>(type: 'LEFT', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S, W>
+  public join<JN extends Name, JT extends Selects>(type: 'RIGHT', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W>
+  public join<JN extends Name, JT extends Selects>(type: 'FULL', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W>
   public join<JN extends Name, JT extends Selects>(type: JoinType, source: NamedSource<JN, JT>, on: any): never
   {
     const join = new SourceJoin(source, type, toExpr(true));
@@ -109,22 +113,22 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     return this as never;
   }
 
-  public joinInner<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S, W> 
+  public joinInner<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S, W> 
   {
     return this.join('INNER', source, on);
   }
 
-  public joinLeft<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S, W> 
+  public joinLeft<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S, W> 
   {
     return this.join('LEFT', source, on);
   }
 
-  public joinRight<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W> 
+  public joinRight<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W> 
   {
     return this.join('RIGHT', source, on);
   }
 
-  public joinFull<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W> 
+  public joinFull<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W> 
   {
     return this.join('FULL', source, on);
   }
@@ -202,7 +206,7 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     return this as any;
   }
 
-  public where(...values: QuerySelectScalarInput<T, S, W, boolean>): this 
+  public where(...values: QuerySelectScalarInput<T, S, W, _Boolean>): this 
   {
     const exprs = this._criteria.exprs.parse(values);
 
@@ -261,7 +265,7 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     return this;
   }
 
-  public having(condition: ExprProvider<T, S, W, ExprScalar<boolean>>): this 
+  public having(condition: ExprProvider<T, S, W, ExprScalar<_Boolean>>): this 
   {
     this._criteria.having = this._criteria.exprs.provide(condition);
 
@@ -327,7 +331,7 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     return (condition ? maybeQuery(this) : this) as any;
   }
 
-  public aggregate<A extends keyof Aggs, V extends SelectsKey<S>, Aggs = AggregateFunctions, R = FunctionResult<A, Aggs>>(type: A, values: V | ExprProvider<T, S, W, FunctionArgumentInputs<A, Aggs>>, distinct?: boolean, filter?: ExprProvider<T, S, W, ExprScalar<boolean>>, orderBy?: OrderBy[]): ExprScalar<R> 
+  public aggregate<A extends keyof Aggs, V extends SelectsKey<S>, Aggs = AggregateFunctions, R = FunctionResult<A, Aggs>>(type: A, values: V | ExprProvider<T, S, W, FunctionArgumentInputs<A, Aggs>>, distinct?: boolean, filter?: ExprProvider<T, S, W, ExprScalar<_Boolean>>, orderBy?: OrderBy[]): ExprScalar<R> 
   {
     const valuesResolved = this._criteria.exprs.provide(values);
     const valuesTuple = isArray(valuesResolved) ? valuesResolved : [valuesResolved];
@@ -348,32 +352,32 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     );
   }
 
-  public count(): ExprScalar<number>
-  public count<V extends SelectsKey<S>>(distinct: boolean, select: V): ExprScalar<number>
-  public count(distinct: boolean, value: ExprProvider<T, S, W, ExprScalar<any>>): ExprScalar<number>
-  public count(distinct: boolean, value?: ExprProvider<T, S, W, ExprScalar<any>>): ExprScalar<number>
-  public count(distinct: boolean = false, value?: ExprProvider<T, S, W, ExprScalar<any>>): ExprScalar<number> 
+  public count(): ExprScalar<_BigInt>
+  public count<V extends SelectsKey<S>>(distinct: boolean, select: V): ExprScalar<_BigInt>
+  public count(distinct: boolean, value: ExprProvider<T, S, W, ExprScalar<any>>): ExprScalar<_BigInt>
+  public count(distinct: boolean, value?: ExprProvider<T, S, W, ExprScalar<any>>): ExprScalar<_BigInt>
+  public count(distinct: boolean = false, value?: ExprProvider<T, S, W, ExprScalar<any>>): ExprScalar<_BigInt> 
   {
     return this.aggregate('count', [value], distinct);
   }
 
-  public countIf<V extends SelectsKeyWithType<S, boolean>>(select: V): ExprScalar<number>
-  public countIf(value: ExprProvider<T, S, W, ExprScalar<boolean>>): ExprScalar<number>
-  public countIf(condition: ExprScalar<boolean>): ExprScalar<number> 
+  public countIf<V extends SelectsKeyWithType<S, _Boolean>>(select: V): ExprScalar<_BigInt>
+  public countIf(value: ExprProvider<T, S, W, ExprScalar<_Boolean>>): ExprScalar<_BigInt>
+  public countIf(condition: ExprScalar<_Boolean>): ExprScalar<_BigInt> 
   {
     return this.aggregate('countIf', [condition], false);
   }
 
-  public sum<V extends SelectsKeyWithType<S, number>>(select: V): ExprScalar<number>
-  public sum(value: ExprProvider<T, S, W, ExprScalar<number>>): ExprScalar<number>
-  public sum(value: ExprScalar<number>): ExprScalar<number> 
+  public sum<V extends SelectsKeyWithType<S, _Numbers>>(select: V): ExprScalar<_Floats>
+  public sum(value: ExprProvider<T, S, W, ExprScalar<_Numbers>>): ExprScalar<_Floats>
+  public sum(value: ExprScalar<number>): ExprScalar<_Floats> 
   {
     return this.aggregate('sum', [value]);
   }
 
-  public avg<V extends SelectsKeyWithType<S, number>>(select: V): ExprScalar<number>
-  public avg(value: ExprProvider<T, S, W, ExprScalar<number>>): ExprScalar<number>
-  public avg(value: ExprScalar<number>): ExprScalar<number> 
+  public avg<V extends SelectsKeyWithType<S, _Numbers>>(select: V): ExprScalar<_Floats>
+  public avg(value: ExprProvider<T, S, W, ExprScalar<_Numbers>>): ExprScalar<_Floats>
+  public avg(value: ExprScalar<_Numbers>): ExprScalar<_Floats> 
   {
     return this.aggregate('avg', [value]);
   }

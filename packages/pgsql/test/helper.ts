@@ -1,8 +1,19 @@
+import { setTypes } from '../src';
 import { Client } from 'pg';
+
+
+setTypes({
+  FLOAT4: 'float',
+  FLOAT8: 'float',
+  NUMERIC: 'float',
+  INT2: 'int',
+  INT4: 'int',
+  INT8: 'int',
+});
 
 export const client = new Client({
   host: 'localhost',
-  port: 5435,
+  port: 5438,
   user: 'postgres',
   password: 'postgres',
   database: 'tqb',

@@ -1,14 +1,14 @@
-import { ExprKind, ExprScalar, Traverser, Expr, PredicatesType } from '../internal';
+import { ExprKind, ExprScalar, Traverser, Expr, PredicatesType, _Boolean } from '../internal';
 
 
-export class ExprPredicates extends ExprScalar<boolean> 
+export class ExprPredicates extends ExprScalar<_Boolean> 
 {
   
   public static readonly id = ExprKind.PREDICATES;
 
   public constructor(
     public type: PredicatesType,
-    public predicates: ExprScalar<boolean>[]
+    public predicates: ExprScalar<_Boolean>[]
   ) {
     super();
   }

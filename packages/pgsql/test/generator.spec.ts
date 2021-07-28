@@ -24,7 +24,44 @@ describe('generator', () =>
       tab: '  ',
       types: 'tables',
       ignore: [
-        'spatial_ref_sys'
+        'spatial_ref_sys',
+        'geocode_settings',
+        'geocode_settings_default',
+        'direction_lookup',
+        'secondary_unit_lookup',
+        'state_lookup',
+        'street_type_lookup',
+        'place_lookup',
+        'county_lookup',
+        'countysub_lookup',
+        'zip_lookup_all',
+        'zip_lookup_base',
+        'zip_lookup',
+        'zip_state',
+        'zip_state_loc',
+        'loader_platform',
+        'loader_variables',
+        'loader_lookuptables',
+        'pagc_gaz',
+        'pagc_lex',
+        'pagc_rules',
+        'topology',
+        'layer',
+        'schema_name',
+        'table_name',
+        'county',
+        'state',
+        'place',
+        'cousub',
+        'edges',
+        'addrfeat',
+        'faces',
+        'featnames',
+        'addr',
+        'zcta5',
+        'tract',
+        'tabblock',
+        'bg',
       ],
       tableNameAlias: camelCase,
       tableVariableAlias: (x) => `${pascalCase(x)}Table`,
@@ -42,6 +79,27 @@ describe('generator', () =>
           name: ["VARCHAR", 128], 
         }, 
       }); 
+
+      export const LocationsTable = table({ 
+        name: 'locations', 
+        primary: ['id'], 
+        fields: { 
+          id: "INT", 
+          location: ["NULL", "GEOMETRY"], 
+          name: ["NULL", "TEXT"], 
+        }, 
+      });
+      
+      export const PersonTable = table({ 
+        name: 'person', 
+        primary: ['id'], 
+        fields: { 
+          id: "INT", 
+          name: ["VARCHAR", 128], 
+          email: ["VARCHAR", 128], 
+          location: ["NULL", "POINT"], 
+        }, 
+      }); 
       
       export const PersonGroupTable = table({ 
         name: 'personGroup',
@@ -56,17 +114,6 @@ describe('generator', () =>
           groupId: 'group_id',
           personId: 'person_id',
         },
-      }); 
-      
-      export const PersonTable = table({ 
-        name: 'person', 
-        primary: ['id'], 
-        fields: { 
-          id: "INT", 
-          name: ["VARCHAR", 128], 
-          email: ["VARCHAR", 128], 
-          location: ["NULL", "POINT"], 
-        }, 
       }); 
       
       export const TaskTable = table({ 
@@ -94,16 +141,6 @@ describe('generator', () =>
           createdAt: 'created_at',
           createdBy: 'created_by',
         },
-      });
-
-      export const LocationsTable = table({ 
-        name: 'locations', 
-        primary: ['id'], 
-        fields: { 
-          id: "INT", 
-          location: ["NULL", "GEOMETRY"], 
-          name: ["NULL", "TEXT"], 
-        }, 
       });
     `);
   });

@@ -113,6 +113,7 @@ export async function generate(conn: Client | Pool, options: Partial<GeneratorOp
         ? `AND table_type = ${opt.types === 'tables' ? "'BASE TABLE'" : "'VIEW'"}`
         : ``
       }
+    ORDER BY table_name
   `);
 
   const outTables: GeneratorTable[] = [];
@@ -149,6 +150,7 @@ export async function generate(conn: Client | Pool, options: Partial<GeneratorOp
       FROM information_schema.columns c 
       WHERE c.table_schema = '${inTable.schema}'
           AND c.table_name = '${inTable.name}'
+      ORDER BY c.ordinal_position
     `);
 
     for (const inColumn of inColumns.rows)

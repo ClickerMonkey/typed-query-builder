@@ -170,6 +170,7 @@ export class Dialect
   public nameQuoter: DialectQuoteFormatter;
   public nameQuotesOptional: RegExp;
   public reservedWords: Record<string, boolean>;
+  public namedFunctionParameterDelimiter: string;
   public valueFormatter: DialectValueFormatter[];
   public valueFormatterMap: DialectMap<keyof DataTypeTypes, DialectValueFormatter>;
   public dataTypeFormatter: DialectMap<keyof DataTypeTypes, DialectDataTypeFormatter>;
@@ -229,6 +230,7 @@ export class Dialect
     this.nameQuotesOptional = /^\w+$/;
     this.dataTypeUnsignedIdentifier = 'UNSIGNED';
     this.dataTypeNullIdentifier = 'NULL';
+    this.namedFunctionParameterDelimiter = ' => ';
     this.dataTypeArrayFormatter = (element, length) => `${element} ARRAY[${length || ''}]`;
     this.dataTypeFormatter = {};
     this.reservedWords = {};

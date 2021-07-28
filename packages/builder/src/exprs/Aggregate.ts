@@ -1,6 +1,6 @@
 import { 
   ExprFactory, isName, Name, QueryWindow, Sources, Selects, FunctionResult, ExprKind, FunctionArgumentValues, OrderBy, 
-  Traverser, Expr, ExprScalar, AggregateFunctions, OrderDirection
+  Traverser, Expr, ExprScalar, AggregateFunctions, OrderDirection, _Boolean
 } from '../internal';
 
 
@@ -16,7 +16,7 @@ export class ExprAggregate<T extends Sources, S extends Selects, W extends Name,
     public _type: A,
     public _values: FunctionArgumentValues<A, Aggs>,
     public _distinct?: boolean,
-    public _filter?: ExprScalar<boolean>,
+    public _filter?: ExprScalar<_Boolean>,
     public _order: OrderBy[] = [],
     public _overWindow?: W,
     public _overWindowDefinition?: QueryWindow<never, T, S, W>
@@ -36,7 +36,7 @@ export class ExprAggregate<T extends Sources, S extends Selects, W extends Name,
     return this;
   }
 
-  public filter(condition: ExprScalar<boolean>): this 
+  public filter(condition: ExprScalar<_Boolean>): this 
   {
     this._filter = condition;
 

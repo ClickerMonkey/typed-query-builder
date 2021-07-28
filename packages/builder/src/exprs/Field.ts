@@ -1,6 +1,6 @@
 import {
   Name, SourceFieldsFunctions, Selects, SourceFieldsFromSelects, SourceFieldsFactory, Select, SelectAliased, ExprScalar,
-  ExprKind, NamedSource, query, Expr, TextModifyType, modifyText
+  ExprKind, NamedSource, query, Expr, TextModifyType, modifyText, _Boolean, _Int, _Floats, _Dates, _Numbers, _BigInt
 } from '../internal';
 
 
@@ -113,37 +113,37 @@ export class ExprField<F extends Name, T> extends ExprScalar<T> implements Selec
     return this as any;
   }
 
-  public count(conditions?: ExprScalar<boolean>[] | ExprScalar<boolean>, distinct: boolean = false): ExprScalar<number> 
+  public count(conditions?: ExprScalar<_Boolean>[] | ExprScalar<_Boolean>, distinct: boolean = false): ExprScalar<_BigInt> 
   {
     return query().from(this.source).where(conditions || []).count(distinct, this);
   }
 
-  public sum(conditions?: ExprScalar<boolean>[] | ExprScalar<boolean>): T extends number ? ExprScalar<number> : never 
+  public sum(conditions?: ExprScalar<_Boolean>[] | ExprScalar<_Boolean>): T extends _Numbers ? ExprScalar<_Floats> : never 
   {
     return query().from(this.source).where(conditions || []).sum(this as any) as any;
   }
 
-  public avg(conditions?: ExprScalar<boolean>[] | ExprScalar<boolean>): T extends number ? ExprScalar<number> : never 
+  public avg(conditions?: ExprScalar<_Boolean>[] | ExprScalar<_Boolean>): T extends _Numbers ? ExprScalar<_Floats> : never 
   {
     return query().from(this.source).where(conditions || []).avg(this as any) as any;
   }
 
-  public min(conditions?: ExprScalar<boolean>[] | ExprScalar<boolean>): T extends number ? ExprScalar<number> : never 
+  public min(conditions?: ExprScalar<_Boolean>[] | ExprScalar<_Boolean>): ExprScalar<T> 
   {
     return query().from(this.source).where(conditions || []).min(this as any) as any;
   }
 
-  public max(conditions?: ExprScalar<boolean>[] | ExprScalar<boolean>): T extends number ? ExprScalar<number> : never 
+  public max(conditions?: ExprScalar<_Boolean>[] | ExprScalar<_Boolean>): ExprScalar<T>
   {
     return query().from(this.source).where(conditions || []).max(this as any) as any;
   }
 
-  public list(conditions?: ExprScalar<boolean>[] | ExprScalar<boolean>): Expr<T[]> 
+  public list(conditions?: ExprScalar<_Boolean>[] | ExprScalar<_Boolean>): Expr<T[]> 
   {
     return query().from(this.source).where(conditions || []).list(this) as any;
   }
 
-  public first(conditions?: ExprScalar<boolean>[] | ExprScalar<boolean>): Expr<T> 
+  public first(conditions?: ExprScalar<_Boolean>[] | ExprScalar<_Boolean>): Expr<T> 
   {
     return query().from(this.source).where(conditions || []).value(this as any) as any;
   }

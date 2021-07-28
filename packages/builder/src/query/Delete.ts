@@ -1,7 +1,7 @@
 import { 
   SourceKind, isArray, isString, Name, Selects, Sources, MergeObjects, SelectsKey, Simplify, JoinedInner, Tuple, ExprProvider, 
   ExprScalar, NamedSource, Source, SourceTable, ExprKind, Statement, StatementReturningColumns, 
-  StatementReturningExpressions, Select, Traverser, Expr, WithProvider
+  StatementReturningExpressions, Select, Traverser, Expr, WithProvider, _Boolean
 } from '../internal';
 
 
@@ -62,7 +62,7 @@ export class StatementDelete<
     return this as never;
   }
 
-  public where(conditions: ExprProvider<T, S, never, ExprScalar<boolean> | ExprScalar<boolean>[]>): this 
+  public where(conditions: ExprProvider<T, S, never, ExprScalar<_Boolean> | ExprScalar<_Boolean>[]>): this 
   {
     const resolved = this._exprs.provide(conditions);
     const values = isArray(resolved)

@@ -1,15 +1,15 @@
-import { ExprKind, Traverser, Expr, ExprScalar, OperationBinaryType } from '../internal';
+import { ExprKind, Traverser, Expr, ExprScalar, OperationBinaryType, _Numbers } from '../internal';
 
 
-export class ExprOperationBinary extends ExprScalar<number> 
+export class ExprOperationBinary extends ExprScalar<_Numbers> 
 {
   
   public static readonly id = ExprKind.OPERATION_BINARY;
 
   public constructor(
     public type: OperationBinaryType,
-    public first: ExprScalar<number>,
-    public second: ExprScalar<number>
+    public first: ExprScalar<_Numbers>,
+    public second: ExprScalar<_Numbers>
   ) {
     super();
   }

@@ -449,6 +449,8 @@ describe('index', () =>
         TasksTree.name,
         TasksTree.depth
       ])
+      .orderBy('depth')
+      .orderBy('name')
       .run( getResult )
     ;
 
@@ -650,19 +652,22 @@ describe('index', () =>
     const near = await from(LocationsTable)
       .select(({ locations }, { cast }, { geomDistance }) => [
         locations.name,
-        geomDistance([locations.location.required(), 4326], cast('GEOGRAPHY', { x: -2.1, y: -2})).as('distance')
+        geomDistance(
+          locations.location.required().cast(['POINT', 4326]), 
+          cast('GEOGRAPHY', { x: -2.1, y: -2})
+        ).as('distance')
       ])
       .where(({}, {}, {}, { distance }) => [
-        distance.lt(3)
+        distance.lt(400000)
       ])
       .orderBy('distance')
       .run( getResult )
     ;
     
     expect(near).toStrictEqual([
-      { name: '4 left', distance: 2.758622844826744 },
-      { name: '4 down', distance: 2.9 },
-      { name: 'origin', distance: 2.9 }
+      { name: '4 left', distance: 305980.8078121 },
+      { name: '4 down', distance: 321565.03691648 },
+      { name: 'origin', distance: 321766.80599594 }
     ]);
 
     DialectPgsql.gis = false;

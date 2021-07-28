@@ -1,5 +1,5 @@
 import { 
-  ExprInput, ExprScalar, Expr, Select, Selects, SelectsFromObject, SelectsValues, ObjectFromSelects
+  ExprInput, ExprScalar, Expr, Select, Selects, SelectsFromObject, SelectsValues, ObjectFromSelects, _Boolean
 } from '../internal';
 
 
@@ -24,8 +24,8 @@ export type ExprValueToExpr<T> =
       // T = object, not array
       ? Expr<SelectsFromObject<T>>
       // T = primitive
-      :  T extends boolean
-        ? Expr<boolean>
+      :  T extends _Boolean
+        ? Expr<_Boolean>
         : Expr<T>;
 
 export type ExprValueObjects<V> =

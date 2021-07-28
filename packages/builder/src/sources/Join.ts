@@ -1,4 +1,4 @@
-import { Name, JoinType, Selects, NamedSourceBase, NamedSource, ExprScalar } from '../internal';
+import { Name, JoinType, Selects, NamedSourceBase, NamedSource, ExprScalar, _Boolean } from '../internal';
 
 
 export class SourceJoin<N extends Name, S extends Selects> extends NamedSourceBase<N, S>
@@ -9,7 +9,7 @@ export class SourceJoin<N extends Name, S extends Selects> extends NamedSourceBa
   public constructor(
     source: NamedSource<N, S>,
     public type: JoinType,
-    public condition: ExprScalar<boolean>,
+    public condition: ExprScalar<_Boolean>,
   ) {
     super( source.getName(), source.getSource(), source.getSelects() );
 

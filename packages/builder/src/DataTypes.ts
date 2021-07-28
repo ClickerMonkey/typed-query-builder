@@ -196,58 +196,108 @@ export interface DataTypeArrayTypes { base: any[]; }
 export interface DataTypeNullTypes { base: null; }
 export interface DataTypeAnyTypes { base: any; }
 
+export type DataTypeFrom<T> = T extends { overrides: infer O } ? O : T[keyof T];
+
+
+export type _Boolean = DataTypeFrom<DataTypeBooleanTypes>;
+export type _Bit = DataTypeFrom<DataTypeBitTypes>;
+export type _Bits = DataTypeFrom<DataTypeBitsTypes>;
+export type _TinyInt = DataTypeFrom<DataTypeTinyIntTypes>;
+export type _SmallInt = DataTypeFrom<DataTypeSmallIntTypes>;
+export type _MediumInt = DataTypeFrom<DataTypeMediumIntTypes>;
+export type _Int = DataTypeFrom<DataTypeIntTypes>;
+export type _BigInt = DataTypeFrom<DataTypeBigIntTypes>;
+export type _Numeric = DataTypeFrom<DataTypeNumericTypes>;
+export type _Decimal = DataTypeFrom<DataTypeDecimalTypes>;
+export type _Float = DataTypeFrom<DataTypeFloatTypes>;
+export type _Double = DataTypeFrom<DataTypeDoubleTypes>;
+export type _Money = DataTypeFrom<DataTypeMoneyTypes>;
+export type _Date = DataTypeFrom<DataTypeDateTypes>;
+export type _Time = DataTypeFrom<DataTypeTimeTypes>;
+export type _Timestamp = DataTypeFrom<DataTypeTimestampTypes>;
+export type _Char = DataTypeFrom<DataTypeCharTypes>;
+export type _VarChar = DataTypeFrom<DataTypeVarcharTypes>;
+export type _Text = DataTypeFrom<DataTypeTextTypes>;
+export type _Uuid = DataTypeFrom<DataTypeUuidTypes>;
+export type _Inet = DataTypeFrom<DataTypeInetTypes>;
+export type _Cidr = DataTypeFrom<DataTypeCidrTypes>;
+export type _MacAddr = DataTypeFrom<DataTypeMacaddrTypes>;
+export type _Binary = DataTypeFrom<DataTypeBinaryTypes>;
+export type _VarBinary = DataTypeFrom<DataTypeVarbinaryTypes>;
+export type _Blob = DataTypeFrom<DataTypeBlobTypes>;
+export type _Xml = DataTypeFrom<DataTypeXmlTypes>;
+export type _Json = DataTypeFrom<DataTypeJsonTypes>;
+export type _Point = DataTypeFrom<DataTypePointTypes>;
+export type _Line = DataTypeFrom<DataTypeLineTypes>;
+export type _Segment = DataTypeFrom<DataTypeSegmentTypes>;
+export type _Path = DataTypeFrom<DataTypePathTypes>;
+export type _Polygon = DataTypeFrom<DataTypePolygonTypes>;
+export type _Box = DataTypeFrom<DataTypeBoxTypes>;
+export type _Circle = DataTypeFrom<DataTypeCircleTypes>;
+export type _Geometry = DataTypeFrom<DataTypeGeometryTypes>;
+export type _Geography = DataTypeFrom<DataTypeGeographyTypes>;
+export type _Array = DataTypeFrom<DataTypeArrayTypes>;
+export type _Null = DataTypeFrom<DataTypeNullTypes>;
+export type _Any = DataTypeFrom<DataTypeAnyTypes>;
+
+
+export type _Ints = _TinyInt | _SmallInt | _MediumInt | _Int | _BigInt;
+export type _Floats = _Numeric | _Decimal | _Float | _Double;
+export type _Numbers = _TinyInt | _SmallInt | _MediumInt | _Int | _BigInt | _Numeric | _Decimal | _Float | _Double;
+export type _Strings = _Text | _Char | _VarChar;
+export type _Dates = _Date | _Timestamp;
 
 export interface DataTypeTypes 
 {
-  BOOLEAN: DataTypeBooleanTypes[keyof DataTypeBooleanTypes];
-  BIT: DataTypeBitTypes[keyof DataTypeBitTypes];
+  BOOLEAN: _Boolean;
+  BIT: _Bit;
 
-  BITS: DataTypeBitsTypes[keyof DataTypeBitsTypes];
-  TINYINT: DataTypeTinyIntTypes[keyof DataTypeTinyIntTypes];
-  SMALLINT: DataTypeSmallIntTypes[keyof DataTypeSmallIntTypes];
-  MEDIUMINT: DataTypeMediumIntTypes[keyof DataTypeMediumIntTypes]; 
-  INT: DataTypeIntTypes[keyof DataTypeIntTypes];
-  BIGINT: DataTypeBigIntTypes[keyof DataTypeBigIntTypes];
-  NUMERIC: DataTypeNumericTypes[keyof DataTypeNumericTypes];
-  DECIMAL: DataTypeDecimalTypes[keyof DataTypeDecimalTypes];
-  FLOAT: DataTypeFloatTypes[keyof DataTypeFloatTypes];
-  DOUBLE: DataTypeDoubleTypes[keyof DataTypeDoubleTypes];
-  MONEY: DataTypeMoneyTypes[keyof DataTypeMoneyTypes];
+  BITS: _Bits;
+  TINYINT: _TinyInt;
+  SMALLINT: _SmallInt;
+  MEDIUMINT: _MediumInt;
+  INT: _Int;
+  BIGINT: _BigInt;
+  NUMERIC: _Numeric;
+  DECIMAL: _Decimal;
+  FLOAT: _Float;
+  DOUBLE: _Double;
+  MONEY: _Money;
 
-  DATE: DataTypeDateTypes[keyof DataTypeDateTypes];
-  TIME: DataTypeTimeTypes[keyof DataTypeTimeTypes];
-  TIMESTAMP: DataTypeTimestampTypes[keyof DataTypeTimestampTypes];
+  DATE: _Date;
+  TIME: _Time;
+  TIMESTAMP: _Timestamp;
 
-  CHAR: DataTypeCharTypes[keyof DataTypeCharTypes];
-  VARCHAR: DataTypeVarcharTypes[keyof DataTypeVarcharTypes];
-  TEXT: DataTypeTextTypes[keyof DataTypeTextTypes];
+  CHAR: _Char;
+  VARCHAR: _VarChar;
+  TEXT: _Text;
 
-  UUID: DataTypeUuidTypes[keyof DataTypeUuidTypes];
-  INET: DataTypeInetTypes[keyof DataTypeInetTypes];
-  CIDR: DataTypeCidrTypes[keyof DataTypeCidrTypes];
-  MACADDR: DataTypeMacaddrTypes[keyof DataTypeMacaddrTypes];
+  UUID: _Uuid;
+  INET: _Inet;
+  CIDR: _Cidr;
+  MACADDR: _MacAddr;
 
-  BINARY: DataTypeBinaryTypes[keyof DataTypeBinaryTypes];
-  VARBINARY: DataTypeVarbinaryTypes[keyof DataTypeVarbinaryTypes];
-  BLOB: DataTypeBlobTypes[keyof DataTypeBlobTypes];
-  JSON: DataTypeJsonTypes[keyof DataTypeJsonTypes];
-  XML: DataTypeXmlTypes[keyof DataTypeXmlTypes];
+  BINARY: _Binary;
+  VARBINARY: _VarBinary;
+  BLOB: _Blob;
+  JSON: _Json;
+  XML: _Xml;
 
-  POINT: DataTypePointTypes[keyof DataTypePointTypes];
-  LINE: DataTypeLineTypes[keyof DataTypeLineTypes];
-  SEGMENT: DataTypeSegmentTypes[keyof DataTypeSegmentTypes];
-  BOX: DataTypeBoxTypes[keyof DataTypeBoxTypes];
-  POLYGON: DataTypePolygonTypes[keyof DataTypePolygonTypes];
-  PATH: DataTypePathTypes[keyof DataTypePathTypes];
-  CIRCLE: DataTypeCircleTypes[keyof DataTypeCircleTypes];
-  GEOMETRY: DataTypeGeometryTypes[keyof DataTypeGeometryTypes];
-  GEOGRAPHY: DataTypeGeographyTypes[keyof DataTypeGeographyTypes];
+  POINT: _Point;
+  LINE: _Line;
+  SEGMENT: _Segment;
+  BOX: _Box;
+  POLYGON: _Polygon;
+  PATH: _Path;
+  CIRCLE: _Circle;
+  GEOMETRY: _Geometry;
+  GEOGRAPHY: _Geography;
 
-  ARRAY: DataTypeArrayTypes[keyof DataTypeArrayTypes];
+  ARRAY: _Array;
 
-  NULL: DataTypeNullTypes[keyof DataTypeNullTypes];
+  NULL: _Null;
   
-  ANY: DataTypeAnyTypes[keyof DataTypeAnyTypes];
+  ANY: _Any;
 }
 
 export interface DataTypeMeta

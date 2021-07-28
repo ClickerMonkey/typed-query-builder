@@ -1,7 +1,7 @@
 import { 
   Name, createExprFactory, SourceKind, SourceKindPair, Selects, SelectsExprs, Sources, SourcesFieldsFactory, ExprFactory, 
   OrderBy, Select, NamedSource, ExprScalar, QueryWindow, fns, FunctionProxy, Functions, QueryGroup, Expr, Traversable,
-  Traverser, SelectsKey
+  Traverser, SelectsKey, _Boolean
 } from '../internal';
 import { SourcesNamedMap } from '../types/Source';
 
@@ -16,9 +16,9 @@ export class QueryCriteria<T extends Sources, S extends Selects, W extends Name>
   public sourcesFields: SourcesFieldsFactory<T>;
   public selects: S;
   public selectsExpr: SelectsExprs<S>;
-  public where: ExprScalar<boolean>[];
+  public where: ExprScalar<_Boolean>[];
   public group: QueryGroup<SelectsKey<S>>[];
-  public having?: ExprScalar<boolean>;
+  public having?: ExprScalar<_Boolean>;
   public windows: { [K in W]: QueryWindow<K, T, S, W> };
   public orderBy: OrderBy[];
   public limit?: number;

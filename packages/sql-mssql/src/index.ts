@@ -276,7 +276,7 @@ DialectMssql.functions.setFormats({
   geomPointX: '({0}).STX',
   geomPointY: '({0}).STY',
   geomArea: '({0}).STArea()',
-  gomeText: '({0}).STAsText()',
+  geomText: '({0}).STAsText()',
   geomBoundary: '({0}).STBoundary()',
   geomWithBuffer: '({0}).STBuffer({1})',
   geomConvexHull: '({0}).STConvexHull()',

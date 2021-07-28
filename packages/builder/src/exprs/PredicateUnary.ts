@@ -1,7 +1,7 @@
-import { ExprKind, ExprScalar, Traverser, Expr, PredicateUnaryType } from '../internal';
+import { ExprKind, ExprScalar, Traverser, Expr, PredicateUnaryType, _Boolean } from '../internal';
 
 
-export class ExprPredicateUnary extends ExprScalar<boolean> 
+export class ExprPredicateUnary extends ExprScalar<_Boolean> 
 {
   
   public static readonly id = ExprKind.PREDICATE_UNARY;

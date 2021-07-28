@@ -148,10 +148,21 @@ DialectPgsql.valueFormatterMap.BOX = ({ l, t, r, b, srid }, d, i) =>
   )
 ;
 
+
+DialectPgsql.dataTypeFormatter.POINT = formatGeometryType;
+DialectPgsql.dataTypeFormatter.PATH = formatGeometryType;
+DialectPgsql.dataTypeFormatter.POLYGON = formatGeometryType;
+DialectPgsql.dataTypeFormatter.LINE = formatGeometryType;
+DialectPgsql.dataTypeFormatter.SEGMENT = formatGeometryType;
+DialectPgsql.dataTypeFormatter.BOX = formatGeometryType;
+DialectPgsql.dataTypeFormatter.CIRCLE = formatGeometryType;
+
 DialectPgsql.dataTypeFormatter.GEOGRAPHY = (dataType: DataTypeInputs) => {
-  return dataType[1] && dataType[1] !== 4326
-    ? `GEOGRAPHY(${dataType[0]}, ${dataType[1]})`
-    : `GEOGRAPHY(${dataType[0]})`;
+  return dataType === 'GEOGRAPHY' || dataType[0] === 'GEOGRAPHY'
+    ? 'GEOGRAPHY'
+    : dataType[1] && dataType[1] !== 4326
+      ? `GEOGRAPHY(${dataType[0]}, ${dataType[1]})`
+      : `GEOGRAPHY(${dataType[0]})`;
 };
 
 function FormatDecimal(value: number, dialect: Dialect, dataType?: DataTypeInputs)
@@ -185,6 +196,20 @@ function formatGeometry(srid: number | undefined, getGis: () => string, getNorma
       ? `ST_SetSRID(${getGis()}, ${srid})`
       : getGis()
     : getNormal();
+}
+
+function formatGeometryType(type: any)
+{
+  if (!DialectPgsql.gis)
+  {
+    return type;
+  }
+
+  return typeof type === 'string' || !Array.isArray(type)
+    ? type
+    : typeof type[1] !== 'number' || type[1] === 4326
+      ? `GEOGRAPHY(${type[0]})`
+      : `GEOGRAPHY(${type[0]}, ${type[1]})`;
 }
 
 function escapeBinary(x: string)

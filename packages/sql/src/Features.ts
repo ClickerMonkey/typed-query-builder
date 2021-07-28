@@ -31,6 +31,7 @@ export enum DialectFeatures
   ARRAYS                  = (1 << 27),
   UNSIGNED                = (1 << 28),
   NAMED_PARAMETERS        = (1 << 29),
+  FUNCTION_NAMED_PARAMS   = (1 << 30),
 
   ALL                     = -1,
 }
@@ -68,4 +69,5 @@ export const DialectFeaturesDescription =
   'ARRAY data types',
   'UNSIGNED numeric types',
   'named parameters',
+  'named parameters in functions',
 ]; 

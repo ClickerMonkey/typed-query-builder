@@ -1,9 +1,10 @@
-CREATE EXTENSION postgis;
+
 CREATE TABLE "group" (
   "id" SERIAL,
   "name" VARCHAR(128) NOT NULL,
   PRIMARY KEY ("id")
 );
+
 CREATE TABLE "person" (
   "id" SERIAL,
   "name" VARCHAR(128) NOT NULL,
@@ -11,6 +12,7 @@ CREATE TABLE "person" (
   "location" POINT,
   PRIMARY KEY ("id")
 );
+
 CREATE TABLE "person_group" (
   "group_id" INT NOT NULL,
   "person_id" INT NOT NULL,
@@ -19,6 +21,7 @@ CREATE TABLE "person_group" (
   FOREIGN KEY ("group_id") REFERENCES "group" ON DELETE CASCADE,
   FOREIGN KEY ("person_id") REFERENCES "person" ON DELETE CASCADE
 );
+
 CREATE TABLE "task" (
   "id" SERIAL,
   "group_id" INT NOT NULL,
@@ -37,10 +40,12 @@ CREATE TABLE "task" (
   FOREIGN KEY ("assigned_to") REFERENCES "person" ON DELETE SET NULL,
   FOREIGN KEY ("created_by") REFERENCES "person" ON DELETE NO ACTION
 );
+
 CREATE TABLE "locations" (
   "id" SERIAL,
   "location" GEOMETRY,
   "name" TEXT,
   PRIMARY KEY ("id")
 );
+
 CREATE INDEX "locations_index" ON "locations" USING GIST (geography("location"));
