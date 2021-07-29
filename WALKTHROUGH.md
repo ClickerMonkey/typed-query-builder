@@ -151,14 +151,18 @@ const GetRoles = table({
   },
 });
 
+const userId = 23;
+
 // Calling functions when named function parameters are supported.
+// SELECT getRoles.name FROM get_roles(userId => 23, includeGroup = true) AS getRoles;
 from(GetRoles.call({ userId, includeGroup: true }))
-  .select(({ getRoles }) => [ getRoles.id ])
+  .select(({ getRoles }) => [ getRoles.name ])
 ;
 
 // Calling functions when only indexed function parameters are supported.
+// SELECT getRoles.name FROM get_roles(23, true) AS getRoles;
 from(GetRoles.call({ 0: userId, 1: true }))
-  .select(({ getRoles }) => [ getRoles.id ])
+  .select(({ getRoles }) => [ getRoles.name ])
 ;
 ```
 
