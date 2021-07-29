@@ -45,7 +45,7 @@ A built AST can be transformed with the following transformers:
 
 ## Terms
 
-- `source`: Something that can supply rows. A table, a subquery, a common table expression, a constant array of rows, or a insert/update/delete that returns values from affected rows.
+- `source`: Something that can supply rows. A table, a subquery, a common table expression, a constant array of rows, a function that returns table data, or a insert/update/delete that returns values from affected rows.
 - `exprs`: A factory of expressions like field, param, cases, func, cast, not, exists, and, or, between, aggregate, op, is, in, etc.
 - `fns`: A factory of functions that can be called with constants or expressions.
 - `selects`: A collection of named expressions that have been selected to be returned.
@@ -134,6 +134,32 @@ const DefinedTypes = values([
 ], [
   'id', 'name', 'code'
 ]);
+```
+
+### Table Function
+
+A table function source calls a function which returns table data. The name of the table is the function name and the fields are the fields returned by the function.
+```ts
+import { table, from } from '@typed-query-builder/builder';
+
+const GetRoles = table({
+  name: 'getRoles',   // how we reference the results of the function call
+  table: 'get_roles', // the function name
+  fields: {           // the fields returned by function
+    id: 'INT',
+    name: ['VARCHAR', 64],
+  },
+});
+
+// Calling functions when named function parameters are supported.
+from(GetRoles.call({ userId, includeGroup: true }))
+  .select(({ getRoles }) => [ getRoles.id ])
+;
+
+// Calling functions when only indexed function parameters are supported.
+from(GetRoles.call({ 0: userId, 1: true }))
+  .select(({ getRoles }) => [ getRoles.id ])
+;
 ```
 
 ### Subquery
