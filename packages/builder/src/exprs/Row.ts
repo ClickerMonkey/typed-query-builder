@@ -14,15 +14,25 @@ export class ExprRow<V extends any[]> extends Expr<V>
     super(); 
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.ROW;
   }
 
-  public is(type: PredicateRowType, row: Expr<V> | Expr<SelectsFromValues<V>> | ExprInputTuple<V>): ExprScalar<boolean> {
+  /**
+   * Returns a condition comparing this row to another row.
+   * 
+   * @param type The type of comparison.
+   * @param row The row or a query which returns a single row.
+   * @returns A new scalar expression.
+   */
+  public is(type: PredicateRowType, row: Expr<V> | Expr<SelectsFromValues<V>> | ExprInputTuple<V>): ExprScalar<boolean> 
+  {
     return new ExprPredicateRow<V>(type, this, isArray(row) ? row.map( toExpr ) : row as any);
   }
 
-  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R 
+  {
     return traverse.enter(this, () => {
       traverse.step('elements', () => {
         for (let i = 0; i < this.elements.length; i++) {

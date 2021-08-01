@@ -74,7 +74,7 @@ describe('Select', () => {
         false,
         nulls(),
         nulls(),
-        people.id
+        people.id,
       ]])
     ;
 

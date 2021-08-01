@@ -13,12 +13,15 @@ export class ExprOperationUnary extends ExprScalar<_Numbers>
     super();
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.OPERATION_UNARY;
   }
 
-  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
-    return traverse.enter(this, () => {
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R 
+  {
+    return traverse.enter(this, () => 
+    {
       traverse.step('value', this.value, (replace) => this.value = replace as any);
     });
   }

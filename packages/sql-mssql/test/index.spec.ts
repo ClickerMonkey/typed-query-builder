@@ -1073,7 +1073,7 @@ describe('index', () =>
     ;
 
     expectText({ condenseSpace: true }, SelectStar, `
-      SELECT Aliases.AliasID AS id FROM Aliases
+      SELECT "Alias".AliasID AS id FROM Aliases AS "Alias"
     `);
 
     const SelectAll = from(AliasedTable)
@@ -1082,7 +1082,7 @@ describe('index', () =>
     ;
 
     expectText({ condenseSpace: true }, SelectAll, `
-      SELECT Aliases.AliasID AS id FROM Aliases
+      SELECT "Alias".AliasID AS id FROM Aliases AS "Alias"
     `);
   });
 

@@ -28,6 +28,7 @@ DialectMssql.deleteOrder = ['with', 'DELETE', 'top', 'FROM', 'table', 'returning
 DialectMssql.updateOrder = ['with', 'UPDATE', 'top', 'ONLY', 'table', 'set', 'returning', 'from', 'where', 'option'];
 DialectMssql.selectOrder = ['with', 'SELECT', 'top', 'distinct', 'selects', 'into', 'from', 'joins', 'where', 'group', 'having', 'windows', 'order', 'paging', 'locks', 'option'];
 
+DialectMssql.nameQuotesOptional = /^#?\w+$/;
 DialectMssql.recursiveKeyword = false;
 DialectMssql.trueIdentifier = '1';
 DialectMssql.falseIdentifier = '0';

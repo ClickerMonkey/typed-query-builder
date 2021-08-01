@@ -19,33 +19,6 @@ export class ExprCase<I, O> extends ExprScalar<O>
     return ExprKind.CASE;
   }
 
-  public else(result: ExprInput<O>): this 
-  {
-    this.otherwise = toExpr(result);
-
-    return this;
-  }
-
-  public required(): ExprCase<I, Exclude<O, null | undefined>>
-  {
-    return this as any;
-  }
-
-  public optional(): ExprCase<I, O | null | undefined>
-  {
-    return this as any;
-  }
-
-  public nullable(): ExprCase<I, O | null>
-  {
-    return this as any;
-  }
-
-  public undefinable(): ExprCase<I, O | undefined>
-  {
-    return this as any;
-  }
-
   public traverse<R>(traverse: Traverser<Expr<any>, R>): R 
   {
     return traverse.enter(this, () => 
@@ -69,6 +42,39 @@ export class ExprCase<I, O> extends ExprScalar<O>
         traverse.step('otherwise', this.otherwise, (replace) => this.otherwise = replace as any, () => this.otherwise = undefined);
       }
     });
+  }
+
+  /**
+   * Sets the expression to return if this case does not have a passing condition.
+   * 
+   * @param result The default result to return.
+   * @returns This case expression.
+   */
+  public else(result?: ExprInput<O>): this 
+  {
+    this.otherwise = result === undefined ? undefined : toExpr(result);
+
+    return this;
+  }
+
+  public required(): ExprCase<I, Exclude<O, null | undefined>>
+  {
+    return this as any;
+  }
+
+  public optional(): ExprCase<I, O | null | undefined>
+  {
+    return this as any;
+  }
+
+  public nullable(): ExprCase<I, O | null>
+  {
+    return this as any;
+  }
+
+  public undefinable(): ExprCase<I, O | undefined>
+  {
+    return this as any;
   }
 
 }

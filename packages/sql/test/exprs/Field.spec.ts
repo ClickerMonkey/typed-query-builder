@@ -40,9 +40,9 @@ describe('Field', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
-        Tasks.id AS id
-      FROM Tasks
-      WHERE NOT Tasks.done = true
+        task.id AS id
+      FROM Tasks AS task
+      WHERE NOT task.done = true
     `);
   });
 
@@ -64,11 +64,11 @@ describe('Field', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
-        Tasks.id AS id,
+        task.id AS id,
         parent."name" AS "name"
-      FROM Tasks
-      INNER JOIN Tasks AS parent ON parent.id = Tasks.parentId
-      WHERE NOT Tasks.done = true
+      FROM Tasks AS task
+      INNER JOIN Tasks AS parent ON parent.id = task.parentId
+      WHERE NOT task.done = true
     `);
   });
 
@@ -90,11 +90,11 @@ describe('Field', () =>
 
     expectText({ condenseSpace: true, ignoreCase: true }, x, `
       SELECT
-        Tasks.id AS id,
-        GlobalSettings.maxTasks AS maxTasks
-      FROM Tasks
-      INNER JOIN GlobalSettings ON true = true
-      WHERE NOT Tasks.done = true
+        task.id AS id,
+        globalSetting.maxTasks AS maxTasks
+      FROM Tasks AS task
+      INNER JOIN GlobalSettings as globalSetting ON true = true
+      WHERE NOT task.done = true
     `);
   });
 

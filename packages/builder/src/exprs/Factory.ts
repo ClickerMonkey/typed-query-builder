@@ -15,18 +15,94 @@ export type ExprProvider<T extends Sources, S extends Selects, W extends Name, R
 
 export interface ExprFactory<T extends Sources, S extends Selects, W extends Name>
 {
+
+  /**
+   * A function that exposes sources, expressions, functions, and existing selects to return anything.
+   * 
+   * @param provider The provider.
+   */
   provide<R>(provider: ExprProvider<T, S, W, R>): R;
+
+  /**
+   * Parses an input and returns an array of scalar expressions. 
+   * 
+   * ```ts
+   * parse(3); // [ ExprConstant(3) ]
+   * parse([({ table }) => table.all()]); // [ array of table fields ]
+   * parse('selectName'); // [ Expr with given select name ]
+   * ```
+   * 
+   * @param input A constant or expression to convert to an array or a function which returns the same type of value.
+   */
   parse<R>(input: QuerySelectScalarInput<T, S, W, R>): ExprScalar<R>[];
+
+  /**
+   * An expression that is a field of the given source.
+   * 
+   * @param source The source to get a field from.
+   * @param field The field to get from the source.
+   * @returns A new scalar expression to a field.
+   */
   field<A extends keyof T & string, V extends T[A], F extends keyof V & string>(source: A, field: F): ExprScalar<V[F]>;
+
+  /**
+   * An expression that is raw.
+   * 
+   * @param raw The raw expression.
+   * @returns A new scalar expression to a raw value.
+   * * @returns A new scalar expression to a raw expression.
+   */
   raw<V>(raw: any): ExprScalar<V>;
+
+  /**
+   * An expression that is equivalent to DEFAULT. When inserting or updating into a specific column this will mean 
+   * the default value of that column.
+   * 
+   * @returns A new expression to a default value.
+   */
   defaults<V>(): Expr<V>;
+
+  /**
+   * An expression representing NULL.
+   * 
+   * @returns A new expression to a null value.
+   */
   nulls<V>(): Expr<V>;
+
+  /**
+   * An expression for a parameterized value. The data type can be explicitly specified and also a default value if 
+   * the parameter is not present.
+   * 
+   * @param param The name of the parameter.
+   * @param dataType The parameter's data type.
+   * @param defaultValue The default value if the parameter is not specified.
+   * @returns A new expression to a named parameter.
+   */
   param<V>(param: string, dataType?: DataTypeInputs, defaultValue?: V): ExprScalar<V>;
+
+  /**
+   * An expression for a row or tuple of values.
+   * 
+   * @param elements The array of elements in the row.
+   * @returns A new expression to a row of expressions.
+   */
   row<E extends ExprInput<any | any[]>[]>(...elements: E): ExprRow<Cast<ExprTypeMap<TuplesJoin<E>>, any[]>>;
+
+  /**
+   * A deep expression is often an object or array representing a complex data type that has parameters or other 
+   * expressions for each of the data types components. For example a circle could have it's X, Y, and radius 
+   * specified with a constant, equation, parameter, etc.
+   * 
+   * @param input The value with deep expressions.
+   */
   deep<V>(input: ExprInputDeep<V>): ExprScalar<V>;
-  inspect<R>(): ExprCase<_Boolean, R>;
-  inspect<R, V>(value: ExprInput<V>): ExprCase<V, R>;
-  inspect<R>(value?: ExprInput<any>): ExprCase<any, R>;
+
+  /**
+   * A case expression. A case expression can compare one expression to a set of others with associated results OR
+   * it can have a list of conditions and result pairs and the first one met is returned.
+   * 
+   * @param value
+   */
   cases<R>(): ExprCase<_Boolean, R>;
   cases<R, V>(value: ExprInput<V>): ExprCase<V, R>;
   cases<R>(value?: ExprInput<any>): ExprCase<any, R>;
@@ -135,10 +211,6 @@ export function createExprFactory<T extends Sources, S extends Selects, W extend
     deep<V>(input: ExprInputDeep<V>): ExprScalar<V> {
       // @ts-ignore
       return new ExprDeep(toExprDeep(input));
-    },
-
-    inspect<R>(value?: ExprInput<any>): ExprCase<any, R> {
-      return new ExprCase(value === undefined ? new ExprConstant(true) : toExpr(value));
     },
 
     cases<R>(value?: ExprInput<any>): ExprCase<any, R> {

@@ -219,5 +219,3 @@ export type QuerySelectScalarSpread<S extends Selects, R = any> =
 export type QuerySelectScalarInput<T extends Sources, S extends Selects, W extends Name, R = any> = 
   QuerySelectScalar<S, R>[] | [QuerySelectScalarProvider<T, S, W, R>]
 ;
-
-

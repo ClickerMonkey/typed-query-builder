@@ -37,32 +37,53 @@ export abstract class Expr<T> implements Traversable<Expr<unknown>>
     throw new Error('getInferredType should not be called.');
   }
 
+  /**
+   * If this expression returns a nullable or undefined value, this will return this expression with a non-null or undefined value.
+   * 
+   * @returns This expression.
+   */
   public required(): Expr<Exclude<T, null | undefined>>
   {
     return this as any;
   }
 
+  /**
+   * If this expression returns a non-null or defined value, this will return this expression with a null or undefined value.
+   * 
+   * @returns This expression.
+   */
   public optional(): Expr<T | null | undefined>
   {
     return this as any;
   }
 
+  /**
+   * If this expression returns a non-null value, this will return this expression with a nullable value.
+   * 
+   * @returns This expression.
+   */
   public nullable(): Expr<T | null>
   {
     return this as any;
   }
 
+  /**
+   * If this expression returns a defined value, this will return this expression with a undefined value.
+   * 
+   * @returns This expression.
+   */
   public undefinable(): Expr<T | undefined>
   {
     return this as any;
   }
 
+  /**
+   * Runs this expression and returns a result. This is shorthand for passing this expression to the runner you pass in.
+   * 
+   * @param runner 
+   * @returns 
+   */
   public run<O>(runner: (expr: this) => O): O
-  {
-    return runner(this);
-  }
-
-  public prepare<O>(runner: (expr: this) => (params: Record<string, any>) => O): ((params: Record<string, any>) => O)
   {
     return runner(this);
   }

@@ -21,9 +21,9 @@ This AST can represent a SELECT, DELETE, UPDATE, or INSERT. Examples of Exprs: A
 
 A built AST can be transformed with the following transformers:
 
-- @typed-query-builder/run: Run expressions against a local JSON database.
+- @typed-query-builder/run: Run expressions against a JSON object.
 - @typed-query-builder/mssql: Run expressions against a SQL Server connection.
-- @typed-query-builder/pgsql: Run expressions against a Postgres connection.
+- @typed-query-builder/pgsql: Run expressions against a PostgreSQL connection.
 - @typed-query-builder/sql: The base SQL generator.
 - @typed-query-builder/sql-mssql: Generates SQL Server query strings.
 - @typed-query-builder/sql-pgsql: Generates Postgres query strings.

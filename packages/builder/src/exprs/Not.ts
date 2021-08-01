@@ -22,8 +22,10 @@ export class ExprNot extends ExprScalar<_Boolean>
     return true;
   }
 
-  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
-    return traverse.enter(this, () => {
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R 
+  {
+    return traverse.enter(this, () => 
+    {
       traverse.step('predicate', this.predicate, (replace) => this.predicate = replace as any);
     });
   }

@@ -23,8 +23,10 @@ export class ExprExists extends ExprScalar<boolean>
     return true;
   }
 
-  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
-    return traverse.enter(this, () => {
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R 
+  {
+    return traverse.enter(this, () => 
+    {
       traverse.step('value', this.value, (replace) => this.value = replace as any);
     });
   }

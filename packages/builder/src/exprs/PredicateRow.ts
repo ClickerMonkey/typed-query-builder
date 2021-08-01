@@ -24,8 +24,10 @@ export class ExprPredicateRow<T extends any[]> extends ExprScalar<_Boolean>
     return true;
   }
 
-  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
-    return traverse.enter(this, () => {
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R 
+  {
+    return traverse.enter(this, () => 
+    {
       const { value, test } = this;
 
       if (isArray(value)) {

@@ -92,9 +92,9 @@ describe('Select', () =>
 
     expectText({ condenseSpace: true }, x, `
       SELECT 
-        projects.ProjectID AS id, 
-        projects.ProjectName AS "name"
-      FROM projects
+        project.ProjectID AS id, 
+        project.ProjectName AS "name"
+      FROM projects AS project
     `);
   });
 
@@ -122,7 +122,7 @@ describe('Select', () =>
       SELECT 
         ProjectID AS id, 
         ProjectName AS "name"
-      FROM projects
+      FROM projects AS project
     `);
   });
 
@@ -153,7 +153,7 @@ describe('Select', () =>
       SELECT 
         ProjectID, 
         ProjectName AS "name"
-      FROM projects
+      FROM projects AS project
     `);
   });
 
@@ -1042,9 +1042,9 @@ describe('Select', () =>
     
     expectText({ ignoreSpace: true, ignoreCase: true }, x, `
       SELECT
-        Persons.id AS id,
-        Persons."name" AS "name"
-      FROM Persons
+        people.id AS id,
+        people."name" AS "name"
+      FROM Persons as people
     `);
   });
 
@@ -1096,6 +1096,195 @@ describe('Select', () =>
         getRoles.id AS id,
         getRoles."name" AS "name"
       FROM getRoles("name" => 'Hello', "time" => currentTimestamp())
+    `);
+  });
+
+  it('quotes aliases appropriately', () => 
+  {
+    const Person = table({
+      name: 'person',
+      table: 'persons',
+      fields: {
+        id: 'INT',
+        name: ['VARCHAR', 64],
+        done: 'BOOLEAN',
+        doneAt: 'TIMESTAMP',
+        parentId: 'INT',
+        assignee: 'INT',
+      },
+    });
+
+    const x = from(Person)
+      .joinInner(Task, ({ task, person }) => task.assignee.eq(person.id))
+      .select(({ person, task }) => [
+        person.id,
+        person.name,
+        task.name.as('taskName')
+      ])
+      .run(sql)
+    ;
+
+    expectText({ ignoreSpace: true, ignoreCase: true }, x, `
+      SELECT
+        person.id AS id,
+        person."name" AS "name",
+        task."name" as taskName
+      FROM persons AS person
+      INNER JOIN task 
+        ON task.assignee = person.id
+    `);
+  });
+
+  it('quotes aliases virtual', () => 
+  {
+    const Person = table({
+      name: 'person',
+      table: 'persons',
+      fields: {
+        id: 'INT',
+        name: ['VARCHAR', 64],
+        done: 'BOOLEAN',
+        doneAt: 'TIMESTAMP',
+        parentId: 'INT',
+        assignee: 'INT',
+      },
+    });
+
+    const x = withs(
+        from(Person)
+        .select(({ person }) => person.only(['id', 'name']))
+        .as('names')
+      )
+      .with(
+        from(Task)
+        .select(({ task }) => task.only(['assignee']))
+        .as('assignees')
+      )
+      .from('names')
+      .joinInner('assignees', ({ names, assignees }) => 
+        assignees.assignee.eq(names.id)
+      )
+      .select(({ names, assignees }) => [
+        names.name,
+        assignees.assignee
+      ])
+      .run(sql)
+    ;
+
+    expectText({ ignoreSpace: true, ignoreCase: true }, x, `
+      WITH "names" AS (
+        SELECT person.id AS id, person."name" AS "name" FROM persons AS person
+      ), assignees AS (
+        SELECT task.assignee AS assignee FROM task
+      )
+      SELECT
+        "names"."name" AS "name",
+        assignees.assignee AS assignee
+      FROM "names"
+      INNER JOIN assignees
+        ON assignees.assignee = "names".id
+    `);
+  });
+
+  it('quotes aliases virtual simplify references', () => 
+  {
+    const Person = table({
+      name: 'person',
+      table: 'persons',
+      fields: {
+        id: 'INT',
+        name: ['VARCHAR', 64],
+        done: 'BOOLEAN',
+        doneAt: 'TIMESTAMP',
+        parentId: 'INT',
+        assignee: 'INT',
+      },
+    });
+
+    const x = withs(
+        from(Person)
+        .select(({ person }) => person.only(['id', 'name']))
+        .as('names')
+      )
+      .with(
+        from(Task)
+        .select(({ task }) => task.only(['assignee']))
+        .as('assignees')
+      )
+      .from('names')
+      .joinInner('assignees', ({ names, assignees }) => 
+        assignees.assignee.eq(names.id)
+      )
+      .select(({ names, assignees }) => [
+        names.name,
+        assignees.assignee
+      ])
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+
+    expectText({ ignoreSpace: true, ignoreCase: true }, x, `
+      WITH "names" AS (
+        SELECT id, "name" FROM persons AS person
+      ), assignees AS (
+        SELECT assignee FROM task
+      )
+      SELECT
+        "name",
+        assignee
+      FROM "names"
+      INNER JOIN assignees
+        ON assignee = id
+    `);
+  });
+
+  it('quotes aliases virtual simplify references duplicate', () => 
+  {
+    const Person = table({
+      name: 'person',
+      table: 'persons',
+      fields: {
+        id: 'INT',
+        name: ['VARCHAR', 64],
+        done: 'BOOLEAN',
+        doneAt: 'TIMESTAMP',
+        parentId: 'INT',
+        assignee: 'INT',
+      },
+    });
+
+    const x = withs(
+        from(Person)
+        .select(({ person }) => person.only(['id', 'name']))
+        .as('names')
+      )
+      .with(
+        from(Task)
+        .select(({ task }) => task.only(['id', 'assignee']))
+        .as('assignees')
+      )
+      .from('names')
+      .joinInner('assignees', ({ names, assignees }) => 
+        assignees.assignee.eq(names.id)
+      )
+      .select(({ names, assignees }) => [
+        names.name,
+        assignees.assignee
+      ])
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+
+    expectText({ ignoreSpace: true, ignoreCase: true }, x, `
+      WITH "names" AS (
+        SELECT id, "name" FROM persons AS person
+      ), assignees AS (
+        SELECT id, assignee FROM task
+      )
+      SELECT
+        "name",
+        assignee
+      FROM "names"
+      INNER JOIN assignees
+        ON assignee = "names".id
     `);
   });
 

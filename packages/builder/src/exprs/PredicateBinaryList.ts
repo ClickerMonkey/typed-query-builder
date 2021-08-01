@@ -25,10 +25,13 @@ export class ExprPredicateBinaryList<T> extends ExprScalar<_Boolean>
     return true;
   }
 
-  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
-    return traverse.enter(this, () => {
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R 
+  {
+    return traverse.enter(this, () => 
+    {
       traverse.step('value', this.value, (replace) => this.value = replace as any);
-      traverse.step('test', () => {
+      traverse.step('test', () => 
+      {
         const test = this.test;
         if (isArray(test)) {
           for (let i = 0; i < test.length; i++) {

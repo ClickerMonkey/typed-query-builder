@@ -9,6 +9,7 @@
         "clean": "lerna run clean",
         "build": "lerna run build",
         "pub": "lerna publish",
+        "compile": "lerna run compile",
         "test": "lerna run test",
         "builder": "yarn workspace @typed-query-builder/builder",
         "sql": "yarn workspace @typed-query-builder/sql",

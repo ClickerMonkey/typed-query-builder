@@ -21,6 +21,11 @@ export class NamedSourceBase<N extends Name, S extends Selects> implements Named
     return this.name;
   }
 
+  public getSystemName(): Name | false
+  {
+    return this.source.getSystemName();
+  }
+
   public getSource(): Source<S> 
   {
     return this.source;
@@ -29,6 +34,11 @@ export class NamedSourceBase<N extends Name, S extends Selects> implements Named
   public getSelects(): S
   {
     return this.selects;
+  }
+  
+  public getSelectName(alias: string): string
+  {
+    return this.source.getSelectName(alias);
   }
 
   public getFields(): SourceFieldsFromSelects<S> 

@@ -39,8 +39,8 @@ describe('Case', () =>
   it('case boolean', () =>
   {
     const x = from(Task)
-      .select(({ task }, { inspect }) => [
-        inspect().when(task.done, 'Done').else('Not Done').as('status')
+      .select(({ task }, { cases }) => [
+        cases().when(task.done, 'Done').else('Not Done').as('status')
       ])
       .run(sqlWithOptions({ simplifyReferences: true }))
     ;

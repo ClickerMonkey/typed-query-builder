@@ -12,7 +12,8 @@ export class ExprRaw extends ExprScalar<any>
     super();
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.RAW;
   }
 

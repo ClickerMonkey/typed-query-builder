@@ -71,6 +71,23 @@ export class DialectOutput
     }
   }
 
+  public getParamObject(override?: Record<string, any>): Record<string, any>
+  {
+    const params: Record<string, any> = {};
+
+    for (const param in this.paramIndices)
+    {
+      params[param] = this.params[this.paramIndices[param]];
+    }
+
+    if (override)
+    {
+      Object.assign(params, override);
+    }
+
+    return params;
+  }
+
   public getParams(params: Record<string, any>): any[]
   {
     const copy = this.params.slice();

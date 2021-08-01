@@ -62,9 +62,19 @@ export class SourceFunction<N extends Name, S extends Selects, F extends DataTyp
     return this.table.getName();
   }
 
+  public getSystemName(): Name | false
+  {
+    return this.table.table;
+  }
+
   public getSource(): Source<S> 
   {
     return this;
+  }
+
+  public getSelectName(alias: string): string
+  {
+    return this.table.getSelectName(alias);
   }
 
   public getFields(): SourceFieldsFromSelects<S> 

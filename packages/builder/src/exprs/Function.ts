@@ -15,18 +15,24 @@ export class ExprFunction<F extends keyof Funcs, Funcs = Functions> extends Expr
     super();
   }
 
-  public getKind(): ExprKind {
+  public getKind(): ExprKind 
+  {
     return ExprKind.FUNCTION;
   }
   
-  public isSimple(): boolean {
+  public isSimple(): boolean 
+  {
     return true;
   }
 
-  public traverse<R>(traverse: Traverser<Expr<any>, R>): R {
-    return traverse.enter(this, () => {
-      traverse.step('args', () => {
-        for (let i = 0; i < this.args.length; i++) {
+  public traverse<R>(traverse: Traverser<Expr<any>, R>): R 
+  { 
+    return traverse.enter(this, () => 
+    {
+      traverse.step('args', () => 
+      {
+        for (let i = 0; i < this.args.length; i++) 
+        {
           traverse.step(i, this.args[i], (replace) => this.args[i] = replace as any);
         }
       });

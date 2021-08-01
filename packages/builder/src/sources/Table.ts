@@ -78,6 +78,11 @@ export class SourceTable<N extends Name, S extends Selects, F extends DataTypeIn
     return this.name;
   }
 
+  public getSystemName(): Name | false
+  {
+    return this.table;
+  }
+
   public getSource(): Source<S> 
   {
     return this;
@@ -109,6 +114,11 @@ export class SourceTable<N extends Name, S extends Selects, F extends DataTypeIn
     }
 
     return !!this.fieldMap[column] && !this.fieldColumn[column];
+  }
+
+  public getSelectName(alias: string): string
+  {
+    return this.fieldColumn[alias] || alias;
   }
 
   public extend<E extends Name, EF extends DataTypeInputMap>(input: SourceTableInput<E, EF>): SourceTable<E, TupleAppend<S, DataTypeInputMapSelects<EF>>, MergeObjects<F, EF>> 

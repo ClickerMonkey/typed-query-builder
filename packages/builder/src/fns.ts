@@ -2,7 +2,7 @@ import { TextModifyType, Tuple, Name, ObjectKeys, TextModify } from './internal'
 
 
 
-export function isString(x: any): x is string 
+export function isString<S = string>(x: any): x is S 
 {
   return typeof x === 'string';
 }

@@ -1,6 +1,5 @@
-import { ExprField } from '../exprs/Field';
 import { 
-  QueryJson, ExprScalar, ObjectFromSelects, Selects, Name, Expr, QuerySet, NamedSourceBase, NamedSource, SourceCompatible 
+  QueryJson, ExprScalar, ObjectFromSelects, Selects, Name, Expr, QuerySet, NamedSourceBase, NamedSource, SourceCompatible, ExprField 
 } from "../internal";
 
 
@@ -14,9 +13,19 @@ export abstract class Source<S extends Selects> extends Expr<S[]>
     return false;
   }
 
+  public getSystemName(): Name | false
+  {
+    return false;
+  }
+
   public hasAnonymousSelects(): boolean
   {
     return false;
+  }
+  
+  public getSelectName(alias: string): string
+  {
+    return alias;
   }
 
   public as<N extends Name>(name: N): NamedSource<N, S>
