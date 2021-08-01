@@ -306,7 +306,7 @@ DialectMssql.aggregates.aliases({
   rowNumber: 'ROW_NUMBER',
   denseRank: 'DENSE_RANK',
   percentRank: 'PERCENT_RANK',
-  culmulativeDistribution: 'CUME_DIST',
+  cumulativeDistribution: 'CUME_DIST',
   firstValue: 'FIRST_VALUE',
   lastValue: 'LAST_VALUE',
   variance: 'VAR',

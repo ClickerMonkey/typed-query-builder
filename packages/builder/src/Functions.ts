@@ -188,7 +188,7 @@ export interface AggregateFunctions
   rank(): _BigInt;
   denseRank(): _BigInt;
   percentRank(): _Double;
-  culmulativeDistribution(): _Double;
+  cumulativeDistribution(): _Double;
   ntile(buckets: _Ints): _Ints;
   lag<T>(value: T, offset?: _Ints, defaultValue?: T): T;
   lead<T>(value: T, offset?: _Ints, defaultValue?: T): T;

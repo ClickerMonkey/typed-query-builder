@@ -64,7 +64,7 @@ Queries built should read like SQL. **Too often** do ORMs or query builders vent
 - count, countIf, sum, avg, min, max, deviation, variance, array, string, bitAnd, bitOr, boolAnd, boolOr
 
 ### Window Aggregate Functions
-- rowNumber, rank, denseRank, percentRank, culmulativeDistribution, ntile, lag, lead, firstValue, lastValue, nthValue
+- rowNumber, rank, denseRank, percentRank, cumulativeDistribution, ntile, lag, lead, firstValue, lastValue, nthValue
 
 ## Singular Interface
 Even if the underlying database doesn't support particular functionality, it will appear to and the builder will substitue an equivalent expression when possible. Using a singular interface for communicating with the database also allows built queries to be used on any number of supported databases. This also makes it simple to support complex data types like geometry/geography.
