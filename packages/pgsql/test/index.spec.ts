@@ -1,4 +1,4 @@
-import { table, insert, update, from, withs, deletes } from '@typed-query-builder/builder';
+import { table, insert, update, from, withs, deletes, exprs } from '@typed-query-builder/builder';
 import { DialectPgsql } from '@typed-query-builder/sql-pgsql';
 import { exec, prepare, stream } from '../src';
 import { getConnection } from './helper';
@@ -81,6 +81,55 @@ describe('index', () =>
     }, 
   });
 
+  it('select constant', async () => 
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn);
+    const one = await exprs().constant(1).run( getResult );
+
+    expect( one ).toEqual(1);
+  });
+
+  it('select null exists', async () => 
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn);
+
+    const exists = await from(GroupTable)
+      .exists()
+      .run( getResult )
+    ;
+
+    expect( exists ).toEqual(null);
+  });
+
+  it('select first null', async () => 
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn);
+
+    const first = await from(GroupTable)
+      .first()
+      .run( getResult )
+    ;
+
+    expect( first ).toEqual(null);
+  });
+
+  it('select first value null', async () => 
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn);
+
+    const name = await from(GroupTable)
+      .select(({ group }) => [ group.name ])
+      .value('name')
+      .run( getResult )
+    ;
+
+    expect( name ).toEqual(null);
+  });
+
   it('insert, insert returning, insert object, insert object array, affectedCount', async () =>
   {
     const conn = await getConnection();
@@ -127,6 +176,60 @@ describe('index', () =>
     ;
 
     expect(taskInserts.affected).toBe(1);
+  });
+
+  it('select 1 exists', async () => 
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn);
+
+    const exists = await from(GroupTable)
+      .exists()
+      .run( getResult )
+    ;
+
+    expect( exists ).toEqual(1);
+  });
+
+  it('select first empty', async () => 
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn);
+
+    const first = await from(GroupTable)
+      .first()
+      .run( getResult )
+    ;
+
+    expect( first ).toStrictEqual({});
+  });
+
+  it('select first simple', async () => 
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn);
+
+    const first = await from(GroupTable)
+      .select(({ group }) => [ group.name ])
+      .first()
+      .run( getResult )
+    ;
+
+    expect( first ).toStrictEqual({ name: 'Group 1' });
+  });
+
+  it('select first value', async () => 
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn);
+
+    const name = await from(GroupTable)
+      .select(({ group }) => [ group.name ])
+      .value('name')
+      .run( getResult )
+    ;
+
+    expect( name ).toEqual('Group 1');
   });
 
   it('select first, update set column', async () =>

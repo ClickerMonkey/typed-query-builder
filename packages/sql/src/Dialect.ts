@@ -198,6 +198,7 @@ export class Dialect
   public updateOrder: DialectOrderedOrder<DialectParamsUpdate>;
   public selectOrder: DialectOrderedOrder<DialectParamsSelect>;
   public resultParser: DialectMap<ExprKind, (value: any, expr: Expr<any>) => any>;
+  public resultParserDefault: (value: any, expr: Expr<any>) => any;
 
   public functionsUpper: boolean;
   public functionsRawArguments: Partial<Record<keyof Functions, Record<number, true>>>;
@@ -236,6 +237,7 @@ export class Dialect
     this.reservedWords = {};
     this.recursiveKeyword = true;
     this.resultParser = {};
+    this.resultParserDefault = (v) => v;
     this.functionsRawArguments = {};
 
     this.functionsUpper = true;
@@ -406,12 +408,7 @@ export class Dialect
 
   public getResultParser<E extends Expr<any>>(expr: E): ((value: any) => any)
   {
-    const parser = this.resultParser[expr.getKind()];
-
-    if (!parser)
-    {
-      return (v) => v;
-    }
+    const parser = this.resultParser[expr.getKind()] || this.resultParserDefault;
 
     return (v) => parser(v, expr);
   }

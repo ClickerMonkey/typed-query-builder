@@ -23,7 +23,7 @@ CONTAINER_ID=$(docker run -d -p 1433:1433 tqb-mssql)
 
 # Run the tests
 cd ..
-npm run test:jest
+npm run test:jest -- "$@"
 
 # Stop the container and cleanup
 docker stop $CONTAINER_ID

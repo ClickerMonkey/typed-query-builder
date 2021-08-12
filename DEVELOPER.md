@@ -6,8 +6,8 @@
 ### Commands
 ```bash
 # Run these before you try to publish
-yarn workspaces run compile
-yarn workspaces run †est
+yarn run compile
+yarn run †est
 
 # Specific package commands
 yarn builder compile

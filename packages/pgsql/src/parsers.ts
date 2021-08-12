@@ -1,4 +1,4 @@
-import { isArray, isString, isValue, QueryFirst, QueryFirstValue, QueryJson, QueryList, QuerySelect } from '@typed-query-builder/builder';
+import { isArray, isString, isValue, QueryExistential, QueryFirst, QueryFirstValue, QueryJson, QueryList, QuerySelect } from '@typed-query-builder/builder';
 import { DialectPgsql } from '@typed-query-builder/sql-pgsql';
 
 DialectPgsql.setResultParser(QueryJson, (result, q) => 
@@ -52,6 +52,11 @@ DialectPgsql.setResultParser(QueryFirstValue, (result, q) =>
 {
   if (isValue(result))
   {
+    if (isArray(result) && result.length === 0)
+    {
+      return null;
+    }
+
     result = DialectPgsql.getResult(q.value, result);
   }
 
@@ -67,3 +72,23 @@ DialectPgsql.setResultParser(QueryList, (result, q) =>
 
   return result;
 });
+
+DialectPgsql.setResultParser(QueryExistential, (result, q) => 
+{
+  if (!result || (Array.isArray(result) && result.length === 0)) 
+  {
+    return null;
+  }
+
+  return 1;
+});
+
+DialectPgsql.resultParserDefault = (result, q) =>
+{
+  if (!q.isStatement() && Array.isArray(result) && result.length === 1 && result[0]['?column?'] !== undefined)
+  {
+    return result[0]['?column?'];
+  }
+
+  return result;
+};
