@@ -1,3 +1,4 @@
+SET TIMEZONE='GMT';
 
 CREATE TABLE "group" (
   "id" SERIAL,

@@ -1,4 +1,4 @@
-import { table, insert, update, from, withs, deletes, exprs } from '@typed-query-builder/builder';
+import { table, insert, update, from, withs, deletes, exprs, fns, _Timestamp, _Ints } from '@typed-query-builder/builder';
 import { DialectPgsql } from '@typed-query-builder/sql-pgsql';
 import { exec, prepare, stream } from '../src';
 import { getConnection } from './helper';
@@ -88,6 +88,30 @@ describe('index', () =>
     const one = await exprs().constant(1).run( getResult );
 
     expect( one ).toEqual(1);
+  });
+
+  it('select time types', async () => 
+  {
+    const conn = await getConnection();
+    const getResult = exec(conn);
+
+    interface Fns {
+      make_timestamptz(year: _Ints, month: _Ints, day: _Ints, hour: _Ints, min: _Ints, sec: _Ints): _Timestamp;
+    }
+
+    const times = [
+      await fns.createTime(18, 23, 0).run( getResult ),
+      await fns.createDate(1989, 1, 3).run( getResult ),
+      await fns.createTimestamp(1989, 1, 3, 18, 23, 0).run( getResult ),
+      await exprs().func<'make_timestamptz', Fns>('make_timestamptz', 1989, 1, 3, 18, 23, 0).run( getResult ),
+    ];
+
+    expect(times).toStrictEqual([
+      '18:23:00',
+      '1989-01-03',
+      '1989-01-03 18:23:00',
+      '1989-01-03 18:23:00+00',
+    ]);
   });
 
   it('select null exists', async () => 

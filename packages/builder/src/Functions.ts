@@ -146,7 +146,7 @@ export interface Functions
   dateDiff(field: DateField, first: _Dates, second: _Dates): _Ints;
   createDate(year: _Ints, month: _Ints, day: _Ints): _Date;
   createTime(hour: _Ints, min: _Ints, sec: _Ints): _Time;
-  createTimestamp(year: _Ints, month: _Ints, day: _Ints, hour: _Ints, min: _Ints, sec: _Ints): _Timestamp;
+  createTimestamp(year: _Ints, month: _Ints, day: _Ints, hour: _Ints, min: _Ints, sec: _Numbers): _Timestamp;
   timestampToSeconds(x: _Timestamp): _Ints;
   timestampFromSeconds(x: _Ints): _Timestamp;
   datesOverlap(astart: _Date, aend: _Date, bstart: _Date, bend: _Date): _Boolean;

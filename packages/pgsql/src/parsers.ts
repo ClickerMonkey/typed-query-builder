@@ -85,9 +85,14 @@ DialectPgsql.setResultParser(QueryExistential, (result, q) =>
 
 DialectPgsql.resultParserDefault = (result, q) =>
 {
-  if (!q.isStatement() && Array.isArray(result) && result.length === 1 && result[0]['?column?'] !== undefined)
+  if (!q.isStatement() && Array.isArray(result) && result.length === 1)
   {
-    return result[0]['?column?'];
+    const keys = Object.keys(result[0]);
+
+    if (keys.length === 1)
+    {
+      return result[0][keys[0]];
+    }
   }
 
   return result;

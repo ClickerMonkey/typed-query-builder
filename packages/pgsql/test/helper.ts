@@ -9,6 +9,11 @@ setTypes({
   INT2: 'int',
   INT4: 'int',
   INT8: 'int',
+  TIME: 'string',
+  TIMETZ: 'string',
+  TIMESTAMP: 'string',
+  TIMESTAMPZ: 'string',
+  DATE: 'string',
 });
 
 export const client = new Client({
