@@ -1,9 +1,9 @@
 import { 
-  isValue, isArray, isBoolean, isDate, isNumber, isObject, isString, Cast, Json, SelectsFromObject, Selects, Simplify 
+  isValue, isArray, isBoolean, isDate, isNumber, isObject, isString, Cast, Json, SelectsFromObject, Selects, UndefinedToOptional, ExprConstant
 } from './internal';
 
 
-export type defineType<F extends DataTypeInputMap> = Simplify<DataTypeInputMapTypes<F>>;
+export type defineType<F extends DataTypeInputMap> = UndefinedToOptional<DataTypeInputMapTypes<F>>;
 
 export type DataTypeInputMap = Record<string, DataTypeInputs>;
 
@@ -35,6 +35,7 @@ export interface DataTypeInputRegistry
   timestamp: 'TIMESTAMP' | [ type: 'TIMESTAMP', secondFractionDigits: number ] | { timezoned: 'TIMESTAMP', secondFractionDigits?: number };
   date: 'DATE';
   time: 'TIME' | [ type: 'TIME', secondFractionDigits: number ] | { timezoned: 'TIME', secondFractionDigits?: number };
+  interval: 'INTERVAL';
   uuid: 'UUID';
   cidr: 'CIDR';
   inet: 'INET';
@@ -102,44 +103,44 @@ export type DataTypeInputName<I extends DataTypeInputs> =
 export type DataTypeNames = keyof DataTypeTypes;
 
 
-export type DataTypePoint = defineType<{
-  x: 'FLOAT',
-  y: 'FLOAT'
-}>;
+export interface DataTypePoint {
+  x: number;
+  y: number;
+}
 
-export type DataTypeLine = defineType<{
-  a: 'FLOAT',
-  b: 'FLOAT',
-  c: 'FLOAT'
-}>;
+export interface DataTypeLine {
+  a: number;
+  b: number;
+  c: number;
+}
 
-export type DataTypeSegment = defineType<{
-  x1: 'FLOAT',
-  y1: 'FLOAT',
-  x2: 'FLOAT',
-  y2: 'FLOAT'
-}>;
+export interface DataTypeSegment {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
 
-export type DataTypeBox = defineType<{
-  l: 'FLOAT',
-  t: 'FLOAT',
-  r: 'FLOAT',
-  b: 'FLOAT'
-}>;
+export interface DataTypeBox {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+}
 
-export type DataTypePath = defineType<{
-  points: ['ARRAY', 'POINT']
-}>;
+export interface DataTypePath {
+  points: DataTypePoint[];
+}
 
-export type DataTypePolygon = defineType<{
-  corners: ['ARRAY', 'POINT']
-}>;
+export interface DataTypePolygon {
+  corners: DataTypePoint[];
+}
 
-export type DataTypeCircle = defineType<{
-  x: 'FLOAT',
-  y: 'FLOAT',
-  r: 'FLOAT'
-}>;
+export interface DataTypeCircle {
+  x: number;
+  y: number;
+  r: number;
+}
 
 export type DataTypeGeometryBase = 
   DataTypePoint | 
@@ -150,9 +151,21 @@ export type DataTypeGeometryBase =
   DataTypeBox |
   DataTypeLine;
 
+export interface DataTypeInterval {
+  seconds?: number;
+  minutes?: number;
+  hours?: number;
+  days?: number;
+  months?: number;
+  years?: number;
+}
+
 export type DataTypeGeometry = 
-  DataTypeGeometryBase |
-  [base: DataTypeGeometryBase, srid: number]
+  DataTypeGeometryBase & { srid?: number }
+;
+
+export type DataTypeGeography =
+  DataTypeGeometryBase & { srid: number }
 ;
 
 export interface DataTypeBooleanTypes { base: boolean; }
@@ -169,6 +182,7 @@ export interface DataTypeFloatTypes { base: number; }
 export interface DataTypeDoubleTypes { base: number; }
 export interface DataTypeMoneyTypes { base: number; }
 export interface DataTypeDateTypes { base: Date; }
+export interface DataTypeIntervalTypes { base: DataTypeInterval; }
 export interface DataTypeTimeTypes { base: Date; }
 export interface DataTypeTimestampTypes { base: Date; }
 export interface DataTypeCharTypes { base: string; }
@@ -191,7 +205,7 @@ export interface DataTypePolygonTypes { base: DataTypePolygon; }
 export interface DataTypeBoxTypes { base: DataTypeBox; }
 export interface DataTypeCircleTypes { base: DataTypeCircle; }
 export interface DataTypeGeometryTypes { base: DataTypeGeometry; }
-export interface DataTypeGeographyTypes { base: [geo: DataTypeGeometryBase, srid: number]; }
+export interface DataTypeGeographyTypes { base: DataTypeGeography; }
 export interface DataTypeArrayTypes { base: any[]; }
 export interface DataTypeNullTypes { base: null; }
 export interface DataTypeAnyTypes { base: any; }
@@ -215,6 +229,7 @@ export type _Money = DataTypeFrom<DataTypeMoneyTypes>;
 export type _Date = DataTypeFrom<DataTypeDateTypes>;
 export type _Time = DataTypeFrom<DataTypeTimeTypes>;
 export type _Timestamp = DataTypeFrom<DataTypeTimestampTypes>;
+export type _Interval = DataTypeFrom<DataTypeIntervalTypes>;
 export type _Char = DataTypeFrom<DataTypeCharTypes>;
 export type _VarChar = DataTypeFrom<DataTypeVarcharTypes>;
 export type _Text = DataTypeFrom<DataTypeTextTypes>;
@@ -267,6 +282,7 @@ export interface DataTypeTypes
   DATE: _Date;
   TIME: _Time;
   TIMESTAMP: _Timestamp;
+  INTERVAL: _Interval;
 
   CHAR: _Char;
   VARCHAR: _VarChar;
@@ -401,81 +417,136 @@ export function getDataTypeMeta(input?: DataTypeInputs): DataTypeMeta
   return {};
 }
 
+export interface DataTypeDetector
+{
+  type?: DataTypeNames;
+  detect: (value: any) => DataTypeInputs | false;
+}
+
+export const DataTypeDetectors: DataTypeDetector[] = [
+  { type: 'NULL', detect: (value) => 
+    value === null 
+      ? ['NULL', 'ANY'] 
+      : false 
+  },
+  { detect: (value) =>
+    value instanceof ExprConstant && value.dataType
+    ? value.dataType
+    : false
+  },
+  { type: 'BOOLEAN', detect: (value) => 
+    isBoolean(value) 
+      ? 'BOOLEAN' 
+      : false 
+  },
+  { type: 'TEXT', detect: (value) => 
+    isString(value) 
+      ? 'TEXT' 
+      : false 
+  },
+  { type: 'INT', detect: (value) => 
+    isNumber(value) && Math.floor(value) === value
+      ? 'INT' 
+      : false 
+  },
+  { type: 'DOUBLE', detect: (value) => 
+    isNumber(value)
+      ? 'DOUBLE' 
+      : false 
+  },
+  { type: 'BIGINT', detect: (value) => 
+    typeof BigInt !== 'undefined' && value instanceof BigInt 
+      ? 'BIGINT' 
+      : false },
+  { type: 'GEOGRAPHY', detect: (value) => 
+    isObject(value) && 'srid' in value 
+      ? 'GEOGRAPHY' 
+      : false 
+  },
+  { type: 'ARRAY', detect: (value) => 
+    isArray(value) 
+      ? isValue(value[0])
+        ? ['ARRAY', getDataTypeFromValue(value[0])]
+        : ['ARRAY', 'ANY'] 
+      : false 
+  },
+  { type: 'DATE', detect: (value) => 
+    isDate(value) && value.getHours() === 0 && value.getMinutes() === 0 && value.getSeconds() === 0
+      ? 'DATE'
+      : false 
+  },
+  { type: 'TIMESTAMP', detect: (value) => 
+    isDate(value) 
+      ? 'TIMESTAMP'
+      : false
+  },
+  { type: 'PATH', detect: (value) => 
+    isObject(value) && isArray(value.points)
+      ? 'PATH' 
+      : false 
+  },
+  { type: 'POLYGON', detect: (value) => 
+    isObject(value) && isArray(value.corners)
+      ? 'POLYGON' 
+      : false 
+  },
+  { type: 'CIRCLE', detect: (value) => 
+    isObject(value) && 'x' in value && 'y' in value && 'r' in value
+      ? 'CIRCLE' 
+      : false 
+  },
+  { type: 'LINE', detect: (value) => 
+    isObject(value) && 'a' in value && 'b' in value && 'c' in value
+      ? 'LINE' 
+      : false 
+  },
+  { type: 'SEGMENT', detect: (value) => 
+    isObject(value) && 'x1' in value && 'y1' in value && 'x2' in value && 'y2' in value
+      ? 'SEGMENT' 
+      : false 
+  },
+  { type: 'BOX', detect: (value) => 
+    isObject(value) && 'l' in value && 't' in value && 'r' in value && 'b' in value
+      ? 'BOX' 
+      : false 
+  },
+  { type: 'POINT', detect: (value) => 
+    isObject(value) && 'x' in value && 'y' in value
+      ? 'POINT' 
+      : false 
+  },
+  { type: 'JSON', detect: (value) => 
+    isObject(value)
+      ? 'JSON' 
+      : false 
+  },
+];
+
+
+export function addDataTypeDetector(detector: DataTypeDetector): void
+{
+  const i = DataTypeDetectors.findIndex(d => d.type === detector.type);
+
+  if (i === -1 || !detector.type)
+  {
+    DataTypeDetectors.unshift(detector);
+  }
+  else
+  {
+    DataTypeDetectors.splice(i, 1, detector);
+  }
+}
+
 export function getDataTypeFromValue(value: any): DataTypeInputs
 {
-  if (value === null)
+  for (const detector of DataTypeDetectors)
   {
-    return ['NULL', 'ANY'];
-  }
-  if (isBoolean(value))
-  {
-    return 'BOOLEAN';
-  }
-  if (isString(value))
-  {
-    return 'TEXT';
-  }
-  if (isNumber(value))
-  {
-    return Math.floor(value) === value ? 'INT' : 'DOUBLE';
-  }
-  if (typeof BigInt !== 'undefined' && value instanceof BigInt)
-  {
-    return 'BIGINT';
-  }
-  if (isArray(value) && value.length == 2 && isNumber(value[1]))
-  {
-    const geomType = getDataTypeFromValue(value[0]);
+    const detected = detector.detect(value);
 
-    if (['PATH', 'POLYGON', 'CIRCLE', 'LINE', 'SEGMENT', 'BOX', 'POINT'].includes(geomType as string))
+    if (detected !== false)
     {
-      return 'GEOGRAPHY';
+      return detected;
     }
-  }
-  if (isArray(value))
-  {
-    return isValue(value[0])
-      ? ['ARRAY', getDataTypeFromValue(value[0])]
-      : ['ARRAY', 'ANY'];
-  }
-  if (isDate(value))
-  {
-    return value.getHours() === 0 && value.getMinutes() === 0 && value.getSeconds() === 0
-      ? 'DATE'
-      : 'TIMESTAMP';
-  }
-  if (isObject(value))
-  {
-    if (isArray(value.points))
-    {
-      return 'PATH';
-    }
-    if (isArray(value.corners))
-    {
-      return 'POLYGON';
-    }
-    if ('x' in value && 'y' in value && 'r' in value)
-    {
-      return 'CIRCLE';
-    }
-    if ('a' in value && 'b' in value && 'c' in value)
-    {
-      return 'LINE';
-    }
-    if ('x1' in value && 'y1' in value && 'x2' in value && 'y2' in value)
-    {
-      return 'SEGMENT';
-    }
-    if ('l' in value && 't' in value && 'r' in value && 'b' in value)
-    {
-      return 'BOX';
-    }
-    if ('x' in value && 'y' in value)
-    {
-      return 'POINT';
-    }
-
-    return 'JSON';
   }
 
   return 'ANY';

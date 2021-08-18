@@ -1,28 +1,29 @@
-import { setTypes } from '../src';
-import { Client } from 'pg';
+import { DataTypeInputs } from '@typed-query-builder/builder';
+import { setTypes, loadTypes } from '../src';
+import { Client, ClientConfig } from 'pg';
 
 
-setTypes({
-  FLOAT4: 'float',
-  FLOAT8: 'float',
-  NUMERIC: 'float',
-  INT2: 'int',
-  INT4: 'int',
-  INT8: 'int',
-  TIME: 'string',
-  TIMETZ: 'string',
-  TIMESTAMP: 'string',
-  TIMESTAMPZ: 'string',
-  DATE: 'string',
-});
+setTypes(new Map<DataTypeInputs, DataTypeInputs>([
+  ['TIME', 'TEXT'],
+  [{ timezoned: 'TIME' }, 'TEXT'],
+  ['TIMESTAMP', 'TEXT'],
+  [{ timezoned: 'TIMESTAMP'}, 'TEXT'],
+  ['DATE', 'TEXT'],
+]));
 
-export const client = new Client({
-  host: 'localhost',
-  port: 5438,
-  user: 'postgres',
-  password: 'postgres',
-  database: 'tqb',
-});
+export function newClient(config?: ClientConfig): Client
+{
+  return new Client({
+    host: 'localhost',
+    port: 5438,
+    user: 'postgres',
+    password: 'postgres',
+    database: 'tqb',
+    ...(config || {}),
+  });
+}
+
+export const client = newClient();
 
 const connPromise = client.connect();
 
@@ -31,13 +32,36 @@ client.on('error', (e) =>
   console.error(e);
 });
 
-
+let typesLoaded = false;
 
 export async function getConnection()
 {
   await connPromise;
 
+  if (!typesLoaded)
+  {
+    typesLoaded = true;
+
+    await loadTypes(client);
+  }
+
   return client;
+}
+
+export async function getClient<R>(config: ClientConfig | undefined, provider: (client: Client) => Promise<R>): Promise<R>
+{
+  const client = newClient(config);
+
+  try {
+    await client.connect();
+    await loadTypes(client);
+
+    return await provider(client);
+  } catch (e) {
+    throw e;
+  } finally {
+    client.end();
+  }
 }
 
 

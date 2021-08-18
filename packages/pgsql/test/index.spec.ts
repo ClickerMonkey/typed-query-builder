@@ -1,7 +1,7 @@
-import { table, insert, update, from, withs, deletes, exprs, fns, _Timestamp, _Ints } from '@typed-query-builder/builder';
+import { table, insert, update, from, withs, deletes, exprs, fns, _Timestamp, _Ints, query, _Point, _Numeric, _Segment, _Line, _Box, _Circle, DataPoint, DataSegment, DataLine, DataBox, DataPath, DataPolygon, DataCircle, DataInterval } from '@typed-query-builder/builder';
 import { DialectPgsql } from '@typed-query-builder/sql-pgsql';
 import { exec, prepare, stream } from '../src';
-import { getConnection } from './helper';
+import { getClient, getConnection } from './helper';
 
 
 describe('index', () =>
@@ -777,11 +777,11 @@ describe('index', () =>
     DialectPgsql.gis = true;
 
     const near = await from(LocationsTable)
-      .select(({ locations }, { cast }, { geomDistance }) => [
+      .select(({ locations }, {}, { geomDistance }) => [
         locations.name,
         geomDistance(
-          locations.location.required().cast(['POINT', 4326]), 
-          cast('GEOGRAPHY', { x: -2.1, y: -2})
+          locations.location.required().cast(['POINT', 4326]),
+          DataPoint.earth(-2.1, -2),
         ).as('distance')
       ])
       .where(({}, {}, {}, { distance }) => [
@@ -800,4 +800,103 @@ describe('index', () =>
     DialectPgsql.gis = false;
   });
 
+  it('type formats default', async () => 
+  {
+    await getClient({}, async (client) => {
+      const getResult = exec(client);
+
+      const r = await query()
+        .select((_, { raw }) => [
+          raw(`point '(1,3)'`).as('_point'),
+          raw(`line '{1,3,2}'`).as('_line'),
+          raw(`lseg '((1,3),(6,8))'`).as('_lseg'),
+          raw(`box '((1,3),(6,8))'`).as('_box'),
+          raw(`path '((0,1),(2,3),(4,5),(6,7))'`).as('_path'),
+          raw(`polygon '((0,1),(2,3),(4,5),(6,7))'`).as('_polygon'),
+          raw(`circle '<(0,1),2>'`).as('_circle'),
+          raw(`'1'::boolean`).as('_boolean'),
+          raw(`TIMESTAMP '2004-10-19 10:23:54'`).as('_timestamp'),
+          raw(`TIMESTAMP WITH TIME ZONE '2004-10-19 10:23:54+02'`).as('_timestamptz'),
+          raw(`DATE '1999-01-08'`).as('_date'),
+          raw(`'80 minutes'::interval`).as('_interval'),
+          raw(`'\\xDEADBEEF'::bytea`).as('_bytea'),
+          raw(`'abc'::text`).as('_text'),
+          raw(`'abc'::varchar(4)`).as('_varchar'),
+          raw(`'abc'::char(4)`).as('_char'),
+          raw(`2.3::money`).as('_money'),
+          raw(`2::smallint`).as('_smallint'),
+          raw(`2::integer`).as('_integer'),
+          raw(`2::bigint`).as('_bigint'),
+          raw(`2::decimal`).as('_decimal'),
+          raw(`2::numeric`).as('_numeric'),
+          raw(`2.1::real`).as('_real'),
+          raw(`2.3::double precision`).as('_double'),
+          raw(`'192.168.100.128/25'::cidr`).as('_cidr'),
+          raw(`'192.168.0.1/24'::inet`).as('_inet'),
+          raw(`'08:00:2b:01:02:03'::macaddr`).as('_macaddr'),
+          raw(`'a0eebc999c0b4ef8bb6d6bb9bd380a11'::uuid`).as('_uuid'),
+          raw(`'[1, 2, "foo", null]'::json`).as('_json'),
+          raw(`'{1,2,3}'::integer[]`).as('_array'),
+        ])
+        .first()
+        .run(getResult)
+      ;
+
+      expect(r).toStrictEqual({
+        _point: new DataPoint(1, 3),
+        _line: new DataLine(1, 3, 2),
+        _lseg: new DataSegment(1, 3, 6, 8),
+        _box: new DataBox(1, 3, 6, 8),
+        _path: new DataPath([new DataPoint(0, 1), new DataPoint(2, 3), new DataPoint(4, 5), new DataPoint(6, 7)]),
+        _polygon: new DataPolygon([new DataPoint(0, 1), new DataPoint(2, 3), new DataPoint(4, 5), new DataPoint(6, 7)]),
+        _circle: new DataCircle(0, 1, 2),
+        _boolean: true,
+        _timestamp: '2004-10-19 10:23:54',
+        _timestamptz: '2004-10-19 08:23:54+00',
+        _date: '1999-01-08',
+        _interval: new DataInterval(undefined, 20, 1),
+        _bytea: Buffer.from('DEADBEEF', 'hex'),
+        _text: 'abc',
+        _varchar: 'abc',
+        _char: 'abc ',
+        _money: '$2.30',
+        _smallint: 2,
+        _integer: 2,
+        _bigint: 2,
+        _decimal: 2,
+        _numeric: 2,
+        _real: 2.1,
+        _double: 2.3,
+        _cidr: '192.168.100.128/25',
+        _inet: '192.168.0.1/24',
+        _macaddr: '08:00:2b:01:02:03',
+        _uuid: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        _json: [1, 2, 'foo', null],
+        _array: [1,2,3],
+      });
+    });
+  });
+
+  it('type formats geography text raw', async () => 
+  {
+    await getClient({}, async (client) => {
+      const getResult = exec(client);
+
+      const r = await query()
+        .select((_, { raw }) => [
+          raw(`ST_Point(0,1)`).as('_point'),
+          raw(`ST_SetSRID(ST_Point(-76.514612,40.103422), 4326)`).as('_geoPoint'),
+        ])
+        .first()
+        .run(getResult)
+      ;
+
+      expect(r).toStrictEqual({
+        _point: new DataPoint(0, 1),
+        _geoPoint: DataPoint.earth(-76.514612, 40.103422),
+      });
+    });
+  });
+
 });
+

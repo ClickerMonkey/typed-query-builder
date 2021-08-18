@@ -82,3 +82,5 @@ export * from './query/With';
 export * from './Transformer';
 
 export * from './helpers';
+
+export * from './data';

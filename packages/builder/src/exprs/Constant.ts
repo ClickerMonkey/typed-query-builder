@@ -11,6 +11,10 @@ export class ExprConstant<T> extends ExprScalar<T>
     public dataType?: DataTypeInputs
   ) {
     super();
+
+    if (!this.dataType && value instanceof ExprConstant) {
+      this.dataType = value.dataType;
+    }
   }
 
   public getKind(): ExprKind 
