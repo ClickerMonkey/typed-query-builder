@@ -1,5 +1,5 @@
 
-import { getDataTypeMeta, DataTypeInputs, isString, QueryJson, QueryFirst, QuerySelect, QueryList, ExprCast } from '@typed-query-builder/builder';
+import { getDataTypeMeta, DataTypeInputs, isString, QueryJson, QueryFirst, QuerySelect, QueryList, ExprCast, DataTemporal, DataGeometry, DataTypeGeometryBase, Expr, DataTypePoint, DataTypeSegment, DataTypePath, DataTypePolygon, DataTypeBox, isNumber, DataTypeCircle, DataInterval } from '@typed-query-builder/builder';
 import { Dialect, addExprs, addFeatures, addQuery, ReservedWords, addSources, DialectFeatures } from '@typed-query-builder/sql';
 
 import './types';
@@ -60,35 +60,34 @@ DialectPgsql.setDataTypeFormat('BIT', { constant: 'BIT(1)' });
 DialectPgsql.setDataTypeFormat('BITS', { constant: 'BITS(1)', tuple: 'BITS({1})' });
 DialectPgsql.setDataTypeFormat('MEDIUMINT', { constant: 'INT', tuple: 'INT' });
 DialectPgsql.setDataTypeFormat('TINYINT', { constant: 'SMALLINT', tuple: 'SMALLINT' });
-DialectPgsql.valueFormatterMap.BIT = FormatInteger;
-DialectPgsql.valueFormatterMap.TINYINT = FormatInteger;
-DialectPgsql.valueFormatterMap.SMALLINT = FormatInteger;
-DialectPgsql.valueFormatterMap.MEDIUMINT = FormatInteger;
-DialectPgsql.valueFormatterMap.INT = FormatInteger;
-DialectPgsql.valueFormatterMap.BIGINT = FormatInteger;
-DialectPgsql.valueFormatterMap.BITS = FormatInteger;
+DialectPgsql.valueFormatterMap.BIT = formatInteger;
+DialectPgsql.valueFormatterMap.TINYINT = formatInteger;
+DialectPgsql.valueFormatterMap.SMALLINT = formatInteger;
+DialectPgsql.valueFormatterMap.MEDIUMINT = formatInteger;
+DialectPgsql.valueFormatterMap.INT = formatInteger;
+DialectPgsql.valueFormatterMap.BIGINT = formatInteger;
+DialectPgsql.valueFormatterMap.BITS = formatInteger;
 
 DialectPgsql.setDataTypeFormat('FLOAT', { constant: 'REAL' });
-DialectPgsql.valueFormatterMap.FLOAT = FormatFloat;
+DialectPgsql.valueFormatterMap.FLOAT = formatFloat;
 
 DialectPgsql.setDataTypeFormat('DOUBLE', { constant: 'DOUBLE PRECISION' });
-DialectPgsql.valueFormatterMap.DOUBLE = FormatFloat;
+DialectPgsql.valueFormatterMap.DOUBLE = formatFloat;
 
-DialectPgsql.valueFormatterMap.NUMERIC = FormatDecimal;
-DialectPgsql.valueFormatterMap.DECIMAL = FormatDecimal;
+DialectPgsql.valueFormatterMap.NUMERIC = formatDecimal;
+DialectPgsql.valueFormatterMap.DECIMAL = formatDecimal;
 
-DialectPgsql.valueFormatterMap.MONEY  = FormatDecimal;
+DialectPgsql.valueFormatterMap.MONEY  = formatDecimal;
 
 DialectPgsql.valueFormatterMap.CHAR = Dialect.FormatString;
 
 DialectPgsql.valueFormatterMap.VARCHAR = Dialect.FormatString;
 
-DialectPgsql.setDataTypeFormat('TEXT', { constant: 'VARCHAR(MAX)' });
 DialectPgsql.valueFormatterMap.TEXT = Dialect.FormatString;
 
-DialectPgsql.valueFormatterMap.TIMESTAMP = (v, d, t) => `'${v.toISOString().replace('T', ' ').replace('Z', '')}'`;
-DialectPgsql.valueFormatterMap.DATE = (v, d, t) => `'${v.toISOString().substring(0, 10)}'`;
-DialectPgsql.valueFormatterMap.TIME = (v, d, t) => `'${v.toISOString().substring(11, 19)}'`;
+DialectPgsql.valueFormatterMap.TIMESTAMP = (v: DataTemporal, d, t) => d.quoteValue(v.text) + '::timestamp' + (v.hasTimeZone ? 'tz' : '');
+DialectPgsql.valueFormatterMap.DATE = (v: DataTemporal, d, t) => d.quoteValue(v.text) + '::date';
+DialectPgsql.valueFormatterMap.TIME = (v: DataTemporal, d, t) => d.quoteValue(v.text) + '::time' + (v.hasTimeZone ? 'tz' : '');
 
 DialectPgsql.valueFormatterMap.UUID = Dialect.FormatString;
 
@@ -97,54 +96,71 @@ DialectPgsql.valueFormatterMap.INET = Dialect.FormatString;
 DialectPgsql.valueFormatterMap.MACADDR = Dialect.FormatString;
 
 DialectPgsql.setDataTypeFormat('BINARY', { constant: 'BYTEA' });
-DialectPgsql.valueFormatterMap.BINARY = FormatBinary;
+DialectPgsql.valueFormatterMap.BINARY = formatBinary;
 
 DialectPgsql.setDataTypeFormat('VARBINARY', { constant: 'BYTEA' });
-DialectPgsql.valueFormatterMap.VARBINARY = FormatBinary;
+DialectPgsql.valueFormatterMap.VARBINARY = formatBinary;
 
-DialectPgsql.setDataTypeFormat('VARBINARY', { constant: 'BYTEA', tuple: 'BYTEA' });
-DialectPgsql.valueFormatterMap.BLOB = Dialect.FormatString;
+DialectPgsql.setDataTypeFormat('BLOB', { constant: 'BYTEA', tuple: 'BYTEA' });
+DialectPgsql.valueFormatterMap.BLOB = formatBinary;
 
-DialectPgsql.valueFormatterMap.JSON = (v) => "'" + JSON.stringify(v) + "'::json";
+DialectPgsql.valueFormatterMap.JSON = (v, d) => d.quoteValue(JSON.stringify(v)) + '::json';
 
-DialectPgsql.valueFormatterMap.XML = Dialect.FormatString;
+DialectPgsql.valueFormatterMap.XML = (v, d) => d.quoteValue(String(v)) + '::xml';
 
+DialectPgsql.valueFormatterMap.INTERVAL = (v, d) => {
+  if (v instanceof DataInterval) {
+    return 'interval ' + d.quoteValue(v.toString());
+  }
+  const i = DataInterval.from(v);
+  if (!i.isValid()){ 
+    return String(v);
+  } else {
+    return 'interval ' + d.quoteValue(i.toString());
+  }
+};
 
-DialectPgsql.valueFormatterMap.POINT = ({x, y, srid}, d, t) => 
-  formatGeometry(srid, 
-    () => `ST_Point(${x}, ${y})`,
-    () => `point (${x}, ${y})`,
+DialectPgsql.valueFormatterMap.POINT = (v, d) => 
+  formatGeometry<DataTypePoint>(v, d, 
+    (g, s) => `ST_Point(${g(s.x)}, ${g(s.y)})`,
+    (g, s) => `point(${g(s.x)}, ${g(s.y)})`,
   )
 ;
 
 DialectPgsql.setDataTypeFormat('SEGMENT', { constant: 'LSEG' });
-DialectPgsql.valueFormatterMap.SEGMENT = ({x1, y1, x2, y2, srid}, d, t) => 
-  formatGeometry(srid, 
-    () => `ST_MakeLine(ST_Point(${x1}, ${y1}), ST_Point(${x2}, ${y2}))`,
-    () => `lseg [(${x1}, ${y1}), (${x2}, ${y2})]`,
+DialectPgsql.valueFormatterMap.SEGMENT = (v, d, t) => 
+  formatGeometry<DataTypeSegment>(v, d, 
+    (g, s) => `ST_MakeLine(ST_Point(${g(s.x1)}, ${g(s.y1)}), ST_Point(${g(s.x2)}, ${g(s.y2)}))`,
+    (g, s) => `lseg('[(${g(s.x1, true)}, ${g(s.y1, true)}), (${g(s.x2, true)}, ${g(s.y2, true)})]')`,
   )
 ;
 
-DialectPgsql.valueFormatterMap.CIRCLE = ({ x, y, r}, d, t) => `circle <(${x}, ${y}), ${r}>`;
-
-DialectPgsql.valueFormatterMap.PATH = ({ points, srid }, d, t) => 
-  formatGeometry(srid, 
-    () => `ST_MakeLine(ARRAY[${points.map(({x, y}: any) => `ST_Point(${x}, ${y})`).join(', ')}])`,
-    () => `path [${points.map(({x, y}: any) => `(${x}, ${y})`).join(', ')}]`,
+DialectPgsql.valueFormatterMap.CIRCLE = (v, d, t) => 
+  formatGeometry<DataTypeCircle>(v, d, 
+    (g, s) => `ST_Buffer(ST_Point(${g(s.x)}, ${g(s.y)}), ${g(s.r)}, 'quad_segs=32')`,
+    (g, s) => `circle('<(${g(s.x, true)}, ${g(s.y, true)}), ${g(s.r, true)}>')`,
   )
 ;
 
-DialectPgsql.valueFormatterMap.POLYGON = ({ corners, srid }, d, t) => 
-  formatGeometry(srid, 
-    () => `ST_Polygon(ST_MakeLine(ARRAY[${corners.map(({x, y}: any) => `ST_Point(${x}, ${y})`).join(', ')}]))`,
-    () => `polygon (${corners.map(({x, y}: any) => `(${x}, ${y})`).join(', ')})`,
+
+DialectPgsql.valueFormatterMap.PATH = (v, d, t) => 
+  formatGeometry<DataTypePath>(v, d, 
+    (g, s) => `ST_MakeLine(ARRAY[${s.points.map(({x, y}: any) => `ST_Point(${g(x)}, ${g(y)})`).join(', ')}])`,
+    (g, s) => `path('[${s.points.map(({x, y}: any) => `(${g(x, true)}, ${g(y, true)})`).join(', ')}]')`,
   )
 ;
 
-DialectPgsql.valueFormatterMap.BOX = ({ l, t, r, b, srid }, d, i) => 
-  formatGeometry(srid, 
-    () => `ST_Polygon(ST_MakeLine(ARRAY[ ST_Point(${l}, ${t}), ST_Point(${r}, ${t}), ST_Point(${r}, ${b}), ST_Point(${l}, ${b}) ]))`,
-    () => `box ((${l}, ${t}), (${r}, ${b}))`,
+DialectPgsql.valueFormatterMap.POLYGON = (v, d, t) => 
+  formatGeometry<DataTypePolygon>(v, d, 
+    (g, s) => `ST_MakePolygon(ST_MakeLine(ARRAY[${s.corners.map(({x, y}: any) => `ST_Point(${g(x)}, ${g(y)})`).join(', ')}]))`,
+    (g, s) => `polygon('(${s.corners.map(({x, y}: any) => `(${g(x, true)}, ${g(y, true)})`).join(', ')})')`,
+  )
+;
+
+DialectPgsql.valueFormatterMap.BOX = (v, d, i) => 
+  formatGeometry<DataTypeBox>(v, d, 
+    (g, s) => `ST_MakePolygon(ST_MakeLine(ARRAY[ ST_Point(${g(s.minX)}, ${g(s.minY)}), ST_Point(${g(s.maxX)}, ${g(s.minY)}), ST_Point(${g(s.maxX)}, ${g(s.maxY)}), ST_Point(${g(s.minX)}, ${g(s.maxY)}) ]))`,
+    (g, s) => `box('((${g(s.minX, true)}, ${g(s.minY, true)}), (${g(s.maxX, true)}, ${g(s.maxY, true)}))')`,
   )
 ;
 
@@ -157,6 +173,7 @@ DialectPgsql.dataTypeFormatter.SEGMENT = formatGeometryType;
 DialectPgsql.dataTypeFormatter.BOX = formatGeometryType;
 DialectPgsql.dataTypeFormatter.CIRCLE = formatGeometryType;
 
+
 DialectPgsql.dataTypeFormatter.GEOGRAPHY = (dataType: DataTypeInputs) => {
   return dataType === 'GEOGRAPHY' || dataType[0] === 'GEOGRAPHY'
     ? 'GEOGRAPHY'
@@ -165,37 +182,69 @@ DialectPgsql.dataTypeFormatter.GEOGRAPHY = (dataType: DataTypeInputs) => {
       : `GEOGRAPHY(${dataType[0]})`;
 };
 
-function FormatDecimal(value: number, dialect: Dialect, dataType?: DataTypeInputs)
+function formatDecimal(value: number, dialect: Dialect, dataType?: DataTypeInputs)
 {
   return value.toFixed(getDataTypeMeta(dataType).fractionDigits || 0);
 }
 
-function FormatInteger(value: number)
+function formatInteger(value: number)
 {
   return value.toFixed(0);
 }
 
-function FormatFloat(value: number)
+function formatFloat(value: number)
 {
   return value.toString();
 }
 
-function FormatBinary(value: any, dialect: Dialect)
+function formatBinary(value: any, dialect: Dialect)
 {
   if (isString(value))
   {
-    return dialect.quoteValue(value.split('').map(escapeBinary).join('')) + '::bytea';
+    return 'E' + dialect.quoteValue('\\\\x' + value.split('').map(escapeBinary).join(''));
+  }
+
+  if (value instanceof Buffer)
+  {
+    const hex = value.toString('hex');
+
+    return 'E' + dialect.quoteValue('\\\\x' + hex);
   }
 
   return value;
 }
 
-function formatGeometry(srid: number | undefined, getGis: () => string, getNormal: () => string) {
+function formatGeometry<T extends DataTypeGeometryBase>(
+  value: DataGeometry<T>, 
+  dialect: Dialect,
+  getGis: (get: (value: any, inQuote?: boolean) => string, source: T) => string,
+  getNormal: (get: (value: any, inQuote?: boolean) => string, source: T) => string,
+): string {
+  const source: any = value.deep || value;
+  const get = value.deep
+    ? (value: any, inQuote: boolean = false) => {
+      if (value instanceof Expr) {
+        const query = dialect.output()(value).query;
+
+        return inQuote
+          ? `'||${query}||'`
+          : query;
+      } else {
+        return String(value);
+      }
+    }
+    : (value: any, inQuote: boolean = false) => {
+      return isNumber(value) || !inQuote 
+        ? String(value)
+        : `'||${value}||'`;
+    }
+  ;
+
   return DialectPgsql.gis
-    ? srid
-      ? `ST_SetSRID(${getGis()}, ${srid})`
-      : getGis()
-    : getNormal();
+    ? value.srid
+      ? `ST_SetSRID(${getGis(get, source)}, ${value.srid})`
+      : getGis(get, source)
+    : getNormal(get, source);
 }
 
 function formatGeometryType(type: any)
@@ -275,6 +324,10 @@ DialectPgsql.functions.aliases({
   createTimestamp: 'MAKE_TIMESTAMP',
   timestampFromSeconds: 'TO_TIMESTAMP',
   uuid: 'GEN_RANDOM_UUID',
+  getAge: 'AGE',
+  intervalGet: 'DATE_PART',
+  intervalTruncate: 'DATE_TRUNC',
+  createInterval: 'MAKE_INTERVAL',
 });
 
 DialectPgsql.functions.setFormats({
@@ -292,6 +345,18 @@ DialectPgsql.functions.setFormats({
   geomPathConcat: '(({0})+({1}))',
   geomDivide: '(({0})/({1}))',
   geomSame: '(({0})~=({1}))',
+  dateAddInterval: '({0}+{1})',
+  dateSubInterval: '({0}-{1})',
+  timestampAddInterval: '({0}+{1})',
+  timestampSubInterval: '({0}-{1})',
+  timestampInterval: '({0}-{1})',
+  timeSubInterval: '({0}-{1})',
+  timeInterval: '({0}-{1})',
+  intervalAdd: '({0}+{1})',
+  intervalSub: '({0}-{1})',
+  intervalNegate: '(-{0})',
+  intervalMultiply: '(({0})*({1}))',
+  intervalDivide: '(({0})/({1}))',
 });
 
 DialectPgsql.functions.formats.geomContains = ([a, b]: any) => DialectPgsql.gis

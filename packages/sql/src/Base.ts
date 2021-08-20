@@ -24,6 +24,9 @@ DialectBase.joinType.aliases({
 });
 DialectBase.valueFormatter.push(
   Dialect.FormatBoolean,
+  Dialect.FormatTemporal,
+  Dialect.FormatInterval,
+  Dialect.FormatGeometry,
   Dialect.FormatDate,
   Dialect.FormatString,
   Dialect.FormatNumber,

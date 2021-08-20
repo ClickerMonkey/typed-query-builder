@@ -1,4 +1,4 @@
-import { from, table, withs } from '@typed-query-builder/builder';
+import { DataInterval, from, table, withs } from '@typed-query-builder/builder';
 import { expectText, sql, sqlWithOptions } from './helper';
 
 
@@ -301,6 +301,15 @@ describe('Select', () =>
         task."name" AS "name"
       FROM task
       WHERE task.assignee = $myid
+    `);
+  });
+
+  it('select actual constants', () =>
+  {
+    const x = DataInterval.from({ hours: 1, minutes: 20 }).run(sql);
+
+    expectText({ condenseSpace: true }, x, `
+      SELECT '1 hour 20 minutes'
     `);
   });
 

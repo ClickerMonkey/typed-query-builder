@@ -48,7 +48,8 @@
   },
   "dependencies": {
     "@typed-query-builder/builder": "^0.4.3",
-    "@typed-query-builder/sql": "^0.4.3"
+    "@typed-query-builder/sql": "^0.4.3",
+    "tslib": "2.3.1"
   },
   "gitHead": "8f4b2097a70f1557ebcf5f6fa497e8957651129b"
 }

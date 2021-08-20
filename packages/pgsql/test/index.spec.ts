@@ -1,4 +1,4 @@
-import { table, insert, update, from, withs, deletes, exprs, fns, _Timestamp, _Ints, query, _Point, _Numeric, _Segment, _Line, _Box, _Circle, DataPoint, DataSegment, DataLine, DataBox, DataPath, DataPolygon, DataCircle, DataInterval } from '@typed-query-builder/builder';
+import { table, insert, update, from, withs, deletes, exprs, createFns, fns, _Timestamp, _Ints, query, _Point, _Numeric, _Segment, _Line, _Box, _Circle, DataPoint, DataSegment, DataLine, DataBox, DataPath, DataPolygon, DataCircle, DataInterval, DataTemporal as Temporal } from '@typed-query-builder/builder';
 import { DialectPgsql } from '@typed-query-builder/sql-pgsql';
 import { exec, prepare, stream } from '../src';
 import { getClient, getConnection } from './helper';
@@ -94,23 +94,24 @@ describe('index', () =>
   {
     const conn = await getConnection();
     const getResult = exec(conn);
-
+    
     interface Fns {
       make_timestamptz(year: _Ints, month: _Ints, day: _Ints, hour: _Ints, min: _Ints, sec: _Ints): _Timestamp;
     }
+    const fn2 = createFns<Fns>();
 
     const times = [
       await fns.createTime(18, 23, 0).run( getResult ),
       await fns.createDate(1989, 1, 3).run( getResult ),
       await fns.createTimestamp(1989, 1, 3, 18, 23, 0).run( getResult ),
-      await exprs().func<'make_timestamptz', Fns>('make_timestamptz', 1989, 1, 3, 18, 23, 0).run( getResult ),
+      await fn2.make_timestamptz(1989, 1, 3, 18, 23, 0).run( getResult ),
     ];
 
     expect(times).toStrictEqual([
-      '18:23:00',
-      '1989-01-03',
-      '1989-01-03 18:23:00',
-      '1989-01-03 18:23:00+00',
+      Temporal.fromText('18:23:00'),
+      Temporal.fromText('1989-01-03'),
+      Temporal.fromText('1989-01-03 18:23:00'),
+      Temporal.fromText('1989-01-03 18:23:00+00'),
     ]);
   });
 
@@ -818,6 +819,8 @@ describe('index', () =>
           raw(`TIMESTAMP '2004-10-19 10:23:54'`).as('_timestamp'),
           raw(`TIMESTAMP WITH TIME ZONE '2004-10-19 10:23:54+02'`).as('_timestamptz'),
           raw(`DATE '1999-01-08'`).as('_date'),
+          raw(`TIME WITH TIME ZONE '04:05:06-08:00'`).as('_timetz'),
+          raw(`TIME '04:05'`).as('_time'),
           raw(`'80 minutes'::interval`).as('_interval'),
           raw(`'\\xDEADBEEF'::bytea`).as('_bytea'),
           raw(`'abc'::text`).as('_text'),
@@ -851,10 +854,12 @@ describe('index', () =>
         _polygon: new DataPolygon([new DataPoint(0, 1), new DataPoint(2, 3), new DataPoint(4, 5), new DataPoint(6, 7)]),
         _circle: new DataCircle(0, 1, 2),
         _boolean: true,
-        _timestamp: '2004-10-19 10:23:54',
-        _timestamptz: '2004-10-19 08:23:54+00',
-        _date: '1999-01-08',
-        _interval: new DataInterval(undefined, 20, 1),
+        _timestamp: Temporal.fromText('2004-10-19 10:23:54'),
+        _timestamptz: Temporal.fromText('2004-10-19 08:23:54+00'),
+        _date: Temporal.fromText('1999-01-08'),
+        _timetz: Temporal.fromText('04:05:06-08'),
+        _time: Temporal.fromText('04:05:00'),
+        _interval: DataInterval.from({ hours: 1, minutes: 20 }),
         _bytea: Buffer.from('DEADBEEF', 'hex'),
         _text: 'abc',
         _varchar: 'abc',

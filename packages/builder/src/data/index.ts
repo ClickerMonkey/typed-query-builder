@@ -8,3 +8,4 @@ export * from './DataPath';
 export * from './DataPoint';
 export * from './DataPolygon';
 export * from './DataSegment';
+export * from './DataTemporal';

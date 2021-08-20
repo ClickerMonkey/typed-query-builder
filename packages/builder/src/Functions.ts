@@ -1,5 +1,5 @@
 import { 
-  ExprScalar, ExprInput, ExprFunction, toExpr, _Numbers, _Strings, _Ints, _Dates, _Date, _Timestamp, _Time, _Boolean, _Geometry, _Point, _Floats, _BigInt, _Double, _Int
+  ExprScalar, ExprInput, ExprFunction, toExpr, _Numbers, _Strings, _Ints, _Dates, _Date, _Timestamp, _Time, _Boolean, _Geometry, _Point, _Floats, _BigInt, _Double, _Int, _Interval
 } from './internal';
 
 
@@ -10,7 +10,6 @@ export function createFns<Funcs>(): FunctionProxy<Funcs>
       return (...args: FunctionArgumentInputs<K, Funcs>): ExprScalar<FunctionResult<K, Funcs>> => {
         return new ExprFunction<K, Funcs>(func, (args as any).map( toExpr )) as any;
       };
-
     },
   }) as FunctionProxy<Funcs>;
 }
@@ -151,6 +150,23 @@ export interface Functions
   timestampFromSeconds(x: _Ints): _Timestamp;
   datesOverlap(astart: _Date, aend: _Date, bstart: _Date, bend: _Date): _Boolean;
   timestampsOverlap(astart: _Timestamp, aend: _Timestamp, bstart: _Timestamp, bend: _Timestamp): _Boolean;
+  // Interval
+  getAge(a: _Timestamp): _Interval;
+  dateAddInterval(a: _Date, interval: _Interval): _Timestamp;
+  dateSubInterval(a: _Date, interval: _Interval): _Timestamp;
+  timestampAddInterval(a: _Timestamp, interval: _Interval): _Timestamp;
+  timestampSubInterval(a: _Timestamp, interval: _Interval): _Timestamp;
+  timestampInterval(a: _Timestamp, b: _Timestamp): _Interval;
+  timeSubInterval(a: _Time, interval: _Interval): _Time;
+  timeInterval(a: _Time, b: _Time): _Interval;
+  intervalAdd(a: _Interval, b: _Interval): _Interval;
+  intervalSub(a: _Interval, b: _Interval): _Interval;
+  intervalNegate(a: _Interval): _Interval;
+  intervalMultiply(a: _Interval, b: _Numbers): _Interval;
+  intervalDivide(a: _Interval, b: _Numbers): _Interval;
+  intervalGet(field: DateField, a: _Interval): _Numbers;
+  intervalTruncate(field: DateField, source: _Interval): _Interval;
+  createInterval(years?: _Int, months?: _Int, weeks?: _Int, days?: _Int, hours?: _Int, mins?: _Int, secs?: _Int): _Interval;
   // Geometry
   geomCenter(g: _Geometry): _Point;
   geomContains(g: _Geometry, other: _Geometry): boolean;

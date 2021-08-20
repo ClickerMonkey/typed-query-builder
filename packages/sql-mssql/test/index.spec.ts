@@ -1007,7 +1007,7 @@ describe('index', () =>
             1, 
             party.boostExpires
               .gt(currentTimestamp())
-              .then(party.boostAmount)
+              .thenResult(party.boostAmount)
               .else(1)
               .mul(SearchParams.searchBoost)
           )

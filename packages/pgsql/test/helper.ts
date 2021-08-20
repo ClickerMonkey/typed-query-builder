@@ -1,15 +1,6 @@
-import { DataTypeInputs } from '@typed-query-builder/builder';
-import { setTypes, loadTypes } from '../src';
+import { loadTypes } from '../src';
 import { Client, ClientConfig } from 'pg';
 
-
-setTypes(new Map<DataTypeInputs, DataTypeInputs>([
-  ['TIME', 'TEXT'],
-  [{ timezoned: 'TIME' }, 'TEXT'],
-  ['TIMESTAMP', 'TEXT'],
-  [{ timezoned: 'TIMESTAMP'}, 'TEXT'],
-  ['DATE', 'TEXT'],
-]));
 
 export function newClient(config?: ClientConfig): Client
 {
@@ -19,6 +10,7 @@ export function newClient(config?: ClientConfig): Client
     user: 'postgres',
     password: 'postgres',
     database: 'tqb',
+    connectionTimeoutMillis: 0,
     ...(config || {}),
   });
 }
@@ -26,24 +18,17 @@ export function newClient(config?: ClientConfig): Client
 export const client = newClient();
 
 const connPromise = client.connect();
+const typePromise = connPromise.then(() => loadTypes(client));
 
 client.on('error', (e) => 
 {
   console.error(e);
 });
 
-let typesLoaded = false;
-
 export async function getConnection()
 {
   await connPromise;
-
-  if (!typesLoaded)
-  {
-    typesLoaded = true;
-
-    await loadTypes(client);
-  }
+  await typePromise;
 
   return client;
 }

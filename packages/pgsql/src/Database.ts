@@ -1,6 +1,7 @@
 import { Pool, Client } from 'pg';
 import { Database, DatabaseQueryProvider, DatabaseParameters, DatabaseResultProvider } from '@typed-query-builder/builder';
 import { prepare, exec, stream } from './index';
+import { loadTypes } from './types';
 
 
 export interface PgsqlDatabaseOptions
@@ -149,6 +150,9 @@ export function createDatabase(db: Pool | Client, options?: PgsqlDatabaseOptions
   
   return {
     ...resultProvider,
+    initialize: async () => {
+      await loadTypes(db);
+    },
     transaction: async (run) => {
       try {
         await db.query('BEGIN');

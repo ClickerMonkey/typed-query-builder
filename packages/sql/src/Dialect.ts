@@ -2,7 +2,7 @@ import {
   Transformer, Expr, isString, isFunction, DataTypeTypes, DataTypeInputs, OperationUnaryType, GroupingSetType, InsertPriority, 
   JoinType, LockRowLock, LockStrength, OperationBinaryType, OrderDirection, PredicateBinaryListType, 
   PredicateBinaryType, PredicateRowType, PredicatesType, PredicateUnaryType, SetOperation, WindowFrameExclusion, WindowFrameMode, 
-  isArray, isBoolean, compileFormat, isNumber, AggregateFunctions, getDataTypeFromValue, getDataTypeFromInput, Functions, isValue, ExprKind, ExprClass
+  isArray, isBoolean, compileFormat, isNumber, AggregateFunctions, getDataTypeFromValue, getDataTypeFromInput, Functions, isValue, ExprKind, ExprClass, DataTemporal, DataInterval, DataGeometry
 } from '@typed-query-builder/builder';
 
 import { DialectFeatures, DialectFeaturesDescription } from './Features';
@@ -507,7 +507,7 @@ export class Dialect
       }
     }
 
-    throw new Error(`A value formatted does not exist for the value ${JSON.stringify(value)}`);
+    throw new Error(`A value formatter does not exist for the value ${JSON.stringify(value)}`);
   }
 
   public getDataTypeString(type: DataTypeInputs): string
@@ -674,6 +674,21 @@ export class Dialect
   public static FormatNumber: DialectValueFormatter = (value, dialect) => 
   {
     return isNumber(value) ? value.toString() : undefined;
+  };
+  
+  public static FormatTemporal: DialectValueFormatter = (value, dialect) => 
+  {
+    return value instanceof DataTemporal ? dialect.quoteValue(value.text) : undefined;
+  };
+  
+  public static FormatInterval: DialectValueFormatter = (value, dialect) => 
+  {
+    return value instanceof DataInterval ? dialect.quoteValue(value.toString()) : undefined;
+  };
+  
+  public static FormatGeometry: DialectValueFormatter = (value, dialect) => 
+  {
+    return value instanceof DataGeometry ? dialect.quoteValue(value.toString()) : undefined;
   };
 
 }

@@ -1,4 +1,4 @@
-import { exprs, table, from, DataTypePoint, insert, deletes, update } from '@typed-query-builder/builder';
+import { exprs, table, from, DataTypePoint, insert, deletes, update, DataTemporal as Temporal, DataInterval, DataTemporal } from '@typed-query-builder/builder';
 import { DialectPgsql } from '../src';
 import { expectText, sql, sqlWithOptions } from './helper';
 
@@ -198,28 +198,28 @@ describe('index', () =>
 
   it('constant timestamp', () =>
   {
-    const x = exprs().constant(new Date('2020-01-03T18:43:00Z'), 'TIMESTAMP').run(sql);
+    const x = Temporal.fromText('2020-01-03 18:43:00').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT '2020-01-03 18:43:00.000'
+      SELECT '2020-01-03 18:43:00'::timestamp
     `);
   });
 
   it('constant date', () =>
   {
-    const x = exprs().constant(new Date('2020-01-03T18:43:00Z'), 'DATE').run(sql);
+    const x = Temporal.fromText('2020-01-03').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT '2020-01-03'
+      SELECT '2020-01-03'::date
     `);
   });
 
   it('constant time', () =>
   {
-    const x = exprs().constant(new Date('2020-01-03T18:43:00Z'), 'TIME').run(sql);
+    const x = Temporal.fromText('18:43:00').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT '18:43:00'
+      SELECT '18:43:00'::time
     `);
   });
 
@@ -228,7 +228,7 @@ describe('index', () =>
     const x = exprs().constant({x: 1, y: 2}, 'POINT').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT point (1, 2)
+      SELECT point(1, 2)
     `);
   });
 
@@ -237,7 +237,7 @@ describe('index', () =>
     const x = exprs().constant({x: 1, y: 2}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT point (1, 2)
+      SELECT point(1, 2)
     `);
   });
 
@@ -248,7 +248,7 @@ describe('index', () =>
     const x = deep({x: param('x'), y: 2}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT point ($1, 2)
+      SELECT point($1, 2)
     `);
   });
 
@@ -257,7 +257,7 @@ describe('index', () =>
     const x = exprs().constant({x1: 1, y1: 2, x2: 3, y2: 4}, 'SEGMENT').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT lseg [(1, 2), (3, 4)]
+      SELECT lseg('[(1, 2), (3, 4)]')
     `);
   });
 
@@ -266,7 +266,7 @@ describe('index', () =>
     const x = exprs().constant({x1: 1, y1: 2, x2: 3, y2: 4}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT lseg [(1, 2), (3, 4)]
+      SELECT lseg('[(1, 2), (3, 4)]')
     `);
   });
 
@@ -275,7 +275,7 @@ describe('index', () =>
     const x = exprs().constant({x: 1, y: 2, r: 3}, 'CIRCLE').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT circle <(1, 2), 3>
+      SELECT circle('<(1, 2), 3>')
     `);
   });
 
@@ -284,7 +284,7 @@ describe('index', () =>
     const x = exprs().constant({x: 1, y: 2, r: 3}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT circle <(1, 2), 3>
+      SELECT circle('<(1, 2), 3>')
     `);
   });
 
@@ -293,7 +293,7 @@ describe('index', () =>
     const x = exprs().constant({points: [{x: 1, y: 2}, {x: 3, y: 4}]}, 'PATH').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT  path [(1, 2), (3, 4)]
+      SELECT  path('[(1, 2), (3, 4)]')
     `);
   });
 
@@ -302,7 +302,7 @@ describe('index', () =>
     const x = exprs().constant({points: []}, 'PATH').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT path []
+      SELECT path('[]')
     `);
   });
 
@@ -311,7 +311,7 @@ describe('index', () =>
     const x = exprs().constant({points: [{x: 1, y: 2}, {x: 3, y: 4}]}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT path [(1, 2), (3, 4)]
+      SELECT path('[(1, 2), (3, 4)]')
     `);
   });
 
@@ -320,7 +320,7 @@ describe('index', () =>
     const x = exprs().constant({points: []}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT path []
+      SELECT path('[]')
     `);
   });
 
@@ -329,7 +329,7 @@ describe('index', () =>
     const x = exprs().constant({corners: [{x: 1, y: 2}, {x: 3, y: 4}]}, 'POLYGON').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT polygon ((1, 2), (3, 4))
+      SELECT polygon('((1, 2), (3, 4))')
     `);
   });
 
@@ -338,7 +338,7 @@ describe('index', () =>
     const x = exprs().constant({corners: []}, 'POLYGON').run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT polygon ()
+      SELECT polygon('()')
     `);
   });
 
@@ -347,7 +347,7 @@ describe('index', () =>
     const x = exprs().constant({corners: [{x: 1, y: 2}, {x: 3, y: 4}]}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT polygon ((1, 2), (3, 4))
+      SELECT polygon('((1, 2), (3, 4))')
     `);
   });
 
@@ -356,7 +356,25 @@ describe('index', () =>
     const x = exprs().constant({corners: []}).run(sql);
 
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
-      SELECT polygon ()
+      SELECT polygon('()')
+    `);
+  });
+
+  it('constant interval', () =>
+  {
+    const x = DataInterval.from({ hours: 1, minutes: 30 }).run(sql);
+
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      SELECT interval '1 hour 30 minutes'
+    `);
+  });
+
+  it('constant date', () =>
+  {
+    const x = DataTemporal.fromText('1989-01-03').run(sql);
+
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      SELECT '1989-01-03'::date
     `);
   });
 
@@ -405,7 +423,7 @@ describe('index', () =>
     
     expectText({ ignoreCase: true, condenseSpace: true }, x, `
       SELECT
-        ((point (0, 2))<->(point (3, 2))) AS distance
+        ((point(0, 2))<->(point(3, 2))) AS distance
       FROM task
     `);
   });
@@ -820,7 +838,7 @@ describe('index', () =>
             1, 
             party.boostExpires
               .gt(currentTimestamp())
-              .then(party.boostAmount)
+              .thenResult(party.boostAmount)
               .else(1)
               .mul(SearchParams.searchBoost)
           )
@@ -851,9 +869,9 @@ describe('index', () =>
           COUNT(*) AS "interestCount", 
           COUNT(CASE WHEN (("status" = $2)) = 1 THEN 1 ELSE NULL END) AS "primaryCount", 
           SUM(("status" + 1)) AS "scoreRaw",
-          ((MIN(search_location))<->(point ($3, $4))) AS distance 
+          ((MIN(search_location))<->(point($3, $4))) AS distance 
         FROM party_interest 
-        WHERE ((search_location)<->(point ($3, $4))) <= $5
+        WHERE ((search_location)<->(point($3, $4))) <= $5
           AND interest_id IN (1, 2, 3, 4) 
           AND party_id <> $6 
         GROUP BY party_id) AS neighbor 

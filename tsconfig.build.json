@@ -26,6 +26,7 @@
     "noUnusedLocals": true,
     "downlevelIteration": true,
     "composite": true,
+    "importHelpers": true,
   },
   "compileOnSave": false,
   "buildOnSave": false,

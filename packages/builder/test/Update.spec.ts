@@ -1,4 +1,4 @@
-import { table, update, query, from } from '../src';
+import { table, update, query, from, DataTemporal, DataTypeTemporal } from '../src';
 import { expectExpr, expectExprType } from './helper';
 
 
@@ -42,7 +42,7 @@ describe('Select', () => {
       .returning('*')
     ;
 
-    expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number, assignee: number }]>(q);
+    expectExpr<[{ id: number, name: string, done: boolean, doneAt: DataTypeTemporal, parentId: number, assignee: number }]>(q);
   });
 
   it('update returning', () => {
@@ -111,7 +111,7 @@ describe('Select', () => {
   it('update with multiple returning columns', () => {
     const q = update(Task)
       .set('done', true)
-      .where(Task.fields.doneAt.lt(new Date()))
+      .where(Task.fields.doneAt.lt(DataTemporal.now()))
       .returning(['id', 'done'])
     ;
 
@@ -122,7 +122,7 @@ describe('Select', () => {
   it('update with multiple returning expression', () => {
     const q = update(Task)
       .set('done', true)
-      .where(Task.fields.doneAt.lt(new Date()))
+      .where(Task.fields.doneAt.lt(DataTemporal.now()))
       .returning(({ task }, {}, { lower }) => [
         lower(task.name).as('lower')
       ])
@@ -135,14 +135,14 @@ describe('Select', () => {
   it('update with multiple returning expression with rest', () => {
     const q = update(Task)
       .set('done', true)
-      .where(Task.fields.doneAt.lt(new Date()))
+      .where(Task.fields.doneAt.lt(DataTemporal.now()))
       .returning(({ task }, {}, { lower }) => [
         lower(task.name).as('lower'),
         ...task.all()
       ])
     ;
 
-    expectExpr<[{ lower: string, id: number, name: string, done: boolean, doneAt: Date, parentId: number, assignee: number }]>(q);
+    expectExpr<[{ lower: string, id: number, name: string, done: boolean, doneAt: DataTypeTemporal, parentId: number, assignee: number }]>(q);
   });
 
 });

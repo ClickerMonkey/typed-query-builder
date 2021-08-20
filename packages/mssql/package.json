@@ -52,7 +52,8 @@
     "@typed-query-builder/sql": "^0.4.3",
     "@typed-query-builder/sql-mssql": "^0.4.3",
     "@types/mssql": "6.0.7",
-    "mssql": "6.3.1"
+    "mssql": "6.3.1",
+    "tslib": "2.3.1"
   },
   "gitHead": "8f4b2097a70f1557ebcf5f6fa497e8957651129b"
 }

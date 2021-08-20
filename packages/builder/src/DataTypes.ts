@@ -160,6 +160,23 @@ export interface DataTypeInterval {
   years?: number;
 }
 
+export interface DataTypeTemporal {
+  hasDate: boolean;
+  hasTime: boolean;
+  hasTimeZone: boolean;
+  year: number;
+  month: number;
+  date: number;
+  hour: number;
+  minute: number;
+  second: number;
+  millisecond: number;
+  zoneOffsetMinutes: number;
+  text: string;
+  toDate(): Date;
+  toUnixEpoch(): number;
+}
+
 export type DataTypeGeometry = 
   DataTypeGeometryBase & { srid?: number }
 ;
@@ -181,10 +198,10 @@ export interface DataTypeDecimalTypes { base: number; }
 export interface DataTypeFloatTypes { base: number; }
 export interface DataTypeDoubleTypes { base: number; }
 export interface DataTypeMoneyTypes { base: number; }
-export interface DataTypeDateTypes { base: Date; }
+export interface DataTypeDateTypes { base: DataTypeTemporal; }
 export interface DataTypeIntervalTypes { base: DataTypeInterval; }
-export interface DataTypeTimeTypes { base: Date; }
-export interface DataTypeTimestampTypes { base: Date; }
+export interface DataTypeTimeTypes { base: DataTypeTemporal; }
+export interface DataTypeTimestampTypes { base: DataTypeTemporal; }
 export interface DataTypeCharTypes { base: string; }
 export interface DataTypeVarcharTypes { base: string; }
 export interface DataTypeTextTypes { base: string; }
@@ -192,9 +209,9 @@ export interface DataTypeUuidTypes { base: string; }
 export interface DataTypeInetTypes { base: string; }
 export interface DataTypeCidrTypes { base: string; }
 export interface DataTypeMacaddrTypes { base: string; }
-export interface DataTypeBinaryTypes { base: string; }
-export interface DataTypeVarbinaryTypes { base: string; }
-export interface DataTypeBlobTypes { base: string; }
+export interface DataTypeBinaryTypes { base: Buffer; }
+export interface DataTypeVarbinaryTypes { base: Buffer; }
+export interface DataTypeBlobTypes { base: Buffer; }
 export interface DataTypeXmlTypes { base: string; }
 export interface DataTypeJsonTypes { base: Json; }
 export interface DataTypePointTypes { base: DataTypePoint; }
@@ -457,7 +474,8 @@ export const DataTypeDetectors: DataTypeDetector[] = [
   { type: 'BIGINT', detect: (value) => 
     typeof BigInt !== 'undefined' && value instanceof BigInt 
       ? 'BIGINT' 
-      : false },
+      : false 
+  },
   { type: 'GEOGRAPHY', detect: (value) => 
     isObject(value) && 'srid' in value 
       ? 'GEOGRAPHY' 

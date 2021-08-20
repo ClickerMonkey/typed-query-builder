@@ -201,4 +201,9 @@ export interface Database extends DatabaseResultProvider
    */
   transaction<T>(run: (provider: DatabaseResultProvider, abort: () => any) => Promise<T>, mode?: keyof DatabaseTransactionModes): Promise<T>;
 
+  /**
+   * Initializes the database. This should be done once before any querying is done.
+   */
+  initialize(): Promise<void>;
+  
 }

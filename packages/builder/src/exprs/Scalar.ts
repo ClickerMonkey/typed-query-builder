@@ -87,7 +87,7 @@ export abstract class ExprScalar<T> extends Expr<T>
    * @param result The result to return if this expression is true.
    * @returns A new case expression.
    */
-  public then<O>(result: ExprInput<O>): ExprCase<T, O>
+  public thenResult<O>(result: ExprInput<O>): ExprCase<T, O>
   {
     return new ExprCase(toExpr(true), [[this as any, toExpr(result)]]) as any;
   }

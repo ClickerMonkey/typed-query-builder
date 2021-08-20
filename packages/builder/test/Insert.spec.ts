@@ -1,4 +1,4 @@
-import { table, insert, query, from } from '../src/';
+import { table, insert, query, from, DataTypeTemporal, DataTemporal } from '../src/';
 import { expectExpr, expectExprType } from './helper';
 
 
@@ -41,11 +41,11 @@ describe('Select', () => {
   it('insert returning all', () => {
     const q = insert()
       .into(Task)
-      .values({ id: 3, name: 't3', done: false, doneAt: new Date(), parentId: -1, assignee: -1 })
+      .values({ id: 3, name: 't3', done: false, doneAt: DataTemporal.now(), parentId: -1, assignee: -1 })
       .returning('*')
     ;
 
-    expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number, assignee: number }]>(q);
+    expectExpr<[{ id: number, name: string, done: boolean, doneAt: DataTypeTemporal, parentId: number, assignee: number }]>(q);
   });
 
   it('insert returning', () => {
@@ -248,7 +248,7 @@ describe('Select', () => {
       ])
     ;
 
-    expectExpr<[{ lower: string, id: number, name: string, done: boolean, doneAt: Date, parentId: number, assignee: number }]>(q);
+    expectExpr<[{ lower: string, id: number, name: string, done: boolean, doneAt: DataTypeTemporal, parentId: number, assignee: number }]>(q);
   });
 
 });

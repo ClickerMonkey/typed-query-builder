@@ -113,9 +113,9 @@ export function exec<P = any>(access: Pool | Client, options?: PgsqlOptions<P>):
 
       return parseResult(e, results, options);
     }
-    catch (e)
+    catch (ex)
     {
-      throw new Error(e + '\n\nQuery: ' + output.query);
+      throw new Error(ex + '\n\nQuery: ' + output.query);
     }
   };
 }

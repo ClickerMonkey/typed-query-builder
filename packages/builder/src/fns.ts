@@ -17,6 +17,13 @@ export function isNumber(x: any): x is number
   return typeof x === 'number' && isFinite(x);
 }
 
+export function isNumbersEqual(a: number, b: number, epsilon: number = 0.00001): boolean
+{
+  const d = a - b;
+
+  return d < epsilon && d > -epsilon;
+}
+
 export function isDate(x: any): x is Date 
 {
   return x instanceof Date;
@@ -118,6 +125,18 @@ export function mapRecord<M, O>(map: M, mapper: <K extends keyof M>(value: M[K],
 export function keys<T>(object: T): ObjectKeys<T>
 {
   return Object.keys(object) as ObjectKeys<T>;
+}
+
+export function pad(unpadded: any, length: number, padding: string, left: boolean = true): string
+{
+  let x = String(unpadded);
+
+  while (x.length < length)
+  {
+    x = left ? padding + x : x + padding;
+  }
+
+  return x;
 }
 
 export function modifyText<S extends string, T extends TextModifyType>(text: S, type: T): TextModify<S, T>

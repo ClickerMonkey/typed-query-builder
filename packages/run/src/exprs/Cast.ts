@@ -1,6 +1,6 @@
-import { isArray, isNumber, isString, DataTypeTypes, ExprCast, getDataTypeFromInput, getDataTypeFromValue, getDataTypeMeta } from '@typed-query-builder/builder';
+import { isArray, isNumber, isString, DataTypeTypes, ExprCast, getDataTypeFromInput, getDataTypeMeta, DataPoint, DataLine, DataSegment, DataPath, DataPolygon, DataBox, DataCircle, DataGeometry, DataInterval } from '@typed-query-builder/builder';
 import { RunTransformers } from '../Transformers';
-import { parseDate } from '../util';
+import { parseBuffer, parseTemporal, parseGeometry, parseInterval } from '../util';
 
 interface QueryDataTypeConfigObject<T> {
   parser: (value: any) => T,
@@ -68,16 +68,16 @@ const QueryDataTypeConfig: {
     isValid: isFinite,
   },
   'DATE': {
-    parser: parseDate,
-    isValid: (d) => isFinite(d.getTime()),
+    parser: parseTemporal,
+    isValid: (t) => t.hasDate && !t.hasTime,
   },
   'TIME': {
-    parser: parseDate,
-    isValid: () => true,
+    parser: parseTemporal,
+    isValid: (t) => !t.hasDate && t.hasTime,
   },
   'TIMESTAMP': {
-    parser: parseDate,
-    isValid: (d) => isFinite(d.getTime()),
+    parser: parseTemporal,
+    isValid: (t) => t.hasDate && t.hasTime,
   },
   'CHAR': {
     parser: (x) => String(x),
@@ -118,22 +118,22 @@ const QueryDataTypeConfig: {
     isValid: isString,
   },
   'BINARY': {
-    parser: (x) => String(x),
-    isValid: isString,
+    parser: (x) => parseBuffer(x)!,
+    isValid: (x) => x instanceof Buffer && x.length > 0,
     clamp: (x, length) => isNumber(length)
-      ? x.substring(0, length)
+      ? x.slice(0, length)
       : x,
   },
   'VARBINARY': {
-    parser: (x) => String(x),
-    isValid: isString,
+    parser: (x) => parseBuffer(x)!,
+    isValid: (x) => x instanceof Buffer && x.length > 0,
     clamp: (x, length) => isNumber(length)
-      ? x.substring(0, length)
+      ? x.slice(0, length)
       : x,
   },
   'BLOB': {
-    parser: (x) => String(x),
-    isValid: isString,
+    parser: (x) => parseBuffer(x)!,
+    isValid: (x) => x instanceof Buffer && x.length > 0,
   },
   'JSON': {
     parser: (x) => isString(x) ? JSON.parse(x) : x,
@@ -152,40 +152,44 @@ const QueryDataTypeConfig: {
     isValid: (x) => isArray(x),
   },
   'POINT': {
-    parser: (x) => x,
-    isValid: (x) => getDataTypeFromValue(x) === 'POINT',
+    parser: parseGeometry(DataPoint),
+    isValid: (x) => x instanceof DataPoint && x.isValid(),
   },
   'LINE': {
-    parser: (x) => x,
-    isValid: (x) => getDataTypeFromValue(x) === 'LINE',
+    parser: parseGeometry(DataLine),
+    isValid: (x) => x instanceof DataLine && x.isValid(),
   },
   'SEGMENT': {
-    parser: (x) => x,
-    isValid: (x) => getDataTypeFromValue(x) === 'SEGMENT',
+    parser: parseGeometry(DataSegment),
+    isValid: (x) => x instanceof DataSegment && x.isValid(),
   },
   'PATH': {
-    parser: (x) => x,
-    isValid: (x) => getDataTypeFromValue(x) === 'PATH',
+    parser: parseGeometry(DataPath),
+    isValid: (x) => x instanceof DataPath && x.isValid(),
   },
   'POLYGON': {
-    parser: (x) => x,
-    isValid: (x) => getDataTypeFromValue(x) === 'POLYGON',
+    parser: parseGeometry(DataPolygon),
+    isValid: (x) => x instanceof DataPolygon && x.isValid(),
   },
   'BOX': {
-    parser: (x) => x,
-    isValid: (x) => getDataTypeFromValue(x) === 'BOX',
+    parser: parseGeometry(DataBox),
+    isValid: (x) => x instanceof DataBox && x.isValid(),
   },
   'CIRCLE': {
-    parser: (x) => x,
-    isValid: (x) => getDataTypeFromValue(x) === 'CIRCLE',
+    parser: parseGeometry(DataCircle),
+    isValid: (x) => x instanceof DataCircle && x.isValid(),
   },
   'GEOMETRY': {
     parser: (x) => x,
-    isValid: (x) => ['POINT', 'LINE', 'SEGMENT', 'PATH', 'POLYGON', 'BOX'].includes(getDataTypeFromValue(x) as any),
+    isValid: (x) => x instanceof DataGeometry && x.isValid(),
   },
   'GEOGRAPHY': {
     parser: (x) => x,
-    isValid: () => true,
+    isValid: (x) => x instanceof DataGeometry && x.isValid() && x.srid !== 0,
+  },
+  'INTERVAL': {
+    parser: parseInterval,
+    isValid: (x) => x instanceof DataInterval && x.isValid(),
   },
 };
 

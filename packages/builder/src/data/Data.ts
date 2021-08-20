@@ -16,6 +16,12 @@ export abstract class Data<T> extends ExprConstant<T>
     this.dataType = this.getType();
   }
 
-  public abstract getType(): DataTypeInputs
+  public abstract getType(): DataTypeInputs;
+
+  public abstract clear(): this;
+
+  public abstract set(object: Partial<T>): this;
+
+  public abstract isValid(): boolean;
 
 }

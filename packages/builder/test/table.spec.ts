@@ -1,4 +1,4 @@
-import { DataTypeBox, DataTypeCircle, DataTypeLine, DataTypePath, DataTypePoint, DataTypePolygon, DataTypeSegment, Json, table, tableFromType } from '../src';
+import { DataTypeBox, DataTypeCircle, DataTypeLine, DataTypePath, DataTypePoint, DataTypePolygon, DataTypeSegment, Json, table, tableFromType, _Date } from '../src';
 import { expectExprType } from "./helper";
 
 
@@ -99,13 +99,13 @@ describe('table', () =>
     expectExprType<string>(all.fields.af);
     expectExprType<string>(all.fields.ag);
     expectExprType<string>(all.fields.ah);
-    expectExprType<Date>(all.fields.ai);
-    expectExprType<Date>(all.fields.aj);
-    expectExprType<Date>(all.fields.ak);
-    expectExprType<Date>(all.fields.al);
-    expectExprType<Date>(all.fields.am);
-    expectExprType<Date>(all.fields.an);
-    expectExprType<Date>(all.fields.ao);
+    expectExprType<_Date>(all.fields.ai);
+    expectExprType<_Date>(all.fields.aj);
+    expectExprType<_Date>(all.fields.ak);
+    expectExprType<_Date>(all.fields.al);
+    expectExprType<_Date>(all.fields.am);
+    expectExprType<_Date>(all.fields.an);
+    expectExprType<_Date>(all.fields.ao);
     expectExprType<string>(all.fields.ap);
   });
 
@@ -136,9 +136,9 @@ describe('table', () =>
     expectExprType<string>(all.fields.aq);
     expectExprType<string>(all.fields.ar);
     expectExprType<string>(all.fields.as);
-    expectExprType<string>(all.fields.at);
-    expectExprType<string>(all.fields.au);
-    expectExprType<string>(all.fields.av);
+    expectExprType<Buffer>(all.fields.at);
+    expectExprType<Buffer>(all.fields.au);
+    expectExprType<Buffer>(all.fields.av);
     expectExprType<Json>(all.fields.aw);
     expectExprType<DataTypePoint>(all.fields.ax);
     expectExprType<DataTypeSegment>(all.fields.ay);

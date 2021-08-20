@@ -1,4 +1,4 @@
-import { table, query, from, Select, values, Expr, ExprValueObjects, ExprType } from '../src';
+import { table, query, from, Select, values, Expr, ExprValueObjects, ExprType, DataTypeTemporal } from '../src';
 import { expectExpr, expectExprType, expectSelect, expectExtends, expectTypeMatch } from './helper';
 
 
@@ -27,7 +27,7 @@ describe('Select', () => {
       ])
     ;
 
-    expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number }]>(q);
+    expectExpr<[{ id: number, name: string, done: boolean, doneAt: DataTypeTemporal, parentId: number }]>(q);
   });
 
   it('select *', () => {
@@ -38,7 +38,7 @@ describe('Select', () => {
       ])
     ;
 
-    expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number }]>(q);
+    expectExpr<[{ id: number, name: string, done: boolean, doneAt: DataTypeTemporal, parentId: number }]>(q);
   });
 
   it('select distinct', () => {
@@ -46,7 +46,7 @@ describe('Select', () => {
       .select('*')
       .distinct()
       .run((q) => {
-        expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number }]>(q);
+        expectExpr<[{ id: number, name: string, done: boolean, doneAt: DataTypeTemporal, parentId: number }]>(q);
       })
     ;
   });
@@ -57,7 +57,7 @@ describe('Select', () => {
       .distinctOn('name')
       .orderBy('doneAt')
       .run((q) => {
-        expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number }]>(q);
+        expectExpr<[{ id: number, name: string, done: boolean, doneAt: DataTypeTemporal, parentId: number }]>(q);
       })
     ;
   });
@@ -74,7 +74,7 @@ describe('Select', () => {
       .orderBy(() => ['done'])
       .orderBy(({ task }) => ['done', task.done])
       .run((q) => {
-        expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number }]>(q);
+        expectExpr<[{ id: number, name: string, done: boolean, doneAt: DataTypeTemporal, parentId: number }]>(q);
       })
     ;
   });
@@ -116,7 +116,7 @@ describe('Select', () => {
       .groupBy('doneAt')
       .run((q) => {
         expectExprType<[
-          Select<"doneAt", Date>, Select<"name", string>, Select<"count", number>
+          Select<"doneAt", DataTypeTemporal>, Select<"name", string>, Select<"count", number>
         ][]>(q);
       })
     ;
@@ -133,7 +133,7 @@ describe('Select', () => {
       .groupByRollup([['doneAt'], []])
       .run((q) => {
         expectExprType<[
-          Select<"doneAt", Date>, Select<"name", string>, Select<"count", number>
+          Select<"doneAt", DataTypeTemporal>, Select<"name", string>, Select<"count", number>
         ][]>(q);
       })
     ;
@@ -150,7 +150,7 @@ describe('Select', () => {
       .groupBySet([['doneAt'], []])
       .run((q) => {
         expectExprType<[
-          Select<"doneAt", Date>, Select<"name", string>, Select<"count", number>
+          Select<"doneAt", DataTypeTemporal>, Select<"name", string>, Select<"count", number>
         ][]>(q);
       })
     ;
@@ -167,7 +167,7 @@ describe('Select', () => {
       .groupByCube([['doneAt'], []])
       .run((q) => {
         expectExprType<[
-          Select<"doneAt", Date>, Select<"name", string>, Select<"count", number>
+          Select<"doneAt", DataTypeTemporal>, Select<"name", string>, Select<"count", number>
         ][]>(q);
       })
     ;
@@ -256,12 +256,12 @@ describe('Select', () => {
     // type QT = ExprType<typeof q>;
     // type EVO = ExprValueObjects<QT>;
 
-    expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number, parentName?: string }]>(q);
+    expectExpr<[{ id: number, name: string, done: boolean, doneAt: DataTypeTemporal, parentId: number, parentName?: string }]>(q);
     expectTypeMatch<{
       id: number;
       name: string;
       done: boolean;
-      doneAt: Date;
+      doneAt: DataTypeTemporal;
       parentId: number;
       parentName?: string | undefined;
     }[], ExprValueObjects<ExprType<typeof q>>>(true);
@@ -295,7 +295,7 @@ describe('Select', () => {
       .where(({ task }) => task.done.eq(true))
     ;
 
-    expectExpr<[{ id: number, name: string, done: boolean, doneAt: Date, parentId: number }]>(q);
+    expectExpr<[{ id: number, name: string, done: boolean, doneAt: DataTypeTemporal, parentId: number }]>(q);
     expectExprType<number>(q.count());
     expectSelect<'count', number>(q.count().as('count'));
 
@@ -425,9 +425,9 @@ describe('Select', () => {
           id: number, 
           name: string, 
           done: boolean, 
-          doneAt: Date, 
+          doneAt: DataTypeTemporal, 
           parentId: number,
-          children: { id: number, name: string, done: boolean, doneAt: Date, parentId: number }[]
+          children: { id: number, name: string, done: boolean, doneAt: DataTypeTemporal, parentId: number }[]
         }[]>(q);
       })
     ;

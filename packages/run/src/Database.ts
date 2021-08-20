@@ -200,6 +200,7 @@ export function createDatabase<D extends RunInput>(db: D, options?: RunDatabaseO
   
   return {
     ...getResultProvider(db, options || {}),
+    initialize: async () => {},
     transaction: async (run) => {
       const copy = deepCopy(db);
       const trans = getResultProvider(copy, options || {});

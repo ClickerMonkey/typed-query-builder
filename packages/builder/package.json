@@ -46,5 +46,8 @@
   "tslint": {
     "extends": "../../tslint.json"
   },
-  "gitHead": "8f4b2097a70f1557ebcf5f6fa497e8957651129b"
+  "gitHead": "8f4b2097a70f1557ebcf5f6fa497e8957651129b",
+  "dependencies": {
+    "tslib": "2.3.1"
+  }
 }

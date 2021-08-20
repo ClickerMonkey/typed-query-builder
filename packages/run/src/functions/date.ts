@@ -1,233 +1,247 @@
 
-import { DateField, isNumber } from '@typed-query-builder/builder';
+import { DateField, DataTemporal as Temporal, DataTypeTemporal } from '@typed-query-builder/builder';
 import { RunFunctions } from '../Functions';
+import { parseTemporal } from '../util';
 
 
-RunFunctions.dateFormat = (x: Date, format: string): string =>
+RunFunctions.dateFormat = (x: DataTypeTemporal, format: string): string =>
 {
   throw new Error('Function unsupported.');
 }
 
-RunFunctions.dateParse = (x: string, format: string): Date =>
+RunFunctions.dateParse = (x: string, format: string): DataTypeTemporal =>
 {
-  return startOfDay(RunFunctions.timestampParse(x, format));
-}
+  const t = Temporal.fromText(x);
 
-RunFunctions.timestampParse = (x: string, format: string): Date =>
-{
-  const t = Date.parse(format);
-
-  if (!isNumber(t))
+  if (!t.isValid())
   {
     throw new Error('Invalid date format: ' + x);
   }
 
-  return new Date(t);
+  t.hasTime = t.hasTimeZone = false;
+  t.millisecond = t.second = t.minute = t.hour = t.zoneOffsetMinutes = 0;
+
+  return t;
 }
 
-RunFunctions.dateAddDays = (x: Date, days: number): Date =>
+RunFunctions.timestampParse = (x: string, format: string): DataTypeTemporal =>
+{
+  const t = Temporal.fromText(x);
+
+  if (!t.isValid())
+  {
+    throw new Error('Invalid date format: ' + x);
+  }
+
+  return t;
+}
+
+RunFunctions.dateAddDays = (x: DataTypeTemporal, days: number): DataTypeTemporal =>
 {
   return RunFunctions.dateAdd('day', days, x);
 }
 
-RunFunctions.dateWithTime = (x: Date, time: Date): Date =>
+RunFunctions.dateWithTime = (x: DataTypeTemporal, time: DataTypeTemporal): DataTypeTemporal =>
 {
-  const result = copy(x);
-  result.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
+  const result = parseTemporal(x, true);
+
+  result.hour = time.hour;
+  result.minute = time.minute;
+  result.second = time.second;
+  result.millisecond = time.millisecond;
+  result.hasTime = true;
 
   return result;
 }
 
-RunFunctions.daysBetween = (a: Date, b: Date): number =>
+RunFunctions.daysBetween = (a: DataTypeTemporal, b: DataTypeTemporal): number =>
 {
   return RunFunctions.dateDiff('day', a, b);
 }
 
-RunFunctions.dateSubDays = (x: Date, days: number): Date =>
+RunFunctions.dateSubDays = (x: DataTypeTemporal, days: number): DataTypeTemporal =>
 {
   return RunFunctions.dateAdd('day', -days, x);
 }
 
-RunFunctions.currentTime = (): Date =>
+RunFunctions.currentTime = (): DataTypeTemporal =>
 {
-  return new Date();
+  return Temporal.time()
 }
 
-RunFunctions.currentTimestamp = (): Date =>
+RunFunctions.currentTimestamp = (): DataTypeTemporal =>
 {
-  return new Date();
+  return Temporal.now();
 }
 
-RunFunctions.currentDate = (): Date =>
+RunFunctions.currentDate = (): DataTypeTemporal =>
 {
-  return startOfDay(new Date());
+  return Temporal.today();
 }
 
-RunFunctions.dateGet = (field: DateField, source: Date): number =>
+RunFunctions.dateGet = (field: DateField, source: DataTypeTemporal): number =>
 {
-  const foy = startOfYear(copy(source));
+  const foy = parseTemporal(source, true).startOf('year');
   
   switch (field) 
   {
     case 'micro':
       return 0;
     case 'milli':
-      return source.getMilliseconds();
+      return source.millisecond;
     case 'second':
-      return source.getSeconds();
+      return source.second;
     case 'minute':
-      return source.getMinutes();
+      return source.minute;
     case 'hour':
-      return source.getHours();
+      return source.hour;
     case 'day':
-      return source.getDate();
+      return source.date;
     case 'dayOfWeek':
     case 'isoDayOfWeek':
-      return source.getDay();
+      return source.toDate().getDay();
     case 'dayOfYear':
     case 'isoDayOfYear':
-      return Math.floor((source.getTime() - foy.getTime()) / MILLIS_IN_DAY);
+      return Math.floor((source.toUnixEpoch() - foy.toUnixEpoch()) / MILLIS_IN_DAY);
     case 'week':
-      return Math.floor((source.getTime() - foy.getTime()) / MILLIS_IN_DAY / 7);
+      return Math.floor((source.toUnixEpoch() - foy.toUnixEpoch()) / MILLIS_IN_DAY / 7);
     case 'month':
-      return source.getMonth();
+      return source.month;
     case 'quarter':
-      return Math.floor(source.getMonth() / 3);
+      return Math.floor(source.month / 3);
     case 'year':
-      return source.getFullYear();
+      return source.year;
     case 'decade':
-      return Math.floor(source.getFullYear() / 10);
+      return Math.floor(source.year / 10);
     case 'century':
-      return Math.ceil(source.getFullYear() / 100);
+      return Math.ceil(source.year / 100);
     case 'millennium':
-      return Math.ceil(source.getFullYear() / 1000);
+      return Math.ceil(source.year / 1000);
     case 'epoch':
-      return source.getTime();
+      return source.toUnixEpoch();
     case 'timezoneOffset':
-      return source.getTimezoneOffset();
+      return source.zoneOffsetMinutes;
   }
 }
 
-RunFunctions.dateTruncate = (field: DateField, source: Date, timeZone?: string): Date =>
+RunFunctions.dateTruncate = (field: DateField, source: DataTypeTemporal, timeZone?: string): DataTypeTemporal =>
 {
-  const result = copy(source);
+  const result = parseTemporal(source, true);
   
   switch (field) 
   {
     case 'milli':
-      result.setMilliseconds(0);
+      result.startOf('second');
       break;
     case 'second':
-      result.setSeconds(0, 0);
+      result.startOf('minute');
       break;
     case 'minute':
-      result.setMinutes(0, 0, 0);
+      result.startOf('hour');
       break;
     case 'hour':
-      result.setHours(0, 0, 0, 0);
+      result.startOf('day');
       break;
     case 'week':
     case 'dayOfWeek':
     case 'isoDayOfWeek':
-      result.setDate(result.getDate() - result.getDay());
-      startOfDay(result);
+      result.startOf('week');
       break;
     case 'dayOfYear':
     case 'isoDayOfYear':
-      startOfYear(result);
+      result.startOf('year');
       break;
     case 'day':
-      startOfDay(result);
+      result.startOf('day');
       break;
     case 'month':
-      startOfMonth(result);
+      result.startOf('month');
       break;
     case 'quarter':
-      result.setMonth(result.getMonth() - (result.getMonth() % 3));
+      result.startOf('quarter');
       break;
   }
   
   return result;
 }
 
-RunFunctions.dateAdd = (field: DateField, amount: number, date: Date): Date =>
+RunFunctions.dateAdd = (field: DateField, amount: number, date: DataTypeTemporal): DataTypeTemporal =>
 {
-  const result = copy(date);
+  const result = parseTemporal(date, true);
   
   switch (field) 
   {
     case 'milli':
-      result.setMilliseconds(result.getMilliseconds() + amount);
+      result.modify(d => d.setMilliseconds(d.getMilliseconds() + amount));
       break;
     case 'second':
-      result.setSeconds(result.getSeconds() + amount);
+      result.modify(d => d.setSeconds(d.getSeconds() + amount));
       break;
     case 'minute':
-      result.setMinutes(result.getMinutes() + amount);
+      result.modify(d => d.setMinutes(d.getMinutes() + amount));
       break;
     case 'hour':
-      result.setHours(result.getHours() + amount);
+      result.modify(d => d.setHours(d.getHours() + amount));
       break;
     case 'dayOfWeek':
     case 'isoDayOfWeek':
     case 'dayOfYear':
     case 'isoDayOfYear':
     case 'day':
-      result.setDate(result.getDate() + amount);
+      result.modify(d => d.setDate(d.getDate() + amount));
       break;
     case 'week':
-      result.setDate(result.getDate() + amount * 7);
+      result.modify(d => d.setDate(d.getDate() + amount * 7));
       break;
     case 'month':
-      result.setMonth(result.getMonth() + amount);
+      result.modify(d => d.setMonth(d.getMonth() + amount));
       break;
     case 'quarter':
-      result.setMonth(result.getMonth() + amount * 3);
+      result.modify(d => d.setMonth(d.getMonth() + amount * 3));
       break;
     case 'year':
-      result.setFullYear(result.getFullYear() + amount);
+      result.modify(d => d.setFullYear(d.getFullYear() + amount));
       break;
     case 'decade':
-      result.setFullYear(result.getFullYear() + amount * 10);
+      result.modify(d => d.setFullYear(d.getFullYear() + amount * 10));
       break;
     case 'century':
-      result.setFullYear(result.getFullYear() + amount * 100);
+      result.modify(d => d.setFullYear(d.getFullYear() + amount * 100));
       break;
     case 'millennium':
-      result.setFullYear(result.getFullYear() + amount * 1000);
+      result.modify(d => d.setFullYear(d.getFullYear() + amount * 1000));
       break;
     case 'epoch':
-      result.setTime(result.getTime() + amount);
+      result.modify(d => d.setTime(d.getTime() + amount));
       break;
   }
 
   return result;
 }
 
-RunFunctions.dateDiff = (field: DateField, first: Date, second: Date): number =>
+RunFunctions.dateDiff = (field: DateField, first: DataTypeTemporal, second: DataTypeTemporal): number =>
 {
-  const d = first.getTime() - second.getTime();
-
   switch (field) 
   {
+    case 'epoch':
     case 'milli':
-      return d;
+      return (parseTemporal(first).toUnixEpoch() - parseTemporal(second).toUnixEpoch());
     case 'second':
-      return d / MILLIS_IN_SECOND;
+      return (parseTemporal(first).toUnixEpoch() - parseTemporal(second).toUnixEpoch()) / MILLIS_IN_SECOND;
     case 'minute':
-      return d / MILLIS_IN_MINUTE;
+      return (parseTemporal(first).toUnixEpoch() - parseTemporal(second).toUnixEpoch()) / MILLIS_IN_MINUTE;
     case 'hour':
-      return d / MILLIS_IN_HOUR;
+      return (parseTemporal(first).toUnixEpoch() - parseTemporal(second).toUnixEpoch()) / MILLIS_IN_HOUR;
     case 'day':
-      return diffDays(first, second);
+      return diffDays(parseTemporal(first), parseTemporal(second));
     case 'dayOfWeek':
     case 'isoDayOfWeek':
-      return first.getDay() - second.getDay();
+      return parseTemporal(first).toDate().getDay() - parseTemporal(second).toDate().getDay();
     case 'dayOfYear':
     case 'isoDayOfYear':
       return RunFunctions.dateGet('dayOfYear', first) - RunFunctions.dateGet('dayOfYear', second);
     case 'week':
-      return diffDays(first, second) / DAYS_IN_WEEK;
+      return diffDays(parseTemporal(first), parseTemporal(second)) / DAYS_IN_WEEK;
     case 'month':
       return diffMonths(first, second);
     case 'quarter':
@@ -240,82 +254,57 @@ RunFunctions.dateDiff = (field: DateField, first: Date, second: Date): number =>
       return diffMonths(first, second) / MONTHS_IN_CENTURY;
     case 'millennium':
       return diffMonths(first, second) / MONTHS_IN_MILLENIUM;
-    case 'epoch':
-      return d;
   }
   
   return 0;
 }
 
-RunFunctions.createDate = (year: number, month: number, day: number): Date =>
+RunFunctions.createDate = (year: number, month: number, date: number): DataTypeTemporal =>
 {
-  return new Date(year, month, day, 0, 0, 0, 0);
+  return Temporal.fromObject({ year, month, date, hasDate: true });
 }
 
-RunFunctions.createTime = (hour: number, min: number, sec: number): Date =>
+RunFunctions.createTime = (hour: number, minute: number, second: number): DataTypeTemporal =>
 {
-  const result = new Date();
-  result.setHours(hour, min, sec);
-
-  return result;
+  return Temporal.fromObject({ hour, minute, second, hasTime: true });
 }
 
-RunFunctions.createTimestamp = (year: number, month: number, day: number, hour: number, min: number, sec: number): Date =>
+RunFunctions.createTimestamp = (year: number, month: number, date: number, hour: number, minute: number, second: number): DataTypeTemporal =>
 {
-  return new Date(year, month, day, hour, min, sec);
+  return Temporal.fromObject({ year, month, date, hour, minute, second, hasDate: true, hasTime: true });
 }
 
-RunFunctions.timestampToSeconds = (x: Date): number =>
+RunFunctions.timestampToSeconds = (x: DataTypeTemporal): number =>
 {
-  return x.getTime();
+  return parseTemporal(x).toUnixEpoch();
 }
 
-RunFunctions.timestampFromSeconds = (x: number): Date =>
+RunFunctions.timestampFromSeconds = (x: number): DataTypeTemporal =>
 {
-  return new Date(x);
+  return Temporal.fromUnixEpoch(x);
 }
 
-RunFunctions.datesOverlap = (astart: Date, aend: Date, bstart: Date, bend: Date): boolean =>
+RunFunctions.datesOverlap = (astart: DataTypeTemporal, aend: DataTypeTemporal, bstart: DataTypeTemporal, bend: DataTypeTemporal): boolean =>
 {
-  return RunFunctions.timestampsOverlap(startOfDay(copy(astart)), startOfDay(copy(aend)), startOfDay(copy(bstart)), startOfDay(copy(bend)));
+  return RunFunctions.timestampsOverlap(
+    parseTemporal(astart, true).startOf('day'), 
+    parseTemporal(aend, true).startOf('day'), 
+    parseTemporal(bstart, true).startOf('day'), 
+    parseTemporal(bend, true).startOf('day')
+  );
 }
 
-RunFunctions.timestampsOverlap = (astart: Date, aend: Date, bstart: Date, bend: Date): boolean =>
+RunFunctions.timestampsOverlap = (astart: DataTypeTemporal, aend: DataTypeTemporal, bstart: DataTypeTemporal, bend: DataTypeTemporal): boolean =>
 {
-  return !(astart.getTime() > bend.getTime() || aend.getTime() < bstart.getTime());
+  return !(
+    parseTemporal(astart).toUnixEpoch() > parseTemporal(bend).toUnixEpoch() || 
+    parseTemporal(aend).toUnixEpoch() < parseTemporal(bstart).toUnixEpoch()
+  );
 }
 
-function startOfDay(d: Date): Date
+function getTimezoneOffsetInMilliseconds(a: Temporal): number
 {
-  d.setHours(0, 0, 0, 0);
-
-  return d;
-}
-
-function startOfMonth(d: Date): Date
-{
-  d.setDate(1);
-  startOfDay(d);
-
-  return d;
-}
-
-function startOfYear(d: Date): Date
-{
-  d.setMonth(0, 1);
-  startOfMonth(d);
-
-  return d;
-}
-
-function copy(d: Date): Date
-{
-  return new Date(d.getTime());
-}
-
-function getTimezoneOffsetInMilliseconds(a: Date): number
-{
-  const b = new Date(a.getTime());
+  const b = a.toDate();
   const offsetMinutes = b.getTimezoneOffset();
 
   b.setSeconds(0, 0);
@@ -325,12 +314,12 @@ function getTimezoneOffsetInMilliseconds(a: Date): number
   return offsetMinutes * MILLIS_IN_MINUTE + offsetMilliseconds;
 }
 
-function getAbsoluteTimestamp(a: Date): number
+function getAbsoluteTimestamp(a: Temporal): number
 {
-  return a.getTime() - getTimezoneOffsetInMilliseconds(a);
+  return a.toUnixEpoch() - getTimezoneOffsetInMilliseconds(a);
 }
 
-function diffDays(a: Date, b: Date): number
+function diffDays(a: Temporal, b: Temporal): number
 {
   const leftTimestamp = getAbsoluteTimestamp(a);
   const rightTimestamp = getAbsoluteTimestamp(b);
@@ -338,11 +327,11 @@ function diffDays(a: Date, b: Date): number
   return (leftTimestamp - rightTimestamp) / MILLIS_IN_DAY;
 }
 
-function diffMonths(a: Date, b: Date): number
+function diffMonths(a: DataTypeTemporal, b: DataTypeTemporal): number
 {
-  const years = a.getFullYear() - b.getFullYear();
-  const months = a.getMonth() - b.getMonth();
-  const date = (a.getDate() - b.getDate()) / DAYS_IN_MONTH;
+  const years = a.year - b.year;
+  const months = a.month - b.month;
+  const date = (a.date - b.date) / DAYS_IN_MONTH;
 
   return years * MONTHS_IN_YEAR + months + date;
 }
