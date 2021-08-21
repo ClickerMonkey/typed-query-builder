@@ -8,7 +8,6 @@
         "packages/*",
       ]
     },
-    "esModuleInterop": true,
     "skipLibCheck": true,
     "types": ["jest", "node"]
   }
