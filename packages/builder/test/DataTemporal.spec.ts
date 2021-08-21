@@ -260,4 +260,77 @@ describe('DataTemporal', () =>
     expect(d.text).toEqual('2021-12-31');
   });
 
+  it('from and to UnixEpoch', () => {
+    const TIMESTAMP = 1629577808523;
+
+    const d = DataTemporal.fromUnixEpoch(TIMESTAMP);
+
+    expect(d.toUnixEpoch()).toEqual(TIMESTAMP);
+  });
+
+  it('from and to Date', () => {
+    const DATE = new Date(1629577808523);
+
+    const d = DataTemporal.fromDate(DATE);
+
+    expect(d.toDate().getTime()).toEqual(DATE.getTime());
+  });
+
+  it('from and to text', () => {
+    const TEXT = '2021-08-21 16:47:56';
+
+    const d0 = DataTemporal.fromText(TEXT);
+
+    expect(d0.text).toEqual(TEXT);
+
+    const d1 = DataTemporal.fromDate(d0.toDate());
+
+    expect(d1.text).toEqual(TEXT);
+
+    const d2 = DataTemporal.fromUnixEpoch(d0.toUnixEpoch());
+
+    expect(d2.text).toEqual(TEXT);
+  });
+
+  it('compare', () => {
+    expect(DataTemporal.fromText('2020-01-01').compare(DataTemporal.fromText('2020-01-01 00:00:00')) === 0).toBeTruthy();
+    expect(DataTemporal.fromText('2020-01-01').compare(DataTemporal.fromText('2020-01-01 00:00:01')) < 0).toBeTruthy();
+    expect(DataTemporal.fromText('2020-01-01').compare(DataTemporal.fromText('2019-12-31 23:59:59')) > 0).toBeTruthy();
+  });
+
+  it('compare', () => {
+    const t0 = DataTemporal.fromText('2020-01-01');
+    const t1 = DataTemporal.fromText('2020-01-01 00:00:00.000');
+    const t2 = DataTemporal.fromText('2020-01-01 00:00:00.001');
+    const t3 = DataTemporal.fromText('2020-01-01 00:00:01');
+    const t4 = DataTemporal.fromText('2020-01-01 00:01:00');
+    const t5 = DataTemporal.fromText('2020-01-01 01:00:00');
+    const t6 = DataTemporal.fromText('2020-01-02 0:00:00');
+    const t7 = DataTemporal.fromText('2020-02-01 0:00:00');
+    const t8 = DataTemporal.fromText('2021-01-01 0:00:00');
+
+    expect(t0.isSame(t1, 'millisecond')).toBeTruthy();
+    expect(t0.isSame(t1, 'second')).toBeTruthy();
+    
+    expect(t0.isSame(t2, 'millisecond')).toBeFalsy();
+    expect(t0.isSame(t2, 'second')).toBeTruthy();
+
+    expect(t0.isSame(t3, 'second')).toBeFalsy();
+    expect(t0.isSame(t3, 'minute')).toBeTruthy();
+
+    expect(t0.isSame(t4, 'minute')).toBeFalsy();
+    expect(t0.isSame(t4, 'hour')).toBeTruthy();
+
+    expect(t0.isSame(t5, 'hour')).toBeFalsy();
+    expect(t0.isSame(t5, 'day')).toBeTruthy();
+
+    expect(t0.isSame(t6, 'day')).toBeFalsy();
+    expect(t0.isSame(t6, 'month')).toBeTruthy();
+
+    expect(t0.isSame(t7, 'month')).toBeFalsy();
+    expect(t0.isSame(t7, 'year')).toBeTruthy();
+
+    expect(t0.isSame(t8, 'year')).toBeFalsy();
+  });
+
 });

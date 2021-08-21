@@ -22,7 +22,7 @@ export class DataTemporal extends Data<DataTypeTemporal> implements DataTypeTemp
     return new DataTemporal('').setToTime(new Date(), utc);
   }
 
-  public static now(offsetMillis: number = 0, utc: boolean = false): DataTemporal
+  public static now(offsetMillis: number = 0, utc: boolean = true): DataTemporal
   {
     const d = new Date();
     d.setTime(d.getTime() + offsetMillis);
@@ -32,10 +32,10 @@ export class DataTemporal extends Data<DataTypeTemporal> implements DataTypeTemp
 
   public static fromUnixEpoch(millis: number): DataTemporal
   {
-    return new DataTemporal('').setToTimestamp(new Date(millis));
+    return new DataTemporal('').setToTimestamp(new Date(millis), true);
   }
 
-  public static fromDate(date: Date, utc: boolean = false): DataTemporal
+  public static fromDate(date: Date, utc: boolean = true): DataTemporal
   {
     return new DataTemporal('').setToTimestamp(date, utc);
   }
@@ -94,8 +94,77 @@ export class DataTemporal extends Data<DataTypeTemporal> implements DataTypeTemp
     this.hasDate = false;
     this.hasTime = false;
     this.hasTimeZone = false;
-    this.text = '';
     
+    this.update();
+
+    return this;
+  }
+
+  public removeTime(): this
+  {
+    this.hour = 0;
+    this.minute = 0;
+    this.second = 0;
+    this.millisecond = 0;
+    this.hasTime = false;
+
+    this.update();
+
+    return this;
+  }
+
+  public removeZone(): this
+  {
+    this.zoneOffsetMinutes = 0;
+    this.hasTimeZone = false;
+
+    this.update();
+
+    return this;
+  }
+
+  public setTime(hour: number = 0, minute: number = 0, second: number = 0, millisecond: number = 0): this
+  {
+    this.hour = hour;
+    this.minute = minute;
+    this.second = second;
+    this.millisecond = millisecond;
+    this.hasTime = true;
+
+    this.update();
+
+    return this;
+  }
+
+  public setDate(year: number = 0, month: number = 0, date: number = 0): this
+  {
+    this.year = year;
+    this.month = month;
+    this.date = date;
+    this.hasDate = true;
+
+    this.update();
+
+    return this;
+  }
+
+  public setZoned(offsetMinutes: number = 0): this
+  {
+    this.zoneOffsetMinutes = offsetMinutes;
+    this.hasTimeZone = true;
+
+    this.update();
+
+    return this;
+  }
+
+  public removeDate(): this
+  {
+    this.year = 0;
+    this.month = 0;
+    this.date = 0;
+    this.hasDate = false;
+
     this.update();
 
     return this;
@@ -128,7 +197,7 @@ export class DataTemporal extends Data<DataTypeTemporal> implements DataTypeTemp
       this.hasTime = isFinite(H) && isFinite(m);
       this.hasTimeZone = isFinite(offsetHours);
 
-      this.update();
+      this.update(false);
     }
 
     return this;
@@ -142,7 +211,6 @@ export class DataTemporal extends Data<DataTypeTemporal> implements DataTypeTemp
     this.month = utc ? date.getUTCMonth() + 1 : date.getMonth() + 1;
     this.date = utc ? date.getUTCDate() : date.getDate();
     this.hasDate = true;
-    this.text = `${pad(this.year, 4, '0')}-${pad(this.month, 2, '0')}-${pad(this.date, 2, '0')}`;
 
     this.update();
 
@@ -162,15 +230,11 @@ export class DataTemporal extends Data<DataTypeTemporal> implements DataTypeTemp
     this.millisecond = utc ? date.getUTCMilliseconds() : date.getMilliseconds();
     this.hasDate = true;
     this.hasTime = true;
-    this.text = `${pad(this.year, 4, '0')}-${pad(this.month, 2, '0')}-${pad(this.date, 2, '0')} ${pad(this.hour, 2, '0')}:${pad(this.minute, 2, '0')}:${pad(this.second, 2, '0')}.${pad(this.millisecond, 3, '0')}`;
 
     if (zoned)
     {
       this.hasTimeZone = true;
       this.zoneOffsetMinutes = date.getTimezoneOffset();
-      this.text += this.zoneOffsetMinutes > 0
-        ? `+${pad(Math.round(this.zoneOffsetMinutes / 60), 2, '0')}`
-        : `-${pad(Math.round(-this.zoneOffsetMinutes / 60), 2, '0')}`;
     }
 
     this.update();
@@ -187,20 +251,11 @@ export class DataTemporal extends Data<DataTypeTemporal> implements DataTypeTemp
     this.second = utc ? date.getUTCSeconds() : date.getSeconds();
     this.millisecond = utc ? date.getUTCMilliseconds() : date.getMilliseconds();
     this.hasTime = true;
-    this.text = `${pad(this.hour, 2, '0')}:${pad(this.minute, 2, '0')}:${pad(this.second, 2, '0')}`;
-
-    if (this.millisecond > 0)
-    {
-      this.text += `.${pad(this.millisecond, 3, '0')}`;
-    }
 
     if (zoned)
     {
       this.hasTimeZone = true;
       this.zoneOffsetMinutes = date.getTimezoneOffset();
-      this.text += this.zoneOffsetMinutes > 0
-        ? `+${pad(Math.round(this.zoneOffsetMinutes / 60), 2, '0')}`
-        : `-${pad(Math.round(-this.zoneOffsetMinutes / 60), 2, '0')}`;
     }
 
     this.update();
@@ -242,6 +297,46 @@ export class DataTemporal extends Data<DataTypeTemporal> implements DataTypeTemp
     return this.hasDate && this.hasTime && this.hasTimeZone;
   }
 
+  public compare(other: DataTemporal): number
+  {
+    return this.toUnixEpoch() - other.toUnixEpoch();
+  }
+
+  public lessThan(other: DataTemporal): boolean
+  {
+    return this.compare(other) < 0;
+  }
+
+  public lessThanEqual(other: DataTemporal): boolean
+  {
+    return this.compare(other) <= 0;
+  }
+
+  public greaterThan(other: DataTemporal): boolean
+  {
+    return this.compare(other) > 0;
+  }
+
+  public greaterThanEqual(other: DataTemporal): boolean
+  {
+    return this.compare(other) >= 0;
+  }
+
+  public equalTo(other: DataTemporal): boolean
+  {
+    return this.compare(other) === 0;
+  }
+
+  public notEqualTo(other: DataTemporal): boolean
+  {
+    return this.compare(other) !== 0;
+  }
+
+  public isSame(other: DataTemporal, span: DataTemporalSpan): boolean
+  {
+    return this.copy().startOf(span).equalTo(other.copy().startOf(span));
+  }
+
   public modify(modify: (date: Date) => void): this
   {
     return this.transform(this, modify) as this;
@@ -276,22 +371,61 @@ export class DataTemporal extends Data<DataTypeTemporal> implements DataTypeTemp
     return out;
   }
 
-  public update(): this
+  public update(overwriteText: boolean = true): this
   {
     this.dataType = this.getType();
+
+    if (overwriteText)
+    {
+      this.text = this.getText();
+    }
 
     return this;
   }
 
+  private getText(): string
+  {
+    let text = '';
+
+    if (this.hasDate)
+    {
+      text += `${pad(this.year, 4, '0')}-${pad(this.month, 2, '0')}-${pad(this.date, 2, '0')}`;
+    }
+
+    if (this.hasTime)
+    {
+      if (text.length > 0)
+      {
+        text += ' ';
+      }
+
+      text += `${pad(this.hour, 2, '0')}:${pad(this.minute, 2, '0')}:${pad(this.second, 2, '0')}`;
+
+      if (this.millisecond > 0)
+      {
+        text += `.${pad(this.millisecond, 3, '0')}`;
+      }
+
+      if (this.hasTimeZone)
+      {
+        text += this.zoneOffsetMinutes > 0
+          ? `+${pad(Math.round(this.zoneOffsetMinutes / 60), 2, '0')}`
+          : `-${pad(Math.round(-this.zoneOffsetMinutes / 60), 2, '0')}`;
+      }
+    }
+
+    return text;
+  }
+
   public toDate(): Date
   {
-    const d = new Date();
+    const d = new Date(0);
 
     if (this.hasDate) {
       d.setUTCFullYear(this.year, this.month - 1, this.date);
     }
     if (this.hasTime) {
-      d.setUTCHours(this.hour, this.minute, this.second);
+      d.setUTCHours(this.hour, this.minute, this.second, this.millisecond);
     } else {
       d.setUTCHours(0, 0, 0, 0);
     }
@@ -304,13 +438,13 @@ export class DataTemporal extends Data<DataTypeTemporal> implements DataTypeTemp
 
   public toUnixEpoch(): number
   {
-    const d = new Date();
+    const d = new Date(0);
 
     if (this.hasDate) {
       d.setUTCFullYear(this.year, this.month - 1, this.date);
     }
     if (this.hasTime) {
-      d.setUTCHours(this.hour, this.minute, this.second);
+      d.setUTCHours(this.hour, this.minute, this.second, this.millisecond);
     } else {
       d.setUTCHours(0, 0, 0, 0);
     }
