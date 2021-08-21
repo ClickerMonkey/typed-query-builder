@@ -21,6 +21,9 @@ CONTAINER_ID=$(docker run -d -p 5438:5432 tqb-pgsql)
 # Wait until database is running
 . ../../../scripts/wait-until "docker exec -u postgres $CONTAINER_ID psql -U postgres tqb -c 'select 1'"
 
+# Extra pause 
+sleep 5
+
 # Run the tests
 cd ..
 npm run test:jest -- "$@"
