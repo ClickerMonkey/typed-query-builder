@@ -8,6 +8,6 @@ export function addInsertReturningFeature(dialect: Dialect)
 {
   dialect.featureFormatter[DialectFeatures.INSERT_RETURNING] = ([table, selects]: [string, Selects], transform, out) => 
   {
-    return 'RETURNING ' + getSelects(selects, out);
+    return 'RETURNING ' + out.modify({ excludeSource: true }, () => getSelects(selects, out));
   };
 }

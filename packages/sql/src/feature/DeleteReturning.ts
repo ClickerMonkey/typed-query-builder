@@ -8,6 +8,6 @@ export function addDeleteReturningFeature(dialect: Dialect)
 {
   dialect.featureFormatter[DialectFeatures.DELETE_RETURNING] = ([table, selects]: [string, Selects], transform, out) => 
   {
-    return 'RETURNING ' + getSelects(selects, out);
+    return 'RETURNING ' + out.modify({ excludeSource: true }, () => getSelects(selects, out));
   };
 }
