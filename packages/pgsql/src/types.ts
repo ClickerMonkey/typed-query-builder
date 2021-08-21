@@ -3,7 +3,7 @@ import { Client, types, Pool } from 'pg';
 import TypeOverrides from 'pg/lib/type-overrides';
 import array from 'postgres-array';
 import Interval from 'postgres-interval';
-import wkx, { Geometry } from 'wkx';
+import * as wkx from 'wkx';
 import { Buffer } from 'buffer';
 
 // Define our parsers
@@ -36,7 +36,7 @@ export const PgsqlTypeParsers =
     return PgsqlTypeParsers.geography(geom, geom.srid);
   },
 
-  geography(geom: Geometry, srid: number): any
+  geography(geom: wkx.Geometry, srid: number): any
   {
     if (geom instanceof wkx.Point)
     {

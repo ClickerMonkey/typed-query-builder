@@ -19,6 +19,7 @@
     "allowSyntheticDefaultImports": true,
     "suppressImplicitAnyIndexErrors": true,
     "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
     "pretty": true,
     "sourceMap": true,
     "declaration": true,
