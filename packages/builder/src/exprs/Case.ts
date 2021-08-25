@@ -45,6 +45,22 @@ export class ExprCase<I, O> extends ExprScalar<O>
   }
 
   /**
+   * Adds another value to compare to the original, and the result to return if true.
+   * 
+   * @param value The value to compare to.
+   * @param result The result to return if the value is equal.
+   * @returns This case expression.
+   */
+  public elseWhen(value: ExprInput<I>, result: ExprInput<O>): this
+  {
+    const valueResult: [ExprScalar<I>, ExprScalar<O>] = [toExpr(value), toExpr(result)];
+
+    this.cases.push(valueResult);
+
+    return this;    
+  }
+
+  /**
    * Sets the expression to return if this case does not have a passing condition.
    * 
    * @param result The default result to return.

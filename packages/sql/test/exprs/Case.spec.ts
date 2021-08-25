@@ -55,4 +55,29 @@ describe('Case', () =>
     `);
   });
 
+  it('case mixed', () =>
+  {
+    const x = from(Task)
+      .select(({ task }) => [
+        task.name.when('Root', 1)
+          .elseWhen('Base', 2)
+          .elseWhen('Parent', 3)
+          .else(4)
+          .as('status')
+      ])
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT
+        (CASE "name"
+          WHEN 'Root' THEN 1
+          WHEN 'Base' THEN 2
+          WHEN 'Parent' THEN 3
+          ELSE 4
+        END) AS "status"
+      FROM task
+    `);
+  });
+
 });
