@@ -1,7 +1,7 @@
 {
   "name": "@typed-query-builder/run",
   "license": "GPL-3.0-or-later",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "A typed-query-builder runtime that runs on JSON tables without a database.",
   "main": "dist/index.js",
   "typings": "typings/index.d.ts",
@@ -47,7 +47,7 @@
     "extends": "../../tslint.json"
   },
   "dependencies": {
-    "@typed-query-builder/builder": "^0.5.4",
+    "@typed-query-builder/builder": "^0.5.5",
     "tslib": "2.3.1"
   },
   "gitHead": "8f4b2097a70f1557ebcf5f6fa497e8957651129b"
