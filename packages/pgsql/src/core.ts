@@ -1,4 +1,4 @@
-import { ExprValueTuples, Expr, ExprValueObjects, QueryFirst, QueryFirstValue, QueryList, QueryJson, isArray, isString, isPlainObject, isFunction } from '@typed-query-builder/builder';
+import { ExprValueTuples, Expr, ExprValueObjects, QueryFirst, QueryFirstValue, QueryList, QueryJson, isArray, isString, isPlainObject } from '@typed-query-builder/builder';
 import { DialectPgsql } from '@typed-query-builder/sql-pgsql';
 import { Client, Pool, QueryConfig, QueryArrayConfig, QueryResult } from 'pg';
 import Cursor from 'pg-cursor';
@@ -43,21 +43,6 @@ export interface PgsqlOptions<P>
    * If true all strings in results will be inspected for JSON values and be automatically parsed.
    */
   detectJson?: boolean;
-
-  /**
-   * If true all strings in results will be inspected for "YYYY-MM-DD" format and automatically converted to a Date (or custom object).
-   */
-  detectDate?: boolean | ((detected: string) => any);
-
-  /**
-   * If true all strings in results will be inspected for "YYYY-MM-DD(T| )hh:mm:ss" format and automatically converted to a Date (or custom object).
-   */
-  detectTimestamp?: boolean | ((detected: string) => any);
-
-  /**
-   * If true all strings will be inspected for a date format and will be automatically converted to a Date (or custom object).
-   */
-  detectAllDates?: boolean | ((detected: string) => any);
 
   /**
    * If the affected count should be returned, transforming the result into { affected: number, result: any }.
@@ -325,7 +310,7 @@ export function parseResult<R, P>(expr: Expr<R>, queryResult: QueryResult<ExprVa
 {
   let result = DialectPgsql.getResult(expr, handleResult(expr, queryResult));
 
-  if (options && (options.detectJson || options.detectDate || options.detectAllDates))
+  if (options && options.detectJson)
   {
     const traverse = (value: any, onValue: (value: any) => any) => 
     {
@@ -358,66 +343,6 @@ export function parseResult<R, P>(expr: Expr<R>, queryResult: QueryResult<ExprVa
           try {
             return JSON.parse(value);
           } catch (e) {}
-        }
-
-        return value;
-      });
-    }
-
-    const dateDetectors = [
-      {
-        detect: options.detectDate || options.detectAllDates,
-        length: 10,
-        regex: /^\d{4}-\d\d-\d\d$/,
-        toDate: (value: string) => new Date(value + 'T00:00:00'),
-      },
-      {
-        detect: options.detectTimestamp || options.detectAllDates,
-        length: 19,
-        regex: /^\d{4}-\d\d-\d\d(T|\s)\d\d:\d\d:\d\d?$/,
-        toDate: (value: string) => new Date(value),
-      },
-      {
-        detect: options.detectTimestamp || options.detectAllDates,
-        length: 23,
-        regex: /^\d{4}-\d\d-\d\d(T|\s)\d\d:\d\d:\d\d\.\d{3}?$/,
-        toDate: (value: string) => new Date(value),
-      },
-      {
-        detect: options.detectTimestamp || options.detectAllDates,
-        length: 27,
-        regex: /^\d{4}-\d\d-\d\d(T|\s)\d\d:\d\d:\d\d\.\d{7}?$/,
-        toDate: (value: string) => new Date(value),
-      },
-      {
-        detect: options.detectTimestamp || options.detectAllDates,
-        length: 34,
-        regex: /^\d{4}-\d\d-\d\d(T|\s)\d\d:\d\d:\d\d\.\d{7}\s[+-]\d\d:\d\d?$/,
-        toDate: (value: string) => new Date(value.replace(/\s([-+])/, '$1')),
-      }
-    ];
-
-    if (dateDetectors.some(d => d.detect))
-    {
-      for (const detector of dateDetectors)
-      {
-        if (isFunction(detector.detect))
-        {
-          detector.toDate = detector.detect;
-        }
-      }
-
-      result = traverse(result, (value) =>
-      {
-        if (isString(value))
-        {
-          for (const detector of dateDetectors)
-          {
-            if (value.length === detector.length && value.match(detector.regex))
-            {
-              return detector.toDate(value);
-            }
-          }
         }
 
         return value;

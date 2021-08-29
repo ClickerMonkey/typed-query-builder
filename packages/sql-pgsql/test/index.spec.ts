@@ -690,7 +690,7 @@ describe('index', () =>
         id, 
         "name", 
         done, 
-        (SELECT json_agg(t.item) FROM (SELECT subtask."name" AS item FROM subtask WHERE "parentId" = task.id) as t) AS subtasks 
+        (SELECT coalesce(json_agg(t.item), '[]'::json) FROM (SELECT subtask."name" AS item FROM subtask WHERE "parentId" = task.id) as t) AS subtasks 
       FROM task
     `);
   });
@@ -716,7 +716,7 @@ describe('index', () =>
         id, 
         "name", 
         done, 
-        (SELECT json_agg(row_to_json(t)) FROM (SELECT subtask.id AS id, subtask."name" AS "name", "parentId" FROM subtask WHERE "parentId" = task.id) as t) AS subtasks 
+        (SELECT coalesce(json_agg(row_to_json(t)), '[]'::json) FROM (SELECT subtask.id AS id, subtask."name" AS "name", "parentId" FROM subtask WHERE "parentId" = task.id) as t) AS subtasks 
       FROM task
     `);
   });

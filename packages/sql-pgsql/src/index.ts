@@ -472,11 +472,11 @@ DialectPgsql.transformer.setTransformer<QueryJson<any, any>>(
     }
     else if (json instanceof QuerySelect)
     {
-      return `SELECT json_agg(row_to_json(t)) FROM (${subquery}) as t`;
+      return `SELECT coalesce(json_agg(row_to_json(t)), '[]'::json) FROM (${subquery}) as t`;
     }
     else if (json instanceof QueryList)
     {
-      return `SELECT json_agg(t.item) FROM (${subquery}) as t`;
+      return `SELECT coalesce(json_agg(t.item), '[]'::json) FROM (${subquery}) as t`;
     }
     else
     {
