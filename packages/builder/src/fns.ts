@@ -7,7 +7,7 @@ export function isString<S = string>(x: any): x is S
   return typeof x === 'string';
 }
 
-export function isName(x: any): x is Name
+export function isName<N extends Name>(x: any): x is N
 {
   return isString(x) || isNumber(x) || typeof x === 'symbol';
 }

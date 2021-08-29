@@ -32,6 +32,7 @@ export enum DialectFeatures
   UNSIGNED                = (1 << 28),
   NAMED_PARAMETERS        = (1 << 29),
   FUNCTION_NAMED_PARAMS   = (1 << 30),
+  LATERAL_JOIN            = (1 << 31),
 
   ALL                     = -1,
 }
@@ -70,4 +71,5 @@ export const DialectFeaturesDescription =
   'UNSIGNED numeric types',
   'named parameters',
   'named parameters in functions',
+  'LATERAL/APPLY joins',
 ]; 

@@ -31,6 +31,7 @@ DialectMssql.selectOrder = ['with', 'SELECT', 'top', 'distinct', 'selects', 'int
 DialectMssql.nameQuotesOptional = /^#?\w+$/;
 DialectMssql.recursiveKeyword = false;
 DialectMssql.trueIdentifier = '1';
+DialectMssql.trueCondition = '1 = 1';
 DialectMssql.falseIdentifier = '0';
 DialectMssql.paramPrefix = '@';
 
@@ -63,6 +64,13 @@ DialectMssql.joinType.aliases({
   LEFT: 'LEFT JOIN',
   RIGHT: 'RIGHT JOIN',
   FULL: 'FULL JOIN',
+});
+
+DialectMssql.lateralJoinType.aliases({
+  INNER: 'CROSS APPLY',
+  LEFT: 'OUTER APPLY',
+  RIGHT: 'OUTER APPLY',
+  FULL: 'OUTER APPLY',
 });
 
 DialectMssql.aggregates.setDefaultFormat('{name}({distinct}{args}){order}{over}');

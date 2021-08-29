@@ -608,6 +608,44 @@ describe('Select', () =>
     `);
   });
 
+  it('join left lateral', () =>
+  {
+    const x = from(People)
+      .joinLeft(({ people }) =>
+        from(Task)
+          .select(({ task }, { count, max }) => [
+            max(task.doneAt).as('lastDoneAt'),
+            count().as('taskCount')
+          ])
+          .where(({ task }) => [
+            task.assignee.eq(people.id)
+          ])
+          .as('taskStats')
+      )
+      .select(({ people, taskStats }) => [
+        people.id,
+        people.name,
+        taskStats.lastDoneAt,
+        taskStats.taskCount
+      ])
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ condenseSpace: true, ignoreCase: true }, x, `
+      SELECT
+        id,
+        "name",
+        lastDoneAt,
+        taskCount
+      FROM people
+      LEFT JOIN LATERAL (SELECT
+          MAX(doneAt) AS lastDoneAt,
+          COUNT(*) AS taskCount
+        FROM task
+        WHERE assignee = people.id) AS taskStats ON true
+    `);
+  });
+
   it('join right', () =>
   {
     const x = from(Task)

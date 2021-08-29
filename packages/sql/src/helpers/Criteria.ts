@@ -93,7 +93,15 @@ export function getCriteria(criteria: QueryCriteria<any, any, any>, transform: D
     {
       let x = '';
 
-      x += out.dialect.joinType.get(j.type);
+      if (j.lateral)
+      {
+        out.dialect.requireSupport(DialectFeatures.LATERAL_JOIN);
+      }
+
+      x += j.lateral
+        ? out.dialect.lateralJoinType.get(j.type)
+        : out.dialect.joinType.get(j.type);
+
       x += ' ';
       x += getNamedSource( j, out );
       x += ' ON ';
@@ -106,7 +114,7 @@ export function getCriteria(criteria: QueryCriteria<any, any, any>, transform: D
       } 
       else 
       {
-        x += out.dialect.trueIdentifier + ' = ' + out.dialect.trueIdentifier;
+        x += out.dialect.trueCondition;
       }
 
       return x;

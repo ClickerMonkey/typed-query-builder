@@ -21,7 +21,8 @@ DialectPgsql.addReservedWords(ReservedWords);
 
 DialectPgsql.implicitPredicates = true;
 
-DialectPgsql.aliasQuotesOptional = /^[a-z\d]+$/;
+DialectPgsql.aliasQuotesOptional = /^[a-z\d_]+$/;
+DialectPgsql.nameQuotesOptional = /^[a-z\d_]+$/;
 
 DialectPgsql.predicateBinary.alias('!=', '<>');
 
@@ -47,6 +48,12 @@ DialectPgsql.joinType.aliases({
   LEFT: 'LEFT JOIN',
   RIGHT: 'RIGHT JOIN',
   FULL: 'FULL JOIN',
+});
+DialectPgsql.lateralJoinType.aliases({
+  INNER: 'INNER JOIN LATERAL',
+  LEFT: 'LEFT JOIN LATERAL',
+  RIGHT: 'RIGHT JOIN LATERAL',
+  FULL: 'FULL JOIN LATERAL',
 });
 
 // =========================================================

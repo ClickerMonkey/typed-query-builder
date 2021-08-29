@@ -36,6 +36,7 @@ export function addDelete(dialect: Dialect)
       
       params.table = () =>
       {
+        // const table = getNamedSource(_from, out);
         const table = out.dialect.quoteName(String(_from.table));
 
         out.sources.push(_from as any);

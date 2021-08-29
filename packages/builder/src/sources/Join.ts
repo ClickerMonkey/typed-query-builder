@@ -10,6 +10,7 @@ export class SourceJoin<N extends Name, S extends Selects> extends NamedSourceBa
     source: NamedSource<N, S>,
     public type: JoinType,
     public condition: ExprScalar<_Boolean>,
+    public lateral: boolean = false,
   ) {
     super( source.getName(), source.getSource(), source.getSelects() );
 

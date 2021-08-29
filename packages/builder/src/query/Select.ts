@@ -6,9 +6,8 @@ import {
   ExprFactory, Expr, ExprType, QueryExistential, QueryFirst, QueryFirstValue, QueryList, Source, SourceTable, SourceVirtual,
   SourceJoin, OrderBy, Select, FunctionArgumentInputs, FunctionProxy, FunctionResult, Functions, QueryCriteria, ExprKind, 
   NamedSource, SourceRecursive, ExprInput, ExprScalar, fns, QueryGroup, toExpr, GroupingSetType, LockRowLock, LockStrength,
-  WithProvider, _Boolean, _BigInt, _Numbers, _Floats
+  WithProvider, _Boolean, _BigInt, _Numbers, _Floats, isName, SourceKindPair
 } from '../internal';
-import { SourceKindPair } from '../sources/KindPair';
 
 
 export class QuerySelect<T extends Sources, S extends Selects, W extends Name> extends Source<S>
@@ -95,23 +94,25 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
     return this as never;
   }
 
-  public join<JN extends keyof T, JT extends Selects>(type: 'INNER', source: T, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S, W>
-  public join<JN extends keyof T, JT extends Selects>(type: 'LEFT', source: T, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S, W>
-  public join<JN extends keyof T, JT extends Selects>(type: 'RIGHT', source: T, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W>
-  public join<JN extends keyof T, JT extends Selects>(type: 'FULL', source: T, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W>
-  public join<JN extends Name, JT extends Selects>(type: 'INNER', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S, W>
-  public join<JN extends Name, JT extends Selects>(type: 'LEFT', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S, W>
-  public join<JN extends Name, JT extends Selects>(type: 'RIGHT', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W>
-  public join<JN extends Name, JT extends Selects>(type: 'FULL', source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W>
-  public join<JN extends Name | keyof T, JT extends Selects>(type: JoinType, source: NamedSource<JN, JT> | JN, on: any): never
+  public join<JN extends keyof T, JT extends Selects>(type: 'INNER', source: T, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S, W>
+  public join<JN extends keyof T, JT extends Selects>(type: 'LEFT', source: T, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S, W>
+  public join<JN extends keyof T, JT extends Selects>(type: 'RIGHT', source: T, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W>
+  public join<JN extends keyof T, JT extends Selects>(type: 'FULL', source: T, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W>
+  public join<JN extends Name, JT extends Selects>(type: 'INNER', source: ExprProvider<T, S, W, NamedSource<JN, JT>>, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S, W>
+  public join<JN extends Name, JT extends Selects>(type: 'LEFT', source: ExprProvider<T, S, W, NamedSource<JN, JT>>, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S, W>
+  public join<JN extends Name, JT extends Selects>(type: 'RIGHT', source: ExprProvider<T, S, W, NamedSource<JN, JT>>, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W>
+  public join<JN extends Name, JT extends Selects>(type: 'FULL', source: ExprProvider<T, S, W, NamedSource<JN, JT>>, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W>
+  public join<JN extends Name | keyof T, JT extends Selects>(type: JoinType, source: ExprProvider<T, S, W, NamedSource<JN, JT>> | JN, on?: any): never
   {
+    let lateral = false;
     let joinSource: NamedSource<JN, JT>;
 
-    if (!isString<JN>(source))
+    if (isFunction(source))
     {
-      joinSource = source;
+      joinSource = this._criteria.exprs.provide(source);
+      lateral = true;
     }
-    else
+    else if (isName<JN>(source))
     {
       const sourceNamed = this._criteria.sources.find( s => s.source.getName() === source ) as SourceKindPair<JN, JT> | undefined;
 
@@ -122,40 +123,47 @@ export class QuerySelect<T extends Sources, S extends Selects, W extends Name> e
 
       joinSource = new SourceVirtual<JN, JT>(sourceNamed.source);
     }
+    else
+    {
+      joinSource = source;
+    }
 
-    const join = new SourceJoin(joinSource, type, toExpr(true));;
+    const join = new SourceJoin(joinSource, type, toExpr(true), lateral);
 
     this._criteria.addSource(join as any, SourceKind.JOIN);
 
-    join.condition = toExpr(this._criteria.exprs.provide(on as any));
+    if (on)
+    {
+      join.condition = toExpr(this._criteria.exprs.provide(on as any));
+    }
 
     return this as never;
   }
 
-  public joinInner<JN extends keyof T, JT extends Selects>(source: JN, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S, W>
-  public joinInner<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S, W>
-  public joinInner<JN extends Name | keyof T, JT extends Selects>(source: NamedSource<JN, JT> | JN, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S, W>
+  public joinInner<JN extends keyof T, JT extends Selects>(source: JN, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S, W>
+  public joinInner<JN extends Name, JT extends Selects>(source: ExprProvider<T, S, W, NamedSource<JN, JT>>, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S, W>
+  public joinInner<JN extends Name | keyof T, JT extends Selects>(source: ExprProvider<T, S, W, NamedSource<JN, JT>> | JN, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedInner<T, JN, JT>, S, W>
   {
     return this.join('INNER', source as any, on);
   }
 
-  public joinLeft<JN extends keyof T, JT extends Selects>(source: JN, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S, W> 
-  public joinLeft<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S, W> 
-  public joinLeft<JN extends Name | keyof T, JT extends Selects>(source: NamedSource<JN, JT> | JN, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S, W> 
+  public joinLeft<JN extends keyof T, JT extends Selects>(source: JN, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S, W> 
+  public joinLeft<JN extends Name, JT extends Selects>(source: ExprProvider<T, S, W, NamedSource<JN, JT>>, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S, W> 
+  public joinLeft<JN extends Name | keyof T, JT extends Selects>(source: ExprProvider<T, S, W, NamedSource<JN, JT>> | JN, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedLeft<T, JN, JT>, S, W> 
   {
     return this.join('LEFT', source as any, on);
   }
 
-  public joinRight<JN extends keyof T, JT extends Selects>(source: JN, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W> 
-  public joinRight<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W> 
-  public joinRight<JN extends Name | keyof T, JT extends Selects>(source: NamedSource<JN, JT> | JN, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W> 
+  public joinRight<JN extends keyof T, JT extends Selects>(source: JN, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W> 
+  public joinRight<JN extends Name, JT extends Selects>(source: ExprProvider<T, S, W, NamedSource<JN, JT>>, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W> 
+  public joinRight<JN extends Name | keyof T, JT extends Selects>(source: ExprProvider<T, S, W, NamedSource<JN, JT>> | JN, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedRight<T, JN, JT>, S, W> 
   {
     return this.join('RIGHT', source as any, on);
   }
 
-  public joinFull<JN extends keyof T, JT extends Selects>(source: JN, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W> 
-  public joinFull<JN extends Name, JT extends Selects>(source: NamedSource<JN, JT>, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W> 
-  public joinFull<JN extends Name | keyof T, JT extends Selects>(source: NamedSource<JN, JT> | JN, on: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W> 
+  public joinFull<JN extends keyof T, JT extends Selects>(source: JN, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W> 
+  public joinFull<JN extends Name, JT extends Selects>(source: ExprProvider<T, S, W, NamedSource<JN, JT>>, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W> 
+  public joinFull<JN extends Name | keyof T, JT extends Selects>(source: ExprProvider<T, S, W, NamedSource<JN, JT>> | JN, on?: ExprProvider<JoinedInner<T, JN, JT>, S, W, ExprInput<_Boolean>>): QuerySelect<JoinedFull<T, JN, JT>, S, W> 
   {
     return this.join('FULL', source as any, on);
   }

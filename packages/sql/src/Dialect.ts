@@ -181,6 +181,7 @@ export class Dialect
   public paramPrefix: string;
   public paramSuffix: string;
   public trueIdentifier: string;
+  public trueCondition: string;
   public falseIdentifier: string;
   public nullIdentifier: string;
   public featureFormatter: Record<DialectFeatures, DialectFeatureFormatter>;
@@ -212,6 +213,7 @@ export class Dialect
   public predicateRow: DialectFormatter<PredicateRowType, DialectParamsPredicateRow>;
   public predicateTypes: DialectFormatter<PredicatesType, DialectParamsNamed>;
   public joinType: DialectFormatter<JoinType, DialectParamsNamed>;
+  public lateralJoinType: DialectFormatter<JoinType, DialectParamsNamed>;
   public orderDirection: DialectFormatter<OrderDirection, DialectParamsNamed>;
   public setOperation: DialectFormatter<SetOperation, DialectParamsNamed>;
   public windowFrameMode: DialectFormatter<WindowFrameMode, DialectParamsNamed>;
@@ -251,6 +253,7 @@ export class Dialect
     this.predicateRow = new DialectFormatter('({first}) {op} ({second})', ['op', 'first', 'second'], 'op');
     this.predicateTypes = new DialectFormatter('{name}', ['name'], 'name');
     this.joinType = new DialectFormatter('{name}', ['name'], 'name');
+    this.lateralJoinType = new DialectFormatter('{name}', ['name'], 'name');
     this.orderDirection = new DialectFormatter('{name}', ['name'], 'name');
     this.setOperation = new DialectFormatter('{name}', ['name'], 'name');
     this.windowFrameMode = new DialectFormatter('{name}', ['name'], 'name');
@@ -267,6 +270,7 @@ export class Dialect
     this.paramPrefix = '$';
     this.paramSuffix = '';
     this.trueIdentifier = 'TRUE';
+    this.trueCondition = 'TRUE';
     this.falseIdentifier = 'FALSE';
     this.nullIdentifier = 'NULL';
     this.defaultOptions = {};

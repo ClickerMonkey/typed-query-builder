@@ -22,6 +22,12 @@ DialectBase.joinType.aliases({
   RIGHT: 'RIGHT JOIN',
   FULL: 'FULL JOIN',
 });
+DialectBase.lateralJoinType.aliases({
+  INNER: 'INNER JOIN LATERAL',
+  LEFT: 'LEFT JOIN LATERAL',
+  RIGHT: 'RIGHT JOIN LATERAL',
+  FULL: 'FULL JOIN LATERAL',
+});
 DialectBase.valueFormatter.push(
   Dialect.FormatBoolean,
   Dialect.FormatTemporal,

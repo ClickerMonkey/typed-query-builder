@@ -459,7 +459,7 @@ describe('index', () =>
       SELECT
         TRUNC(id * 1.3) AS truncated,
         CURRENT_TIMESTAMP AS now, 
-        EXTRACT(EPOCH FROM doneAt) AS "doneAtSeconds"
+        EXTRACT(EPOCH FROM "doneAt") AS "doneAtSeconds"
       FROM task
     `);
   });
@@ -645,7 +645,7 @@ describe('index', () =>
       DELETE FROM task
       WHERE 
         done
-      RETURNING id, doneAt as "doneAt"
+      RETURNING id, "doneAt"
     `);
   });
 
@@ -664,7 +664,7 @@ describe('index', () =>
         done = false
       WHERE 
         done
-      RETURNING id, doneAt AS "doneAt"
+      RETURNING id, "doneAt"
     `);
   });
 
@@ -690,7 +690,7 @@ describe('index', () =>
         id, 
         "name", 
         done, 
-        (SELECT json_agg(t.item) FROM (SELECT subtask."name" AS item FROM subtask WHERE parentId = task.id) as t) AS subtasks 
+        (SELECT json_agg(t.item) FROM (SELECT subtask."name" AS item FROM subtask WHERE "parentId" = task.id) as t) AS subtasks 
       FROM task
     `);
   });
@@ -716,7 +716,7 @@ describe('index', () =>
         id, 
         "name", 
         done, 
-        (SELECT json_agg(row_to_json(t)) FROM (SELECT subtask.id AS id, subtask."name" AS "name", parentId AS "parentId" FROM subtask WHERE parentId = task.id) as t) AS subtasks 
+        (SELECT json_agg(row_to_json(t)) FROM (SELECT subtask.id AS id, subtask."name" AS "name", "parentId" FROM subtask WHERE "parentId" = task.id) as t) AS subtasks 
       FROM task
     `);
   });
@@ -741,7 +741,7 @@ describe('index', () =>
       SELECT 
         id, 
         "name", 
-        (SELECT row_to_json(t) FROM (SELECT task.id AS id, task."name" AS "name", done, doneAt AS "doneAt" FROM task WHERE task.id = parentId LIMIT 1) as t) AS parent
+        (SELECT row_to_json(t) FROM (SELECT task.id AS id, task."name" AS "name", done, "doneAt" FROM task WHERE task.id = "parentId" LIMIT 1) as t) AS parent
       FROM subtask
     `);
   });
@@ -806,7 +806,7 @@ describe('index', () =>
     };
 
     const Neighbors = from(PartyInterest)
-      .select(({ party_interest }, { count, countIf, sum, min, deep }, { geomDistance }) => [
+      .select(({ party_interest }, { count, countIf, sum, min }, { geomDistance }) => [
         party_interest.partyId.as('relatedId'),
         count().as('interestCount'),
         countIf(party_interest.status.eq(SearchParams.interestPrimary)).as('primaryCount'),
@@ -858,12 +858,12 @@ describe('index', () =>
 
     expectText({ condenseSpace: true }, SearchSql, `
       SELECT 
-        neighbor.relatedId AS "relatedId", 
-        interestCount AS "interestCount", 
-        primaryCount AS "primaryCount", 
-        scoreRaw AS "scoreRaw", 
+        neighbor."relatedId" AS "relatedId", 
+        "interestCount", 
+        "primaryCount", 
+        "scoreRaw", 
         distance, 
-        (scoreRaw * greatest(1, (CASE WHEN boostExpires > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * $1)) AS score 
+        ("scoreRaw" * greatest(1, (CASE WHEN "boostExpires" > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * $1)) AS score 
       FROM (SELECT 
           party_id AS "relatedId", 
           COUNT(*) AS "interestCount", 
@@ -876,15 +876,15 @@ describe('index', () =>
           AND party_id <> $6 
         GROUP BY party_id) AS neighbor 
       INNER JOIN party 
-        ON id = relatedId 
+        ON id = "relatedId"
       LEFT JOIN party_relation 
-        ON party_relation.relatedId = neighbor.relatedId 
-      WHERE partyId = $6 
+        ON party_relation."relatedId" = neighbor."relatedId" 
+      WHERE "partyId" = $6 
         AND (party_relation."status" IS NULL OR (party_relation."status" & $7) <> 0) 
         AND visibility > $8 
-        AND (visibility <> $9 OR primaryCount > 0) 
+        AND (visibility <> $9 OR "primaryCount" > 0) 
         AND party."status" <= $10 
-      ORDER BY (scoreRaw * greatest(1, (CASE WHEN boostExpires > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * $1))
+      ORDER BY ("scoreRaw" * greatest(1, (CASE WHEN "boostExpires" > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * $1))
     `);
 
     DialectPgsql.gis = true;
@@ -893,12 +893,12 @@ describe('index', () =>
 
     expectText({ condenseSpace: true }, SearchSqlGis, `
       SELECT 
-        neighbor.relatedId AS "relatedId", 
-        interestCount AS "interestCount", 
-        primaryCount AS "primaryCount", 
-        scoreRaw AS "scoreRaw", 
+        neighbor."relatedId" AS "relatedId", 
+        "interestCount", 
+        "primaryCount", 
+        "scoreRaw", 
         distance, 
-        (scoreRaw * greatest(1, (CASE WHEN boostExpires > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * $1)) AS score 
+        ("scoreRaw" * greatest(1, (CASE WHEN "boostExpires" > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * $1)) AS score 
       FROM (SELECT 
           party_id AS "relatedId", 
           COUNT(*) AS "interestCount", 
@@ -911,15 +911,15 @@ describe('index', () =>
           AND party_id <> $6 
         GROUP BY party_id) AS neighbor 
       INNER JOIN party 
-        ON id = relatedId 
+        ON id = "relatedId"
       LEFT JOIN party_relation 
-        ON party_relation.relatedId = neighbor.relatedId 
-      WHERE partyId = $6 
+        ON party_relation."relatedId" = neighbor."relatedId" 
+      WHERE "partyId" = $6 
         AND (party_relation."status" IS NULL OR (party_relation."status" & $7) <> 0) 
         AND visibility > $8 
-        AND (visibility <> $9 OR primaryCount > 0) 
+        AND (visibility <> $9 OR "primaryCount" > 0) 
         AND party."status" <= $10 
-      ORDER BY (scoreRaw * greatest(1, (CASE WHEN boostExpires > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * $1))
+      ORDER BY ("scoreRaw" * greatest(1, (CASE WHEN "boostExpires" > CURRENT_TIMESTAMP THEN boost_amount ELSE 1 END) * $1))
     `);
 
     DialectPgsql.gis = false;
