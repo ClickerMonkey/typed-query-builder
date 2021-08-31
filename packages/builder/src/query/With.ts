@@ -74,9 +74,9 @@ export class WithBuilder<T extends Sources = {}>
     return query as never;
   }
 
-  public insert(): StatementInsert<T, never, [], never, []> 
-  public insert<I extends Name, S extends Selects>(target: SourceTable<I, S, any>): StatementInsert<JoinedInner<T, I, S>, I, S, Cast<SelectsKeys<S>, Tuple<SelectsKey<S>>>, []> 
-  public insert<I extends Name, S extends Selects, C extends Tuple<SelectsKey<S>>>(target: SourceTable<I, S, any>, columns: C): StatementInsert<JoinedInner<T, I, S>, I, SelectsFromKeys<S, C>, C, []> 
+  public insert(): StatementInsert<T, never, [], never, [], []> 
+  public insert<I extends Name, S extends Selects>(target: SourceTable<I, S, any>): StatementInsert<JoinedInner<T, I, S>, I, S, Cast<SelectsKeys<S>, Tuple<SelectsKey<S>>>, S, []> 
+  public insert<I extends Name, S extends Selects, C extends Tuple<SelectsKey<S>>>(target: SourceTable<I, S, any>, columns: C): StatementInsert<JoinedInner<T, I, S>, I, S, C, SelectsFromKeys<S, C>, []> 
   public insert(target?: SourceTable<any, any, any>, columns?: any): never 
   {
     const query = new StatementInsert();

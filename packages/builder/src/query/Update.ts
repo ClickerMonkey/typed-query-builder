@@ -132,4 +132,14 @@ export class StatementUpdate<
     return super.clearReturning() as any;
   }
 
+  public hasSets(): boolean
+  {
+    return this._sets.length > 0;
+  }
+
+  public hasWhere(): boolean
+  {
+    return this._where.length > 0;
+  }
+
 }

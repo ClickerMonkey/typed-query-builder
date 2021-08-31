@@ -59,30 +59,32 @@ export function insert<
   I extends Name = never,
   T extends Selects = [], 
   C extends Tuple<SelectsKey<T>> = never,
+  V extends Selects = [],
   R extends Selects = []
->(): StatementInsert<W, I, T, C, R> 
+>(): StatementInsert<W, I, T, C, V, R> 
 export function insert<
   W extends Sources = {}, 
   I extends Name = never,
   T extends Selects = [], 
   C extends Tuple<SelectsKey<T>> = never,
   R extends Selects = []
->(target: SourceTable<I, T, any>): StatementInsert<JoinedInner<W, I, T>, I, T, Cast<SelectsKeys<T>, Tuple<SelectsKey<T>>>, R> 
+>(target: SourceTable<I, T, any>): StatementInsert<JoinedInner<W, I, T>, I, T, Cast<SelectsKeys<T>, Tuple<SelectsKey<T>>>, T, R> 
 export function insert<
   W extends Sources = {}, 
   I extends Name = never,
   T extends Selects = [], 
   C extends Tuple<SelectsKey<T>> = never,
   R extends Selects = []
->(target: SourceTable<I, T, any>, columns: C): StatementInsert<JoinedInner<W, I, T>, I, SelectsFromKeys<T, C>, C, R> 
+>(target: SourceTable<I, T, any>, columns: C): StatementInsert<JoinedInner<W, I, T>, I, T, C, SelectsFromKeys<T, C>, R> 
 export function insert<
   W extends Sources = {}, 
   I extends Name = never,
   T extends Selects = [], 
   C extends Tuple<SelectsKey<T>> = never,
+  V extends Selects = [],
   R extends Selects = []
 >(target?: SourceTable<I, T, any>, columns?: C): never {
-  const query = new StatementInsert<W, I, T, C, R>();
+  const query = new StatementInsert<W, I, T, C, V, R>();
 
   if (target) {
     query.into(target, columns as any);

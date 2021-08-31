@@ -156,6 +156,11 @@ export abstract class Statement<
     return this;
   }
 
+  public hasReturning(): boolean
+  {
+    return this._returning.length > 0;
+  }
+
   public traverse<R>(traverse: Traverser<Expr<any>, R>): R 
   {
     const { _sources, _returning } = this;

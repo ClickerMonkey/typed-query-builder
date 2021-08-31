@@ -45,7 +45,8 @@ export class StatementInsert<
   N extends Name = never,
   S extends Selects = [], 
   C extends Tuple<SelectsKey<S>> = never,
-  R extends Selects = []
+  V extends Selects = [],
+  R extends Selects = [],
 > extends Statement<T, N, S, R>
 {
 
@@ -95,13 +96,13 @@ export class StatementInsert<
     return this;
   }
 
-  public with<WN extends Name, WS extends Selects>(sourceProvider: WithProvider<T, NamedSource<WN, WS>>, recursive?: WithProvider<JoinedInner<T, WN, WS>, Source<WS>>, all?: boolean): StatementInsert<JoinedInner<T, WN, WS>, N, S, C, R>
+  public with<WN extends Name, WS extends Selects>(sourceProvider: WithProvider<T, NamedSource<WN, WS>>, recursive?: WithProvider<JoinedInner<T, WN, WS>, Source<WS>>, all?: boolean): StatementInsert<JoinedInner<T, WN, WS>, N, S, C, V, R>
   {
     return super.with(sourceProvider, recursive, all) as any;
   }
 
-  public into<IN extends Name, IT extends Selects>(into: SourceTable<IN, IT, any>): StatementInsert<JoinedInner<T, IN, IT>, IN, IT, Cast<SelectsKeys<IT>, Tuple<SelectsKey<IT>>>, []>
-  public into<IN extends Name, IT extends Selects, IC extends Tuple<SelectsKey<IT>>>(into: SourceTable<IN, IT, any>, columns: IC): StatementInsert<JoinedInner<T, IN, IT>, IN, SelectsFromKeys<IT, IC>, IC, []>
+  public into<IN extends Name, IT extends Selects>(into: SourceTable<IN, IT, any>): StatementInsert<JoinedInner<T, IN, IT>, IN, IT, Cast<SelectsKeys<IT>, Tuple<SelectsKey<IT>>>, IT, []>
+  public into<IN extends Name, IT extends Selects, IC extends Tuple<SelectsKey<IT>>>(into: SourceTable<IN, IT, any>, columns: IC): StatementInsert<JoinedInner<T, IN, IT>, IN, IT, IC, SelectsFromKeys<IT, IC>, []>
   public into<IN extends Name, IT extends Selects, IC extends SelectsKey<IT>>(into: SourceTable<IN, IT, any>, columns?: IC[]): never
   {
     (this as any)._into = into;
@@ -112,7 +113,7 @@ export class StatementInsert<
     return this as never;
   }
 
-  public values(values: ExprProvider<T, [], never, StatementInsertValuesInput<S, C>>): this 
+  public values(values: ExprProvider<T, [], never, StatementInsertValuesInput<V, C>>): this 
   {
     this._values.push(toAnyExpr(this._exprs.provide(values as any)));
 
@@ -180,17 +181,42 @@ export class StatementInsert<
     return this;
   }
 
-  public returning(output: '*'): StatementInsert<T, N, S, C, S>
-  public returning<RC extends SelectsKey<S>>(output: RC[]): StatementInsert<T, N, S, C, StatementReturningColumns<R, S, RC>>
-  public returning<RS extends Tuple<Select<any, any>>>(output: ExprProvider<T, [], never, RS>): StatementInsert<T, N, S, C, StatementReturningExpressions<R, RS>>
+  public returning(output: '*'): StatementInsert<T, N, S, C, V, S>
+  public returning<RC extends SelectsKey<S>>(output: RC[]): StatementInsert<T, N, S, C, V, StatementReturningColumns<R, S, RC>>
+  public returning<RS extends Tuple<Select<any, any>>>(output: ExprProvider<T, [], never, RS>): StatementInsert<T, N, S, C, V, StatementReturningExpressions<R, RS>>
   public returning<RS extends Tuple<Select<any, any>>>(output: RS | '*' | Array<keyof S>): never
   {
     return super.returning(output as any) as never;
   }
 
-  public clearReturning(): StatementInsert<T, N, S, C, []> 
+  public clearReturning(): StatementInsert<T, N, S, C, V, []> 
   {
     return super.clearReturning() as any;
+  }
+
+  public hasValues(): boolean
+  {
+    return this._values.length > 0;
+  }
+
+  public hasSetsOnDuplicate(): boolean
+  {
+    return this._sets.length > 0;
+  }
+
+  public hasSetsOnDuplicateWhere(): boolean
+  {
+    return this._setsWhere.length > 0;
+  }
+
+  public getIgnoreDuplicate(): boolean
+  {
+    return this._ignoreDuplicate;
+  }
+
+  public getPriority(): InsertPriority | undefined
+  {
+    return this._priority;
   }
 
 }

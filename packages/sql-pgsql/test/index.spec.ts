@@ -698,7 +698,7 @@ describe('index', () =>
   it('nested json rows', () =>
   {
     const x = from(Task)
-      .select(({ task }, { count }) => [
+      .select(({ task }) => [
         task.id,
         task.name,
         task.done,

@@ -44,7 +44,7 @@ export function addInsert(dialect: Dialect)
     return [];
   }
 
-  dialect.transformer.setTransformer<StatementInsert<{}, never, [], any, []>>(
+  dialect.transformer.setTransformer<StatementInsert<{}, never, [], any, [], []>>(
     StatementInsert,
     (expr, transform, out) => 
     {
