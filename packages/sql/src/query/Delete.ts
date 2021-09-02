@@ -1,7 +1,7 @@
 import { SourceKind, StatementDelete } from '@typed-query-builder/builder';
 import { Dialect, DialectOrderedFormatter, DialectParamsDelete } from '../Dialect';
 import { DialectFeatures } from '../Features';
-import { getPredicates } from '../helpers/Predicates';
+import { getTableNames, getPredicates } from '../helpers';
 
 
 export function addDelete(dialect: Dialect)
@@ -36,8 +36,7 @@ export function addDelete(dialect: Dialect)
       
       params.table = () =>
       {
-        // const table = getNamedSource(_from, out);
-        const table = out.dialect.quoteName(String(_from.table));
+        const table = getTableNames(_from, out);
 
         out.sources.push(_from as any);
 

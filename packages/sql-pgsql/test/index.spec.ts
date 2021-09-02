@@ -668,6 +668,88 @@ describe('index', () =>
     `);
   });
 
+  it('update with alias simplified', () =>
+  {
+    const PartyInterest = table({
+      name: 'partyInterest',
+      table: 'party_interest',
+      fields: {
+        partyId: 'UUID',
+        interestId: 'UUID',
+        status: 'INT',
+      },
+      fieldColumn: {
+        partyId: 'party_id',
+        interestId: 'interest_id',
+      },
+    });
+
+    const x = update(PartyInterest)
+      .returning(({ partyInterest }) => [partyInterest.partyId, partyInterest.status])
+      .set('status', 1)
+      .where(({ partyInterest }) => partyInterest.status.eq(4))
+    ;
+
+    const a = x
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, a, `
+      UPDATE party_interest AS "partyInterest"
+      SET
+        "status" = 1
+      WHERE 
+        "status" = 4
+      RETURNING party_id as "partyId", "status"
+    `);
+
+    const b = x
+      .run(sql)
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, b, `
+      UPDATE party_interest AS "partyInterest"
+      SET
+        "status" = 1
+      WHERE 
+        "partyInterest"."status" = 4
+      RETURNING party_id as "partyId", "status"
+    `);
+  });
+
+  it('update with alias default', () =>
+  {
+    const PartyInterest = table({
+      name: 'partyInterest',
+      table: 'party_interest',
+      fields: {
+        partyId: 'UUID',
+        interestId: 'UUID',
+        status: 'INT',
+      },
+      fieldColumn: {
+        partyId: 'party_id',
+        interestId: 'interest_id',
+      },
+    });
+
+    const x = update(PartyInterest)
+      .returning(({ partyInterest }) => [partyInterest.partyId, partyInterest.interestId])
+      .set('status', 1)
+      .where(({ partyInterest }) => partyInterest.status.eq(4))
+      .run(sqlWithOptions({ simplifyReferences: true }))
+    ;
+    
+    expectText({ ignoreCase: true, condenseSpace: true }, x, `
+      UPDATE party_interest AS "partyInterest"
+      SET
+        "status" = 1
+      WHERE 
+        "status" = 4
+      RETURNING party_id AS "partyId", interest_id AS "interestId"
+    `);
+  });
+
   it('nested json list', () =>
   {
     const x = from(Task)

@@ -1,8 +1,7 @@
 import { SourceKind, StatementUpdate } from '@typed-query-builder/builder';
 import { Dialect, DialectOrderedFormatter, DialectParamsUpdate } from '../Dialect';
 import { DialectFeatures } from '../Features';
-import { getPredicates } from '../helpers/Predicates';
-import { getStatementSet } from '../helpers/Set';
+import { getTableNames, getPredicates, getStatementSet } from '../helpers';
 
 
 export function addUpdate(dialect: Dialect)
@@ -43,7 +42,7 @@ export function addUpdate(dialect: Dialect)
 
       params.table = () =>
       {
-        const table = out.dialect.quoteName(String(_target.table));
+        const table = getTableNames(_target, out);
 
         out.sources.push(_target as any);
 
