@@ -1,7 +1,7 @@
 {
   "name": "@typed-query-builder/sql",
   "license": "GPL-3.0-or-later",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "A generic SQL dialect for typed-query-builder",
   "main": "dist/index.js",
   "typings": "typings/index.d.ts",
