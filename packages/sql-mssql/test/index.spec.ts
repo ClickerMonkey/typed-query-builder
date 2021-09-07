@@ -1116,4 +1116,28 @@ describe('index', () =>
     `);
   });
 
+  it('update table aliased', () =>
+  {
+    const AliasedTable = tableFromType<{ id: number }>()({
+      name: 'Alias',
+      table: 'Aliases',
+      fields: ['id'],
+      fieldColumn: {
+        id: 'AliasID',
+      },
+    });
+
+    const x = update(AliasedTable)
+      .set('id', 42)
+      .where(({ Alias }) => Alias.id.eq(2))
+      .run(sql)
+    ;
+
+    expectText({ ignoreSpace: true }, x, `
+      UPDATE Aliases SET
+        AliasID = 42
+      WHERE AliasID = 2
+    `);
+  });
+
 });

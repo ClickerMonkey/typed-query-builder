@@ -55,7 +55,16 @@ export function addDelete(dialect: Dialect)
 
       if (_where.length > 0) 
       {
-        params.where = () => 'WHERE ' + getPredicates( _where, 'AND', transform, out );
+        const excludeSource = _from.name !== _from.table && !out.dialect.hasSupport(DialectFeatures.ALIASED_UPDATE_DELETE);
+
+        if (excludeSource)
+        {
+          params.where = () => 'WHERE ' + out.modify({ tableOverrides: { [_from.name]: '' } }, () => getPredicates(_where, 'AND', transform, out));
+        }
+        else
+        {
+          params.where = () => 'WHERE ' + getPredicates(_where, 'AND', transform, out);
+        }
       }
 
       if (_returning.length > 0) 

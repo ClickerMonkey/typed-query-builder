@@ -1,4 +1,5 @@
 import { NamedSource, Select, SourceTable } from '@typed-query-builder/builder';
+import { DialectFeatures } from '../Features';
 import { DialectOutput } from '../Output';
 
 
@@ -11,7 +12,7 @@ export function getTableNames(source: SourceTable<any, any, any> | SourceTable<n
 {
   const { table, name } = source;
 
-  if (table !== name)
+  if (table !== name && out.dialect.hasSupport(DialectFeatures.ALIASED_UPDATE_DELETE))
   {
     return out.dialect.quoteName(String(table)) + ' AS ' + out.dialect.quoteAlias(name);
   }

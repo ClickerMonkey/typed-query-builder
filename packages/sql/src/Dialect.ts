@@ -184,9 +184,9 @@ export class Dialect
   public trueCondition: string;
   public falseIdentifier: string;
   public nullIdentifier: string;
-  public featureFormatter: Record<DialectFeatures, DialectFeatureFormatter>;
+  public featureFormatter: Partial<Record<DialectFeatures, DialectFeatureFormatter>>;
   public selectExpression: (expr: string) => string;
-  public supports: number;
+  public supported: boolean[];
   public defaultOptions: DialectOutputOptions;
   public aggregateRequiresArgument: DialectMap<keyof AggregateFunctions, string>;
   public implicitPredicates: boolean;
@@ -287,7 +287,7 @@ export class Dialect
     this.updateOrder = ['with', 'UPDATE', 'ONLY', 'table', 'set', 'from', 'where', 'returning'];
     this.selectOrder = ['with', 'SELECT', 'distinct', 'selects', 'from', 'joins', 'where', 'group', 'having', 'windows', 'order', 'paging', 'locks'];
 
-    this.supports = DialectFeatures.ALL;
+    this.supported = [];
   }
 
   public output(options: DialectOutputOptions = {})
@@ -347,60 +347,62 @@ export class Dialect
 
     const formatter = this.featureFormatter[feature];
 
+    if (!formatter)
+    {
+      throw new Error(`Formatter was not found for feature: ${this.getFeaturesDescription(feature)}`)
+    }
+
     return formatter(value, this.transformer.transform, out);
   }
 
-  public getFeaturesDescription(features: number): string[]
+  public getFeaturesDescription(feature: DialectFeatures): string
   {
-    const out: string[] = [];
-    let i = 0;
-
-    while (features > 0)
-    {
-      if (features & 1)
-      {
-        out.push(DialectFeaturesDescription[i]);
-      }
-
-      i++;
-      features >>= 1;
-    }
-
-    return out;
+    return DialectFeaturesDescription[feature];
   }
 
-  public requireSupport(features: number): void
+  public requireSupport(feature: DialectFeatures): void
   {
-    if ((features & this.supports) !== features)
+    if (!this.hasSupport(feature))
     {
-      throw new Error(`The following features are all not supported by this dialect: ${this.getFeaturesDescription(features).join(', ')}`);
+      throw new Error(`The following features are all not supported by this dialect: ${this.getFeaturesDescription(feature)}`);
     }
   }
 
-  public setSupports(supports: number): this
+  public setSupports(supports: DialectFeatures[]): this
   {
-    this.supports = supports;
+    this.supported = [];
+
+    for (const support of supports)
+    {
+      this.supported[support] = true;
+    }
 
     return this;
   }
 
-  public addSupport(supports: number): this
+  public addSupport(supports: DialectFeatures[]): this
   {
-    this.supports = this.supports | supports;
+    for (const support of supports)
+    {
+      this.supported[support] = true;
+    }
 
     return this;
   }
 
-  public removeSupport(supports: number): this
+  public removeSupport(supports: DialectFeatures[]): this
   {
-    this.supports = this.supports & (~supports);
+    for (const support of supports)
+    {
+      this.supported[support] = false;
+    }
 
     return this;
   }
 
-  public hasSupport(features: number): boolean
+  public hasSupport(feature: DialectFeatures): boolean
   {
-    return (this.supports & features) === features;
+    return this.supported[feature] !== false;
   }
 
   public setResultParser<E extends Expr<any>>(type: ExprClass<E>, parser: (value: any, expr: E) => any): this

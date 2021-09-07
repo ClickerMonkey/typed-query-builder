@@ -12,10 +12,10 @@ class PostgresDialect extends Dialect {
 
 export const DialectPgsql = new PostgresDialect();
 
-DialectPgsql.removeSupport(
-  DialectFeatures.UNSIGNED | 
-  DialectFeatures.NAMED_PARAMETERS
-);
+DialectPgsql.removeSupport([
+  DialectFeatures.UNSIGNED, 
+  DialectFeatures.NAMED_PARAMETERS,
+]);
 
 DialectPgsql.addReservedWords(ReservedWords);
 

@@ -17,10 +17,13 @@ export function addField(dialect: Dialect)
       const includeSource = !out.options.excludeSource;
       const fieldIsNotUnique = (!out.options.simplifyReferences || !out.isUnique(alias, source));
 
-      if (out.options.tableOverrides && out.options.tableOverrides[sourceName])
+      if (out.options.tableOverrides && out.options.tableOverrides[sourceName] !== undefined)
       {
-        x += out.dialect.quoteName(out.options.tableOverrides[sourceName]);
-        x += '.';
+        if (out.options.tableOverrides[sourceName])
+        {
+          x += out.dialect.quoteName(out.options.tableOverrides[sourceName]);
+          x += '.';
+        }
       }
       else if (includeSource && fieldIsNotUnique)
       {

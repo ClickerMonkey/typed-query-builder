@@ -7,15 +7,16 @@ import './types';
 
 export const DialectMssql = new Dialect();
 
-DialectMssql.removeSupport(
-  DialectFeatures.UNSIGNED | 
-  DialectFeatures.AGGREGATE_FILTER | 
-  DialectFeatures.SELECT_DISTINCT_ON |
-  DialectFeatures.ROW_CONSTRUCTOR | 
-  DialectFeatures.INSERT_PRIORITY | 
-  DialectFeatures.INSERT_IGNORE_DUPLICATE | 
-  DialectFeatures.INSERT_SET_ON_DUPLICATE
-);
+DialectMssql.removeSupport([
+  DialectFeatures.UNSIGNED, 
+  DialectFeatures.AGGREGATE_FILTER,
+  DialectFeatures.SELECT_DISTINCT_ON,
+  DialectFeatures.ROW_CONSTRUCTOR,
+  DialectFeatures.INSERT_PRIORITY,
+  DialectFeatures.INSERT_IGNORE_DUPLICATE,
+  DialectFeatures.INSERT_SET_ON_DUPLICATE,
+  DialectFeatures.ALIASED_UPDATE_DELETE,
+]);
 
 DialectMssql.addReservedWords(ReservedWords);
 
@@ -430,7 +431,7 @@ DialectMssql.featureFormatter[DialectFeatures.WITH_RECURSIVE] = (value: SourceRe
 {
   value.all = true;
 
-  return withRecursive(value, transform, out);
+  return withRecursive!(value, transform, out);
 };
 
 DialectMssql.featureFormatter[DialectFeatures.WITH] = (value: NamedSource<any, any>, transform, out) => 
