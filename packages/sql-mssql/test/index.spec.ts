@@ -1140,4 +1140,87 @@ describe('index', () =>
     `);
   });
 
+  it('insert output aliased', () =>
+  {
+    const AliasedTable = tableFromType<{ id: number, name: string }>()({
+      name: 'Alias',
+      table: 'Aliases',
+      fields: ['id', 'name'],
+      fieldColumn: {
+        id: 'AliasID',
+        name: 'AliasName',
+      },
+    });
+
+    const x = insert(AliasedTable, ['name'])
+      .returning(({ Alias }) => [
+        Alias.id
+      ])
+      .values({ name: 'Hello' })
+      .run(sql)
+    ;
+
+    expectText({ ignoreSpace: true }, x, `
+      INSERT INTO Aliases (AliasName)
+      OUTPUT INSERTED.AliasID AS id
+      VALUES ('Hello')
+    `);
+  });
+
+  it('update output aliased', () =>
+  {
+    const AliasedTable = tableFromType<{ id: number, name: string }>()({
+      name: 'Alias',
+      table: 'Aliases',
+      fields: ['id', 'name'],
+      fieldColumn: {
+        id: 'AliasID',
+        name: 'AliasName',
+      },
+    });
+
+    const x = update(AliasedTable)
+      .returning(({ Alias }) => [
+        Alias.id
+      ])
+      .set('id', ({ Alias }) => Alias.id.mul(23))
+      .where(({ Alias }) => Alias.name.eq('Hello'))
+      .run(sql)
+    ;
+
+    expectText({ ignoreSpace: true }, x, `
+      UPDATE Aliases
+      SET AliasID = (AliasID * 23)
+      OUTPUT INSERTED.AliasID AS id
+      WHERE AliasName = 'Hello'
+    `);
+  });
+
+  it('delete output aliased', () =>
+  {
+    const AliasedTable = tableFromType<{ id: number, name: string }>()({
+      name: 'Alias',
+      table: 'Aliases',
+      fields: ['id', 'name'],
+      fieldColumn: {
+        id: 'AliasID',
+        name: 'AliasName',
+      },
+    });
+
+    const x = deletes(AliasedTable)
+      .returning(({ Alias }) => [
+        Alias.id
+      ])
+      .where(({ Alias }) => Alias.name.eq('Hello'))
+      .run(sql)
+    ;
+
+    expectText({ ignoreSpace: true }, x, `
+      DELETE FROM Aliases
+      OUTPUT DELETED.AliasID AS id
+      WHERE AliasName = 'Hello'
+    `);
+  });
+
 });

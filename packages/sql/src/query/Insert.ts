@@ -140,7 +140,7 @@ export function addInsert(dialect: Dialect)
 
       if (_returning.length > 0) 
       {
-        params.returning = () => out.dialect.getFeatureOutput(DialectFeatures.INSERT_RETURNING, [_into.table, _returning], out );
+        params.returning = () => out.dialect.getFeatureOutput(DialectFeatures.INSERT_RETURNING, [_into.table, _into.name, _returning], out );
       }
 
       for (const clause in _clauses)

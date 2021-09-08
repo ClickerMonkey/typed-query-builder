@@ -398,19 +398,19 @@ DialectMssql.featureFormatter[DialectFeatures.AGGREGATE_ORDER] = (_order: OrderB
   return 'WITHIN GROUP (ORDER BY ' + _order.map( (o) => getOrder(o, out) ).join(', ') + ')';
 };
 
-DialectMssql.featureFormatter[DialectFeatures.INSERT_RETURNING] = ([table, selects]: [string, Selects], transform, out) => 
+DialectMssql.featureFormatter[DialectFeatures.INSERT_RETURNING] = ([table, alias, selects]: [string, string, Selects], transform, out) => 
 {
-  return 'OUTPUT ' + out.modify({ tableOverrides: { [table]: 'INSERTED' }}, () => getSelects(selects, out));
+  return 'OUTPUT ' + out.modify({ tableOverrides: { [table]: 'INSERTED', [alias]: 'INSERTED' }}, () => getSelects(selects, out));
 };
 
-DialectMssql.featureFormatter[DialectFeatures.UPDATE_RETURNING] = ([table, selects]: [string, Selects], transform, out) => 
+DialectMssql.featureFormatter[DialectFeatures.UPDATE_RETURNING] = ([table, alias, selects]: [string, string, Selects], transform, out) => 
 {
-  return 'OUTPUT ' + out.modify({ tableOverrides: { [table]: 'INSERTED' }}, () => getSelects(selects, out));
+  return 'OUTPUT ' + out.modify({ tableOverrides: { [table]: 'INSERTED', [alias]: 'INSERTED' }}, () => getSelects(selects, out));
 };
 
-DialectMssql.featureFormatter[DialectFeatures.DELETE_RETURNING] = ([table, selects]: [string, Selects], transform, out) => 
+DialectMssql.featureFormatter[DialectFeatures.DELETE_RETURNING] = ([table, alias, selects]: [string, string, Selects], transform, out) => 
 {
-  return 'OUTPUT ' + out.modify({ tableOverrides: { [table]: 'DELETED' }}, () => getSelects(selects, out));
+  return 'OUTPUT ' + out.modify({ tableOverrides: { [table]: 'DELETED', [alias]: 'DELETED' }}, () => getSelects(selects, out));
 };
 
 DialectMssql.featureFormatter[DialectFeatures.DELETE_USING] = (froms: NamedSource<any, any>[], transform, out) => 

@@ -48,6 +48,12 @@ export function addDelete(dialect: Dialect)
         .map( s => s.source )
       ;
 
+      const excludeSource = _from.name !== _from.table && !out.dialect.hasSupport(DialectFeatures.ALIASED_UPDATE_DELETE);
+      const includeTableName = excludeSource && usings.length > 0;
+      const tableOverrideName = includeTableName
+        ? String(_from.table)
+        : '';
+
       if (usings.length > 0) 
       {
         params.using = () => out.dialect.getFeatureOutput(DialectFeatures.DELETE_USING, usings, out );
@@ -55,11 +61,9 @@ export function addDelete(dialect: Dialect)
 
       if (_where.length > 0) 
       {
-        const excludeSource = _from.name !== _from.table && !out.dialect.hasSupport(DialectFeatures.ALIASED_UPDATE_DELETE);
-
         if (excludeSource)
         {
-          params.where = () => 'WHERE ' + out.modify({ tableOverrides: { [_from.name]: '' } }, () => getPredicates(_where, 'AND', transform, out));
+          params.where = () => 'WHERE ' + out.modify({ tableOverrides: { [_from.name]: tableOverrideName } }, () => getPredicates(_where, 'AND', transform, out));
         }
         else
         {
@@ -69,7 +73,7 @@ export function addDelete(dialect: Dialect)
 
       if (_returning.length > 0) 
       {
-        params.returning = () => out.dialect.getFeatureOutput(DialectFeatures.DELETE_RETURNING, [_from.table, _returning], out );
+        params.returning = () => out.dialect.getFeatureOutput(DialectFeatures.DELETE_RETURNING, [_from.table, _from.name, _returning], out );
       }
 
       for (const clause in _clauses)

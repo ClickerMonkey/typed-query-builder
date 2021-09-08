@@ -6,7 +6,7 @@ import { getSelects } from '../helpers/Selects';
 
 export function addInsertReturningFeature(dialect: Dialect)
 {
-  dialect.featureFormatter[DialectFeatures.INSERT_RETURNING] = ([table, selects]: [string, Selects], transform, out) => 
+  dialect.featureFormatter[DialectFeatures.INSERT_RETURNING] = ([table, alias, selects]: [string, string, Selects], transform, out) => 
   {
     return 'RETURNING ' + out.modify({ excludeSource: true }, () => getSelects(selects, out));
   };

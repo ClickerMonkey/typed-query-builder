@@ -48,16 +48,29 @@ export function addUpdate(dialect: Dialect)
 
         return table;
       };
-      
-      if (_sets.length > 0)
-      {
-        params.set = () => 'SET ' + _sets.map( s => getStatementSet( s, transform, out ) ).join(', ');
-      }
 
       const froms = _sources
         .filter( s => s.kind === SourceKind.FROM )
         .map( s => s.source )
       ;
+
+      const excludeSource = _target.name !== _target.table && !out.dialect.hasSupport(DialectFeatures.ALIASED_UPDATE_DELETE);
+      const includeTableName = excludeSource && froms.length > 0;
+      const tableOverrideName = includeTableName
+        ? String(_target.table)
+        : '';
+      
+      if (_sets.length > 0)
+      {
+        if (excludeSource)
+        {
+          params.set = () => 'SET ' + out.modify({ tableOverrides: { [_target.name]: tableOverrideName } }, () => _sets.map( s => getStatementSet( s, transform, out ) ).join(', '));
+        }
+        else
+        {
+          params.set = () => 'SET ' + _sets.map( s => getStatementSet( s, transform, out ) ).join(', ');
+        }
+      }
 
       if (froms.length > 0)
       {
@@ -66,11 +79,9 @@ export function addUpdate(dialect: Dialect)
 
       if (_where.length > 0)
       {
-        const excludeSource = _target.name !== _target.table && !out.dialect.hasSupport(DialectFeatures.ALIASED_UPDATE_DELETE);
-
         if (excludeSource)
         {
-          params.where = () => 'WHERE ' + out.modify({ tableOverrides: { [_target.name]: '' } }, () => getPredicates(_where, 'AND', transform, out));
+          params.where = () => 'WHERE ' + out.modify({ tableOverrides: { [_target.name]: tableOverrideName } }, () => getPredicates(_where, 'AND', transform, out));
         }
         else
         {
@@ -80,7 +91,7 @@ export function addUpdate(dialect: Dialect)
       
       if (_returning.length > 0) 
       {
-        params.returning = () => out.dialect.getFeatureOutput(DialectFeatures.UPDATE_RETURNING, [_target.table, _returning], out );
+        params.returning = () => out.dialect.getFeatureOutput(DialectFeatures.UPDATE_RETURNING, [_target.table, _target.name, _returning], out );
       }
 
       for (const clause in _clauses)
