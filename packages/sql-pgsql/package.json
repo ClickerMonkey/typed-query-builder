@@ -1,7 +1,7 @@
 {
   "name": "@typed-query-builder/sql-pgsql",
   "license": "GPL-3.0-or-later",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "A SQL dialect for Postgres",
   "main": "dist/index.js",
   "typings": "typings/index.d.ts",
@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@typed-query-builder/builder": "^0.6.2",
-    "@typed-query-builder/sql": "^0.6.4",
+    "@typed-query-builder/sql": "^0.6.5",
     "tslib": "2.3.1"
   },
   "gitHead": "2619c027919f5d59167df540686231246ac2b9d2"
