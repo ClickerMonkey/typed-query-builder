@@ -1,5 +1,5 @@
 import { Database, DatabaseQueryProvider, DatabaseParameters, DatabaseQueryResult, DatabaseStreamListener, DatabaseProcResult, DatabaseResultProvider } from '@typed-query-builder/builder';
-import { prepare, exec } from './core';
+import { prepare, exec, execMany } from './core';
 import { RunInput } from './State';
 
 
@@ -130,6 +130,14 @@ export function createDatabase<D extends RunInput>(db: D, options?: RunDatabaseO
 
       return async (expr) => compiled(expr);
     },
+    countMany: (params) => {
+      const compiled = execMany(db, {
+        ...extendParams(options, params),
+        affectedCount: true,
+      });
+
+      return async (...expr) => compiled(...expr);
+    },
     countTuples: (params) => {
       const compiled = exec(db, {
         ...extendParams(options, params),
@@ -143,6 +151,11 @@ export function createDatabase<D extends RunInput>(db: D, options?: RunDatabaseO
       const compiled = exec(db, extendParams(options, params));
 
       return async (expr) => compiled(expr);
+    },
+    many: (params) => {
+      const compiled = execMany(db, extendParams(options, params));
+
+      return async (...exprs) => compiled(...exprs);
     },
     tuples: (params) => {
       const compiled = exec(db, {
@@ -171,6 +184,13 @@ export function createDatabase<D extends RunInput>(db: D, options?: RunDatabaseO
         const result = compiled(expr) as any[];
 
         return handleStream(batchSize, result);
+      };
+    },
+    run: (params) => {
+      const compiled = execMany(db, extendParams(options, params));
+
+      return async (exprs) => {
+        compiled(...exprs)
       };
     },
   });

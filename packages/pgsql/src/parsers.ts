@@ -1,6 +1,7 @@
 import { isArray, isString, isValue, QueryExistential, QueryFirst, QueryFirstValue, QueryJson, QueryList, QuerySelect } from '@typed-query-builder/builder';
 import { DialectPgsql } from '@typed-query-builder/sql-pgsql';
 
+
 DialectPgsql.setResultParser(QueryJson, (result, q) => 
 {
   if (isString(result)) 

@@ -1,6 +1,6 @@
 import { Pool, Client } from 'pg';
 import { Database, DatabaseQueryProvider, DatabaseParameters, DatabaseResultProvider } from '@typed-query-builder/builder';
-import { prepare, exec, stream } from './index';
+import { prepare, exec, stream, execMany } from './index';
 import { loadTypes } from './types';
 
 
@@ -41,21 +41,11 @@ export interface PgsqlDatabaseOptions
     * If true all strings in results will be inspected for JSON values and be automatically parsed.
     */
    detectJson?: boolean;
- 
+
    /**
-    * If true all strings in results will be inspected for "YYYY-MM-DD" format and automatically converted to a Date (or custom object).
+    * Don't bother parsing any results, I don't care!
     */
-   detectDate?: boolean | ((detected: string) => any);
- 
-   /**
-    * If true all strings in results will be inspected for "YYYY-MM-DD(T| )hh:mm:ss" format and automatically converted to a Date (or custom object).
-    */
-   detectTimestamp?: boolean | ((detected: string) => any);
- 
-   /**
-    * If true all strings will be inspected for a date format and will be automatically converted to a Date (or custom object).
-    */
-   detectAllDates?: boolean | ((detected: string) => any);
+   ignoreResults?: boolean;
 
 }
 
@@ -86,6 +76,11 @@ export function createDatabase(db: Pool | Client, options?: PgsqlDatabaseOptions
 
       return exec(db, { ...finalOptions, affectedCount: true });
     },
+    countMany: (params) => {
+      const finalOptions = extendParams(options, params);
+
+      return execMany(db, { ...finalOptions, affectedCount: true });
+    },
     countTuples: (params) => {
       const finalOptions = extendParams(options, params);
 
@@ -93,6 +88,9 @@ export function createDatabase(db: Pool | Client, options?: PgsqlDatabaseOptions
     },
     get: (params) => {
       return exec(db, extendParams(options, params));
+    },
+    many: (params) => {
+      return execMany(db, extendParams(options, params));
     },
     tuples: (params) => {
       const finalOptions = extendParams(options, params);
@@ -114,6 +112,12 @@ export function createDatabase(db: Pool | Client, options?: PgsqlDatabaseOptions
       };
 
       return stream(db, { ...finalOptions, arrayMode: true });
+    },
+    run: (params) => {
+      const finalOptions = extendParams(options, params);
+      const many = execMany(db, { ...finalOptions, ignoreResults: true });
+
+      return (exprs) => many(...exprs);
     },
   });
 

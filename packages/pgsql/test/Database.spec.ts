@@ -129,4 +129,44 @@ describe('index', () =>
     expect(remainingCount).toBe(initialCount);
   });
 
+  it('run', async () =>
+  {
+    const conn = await getConnection();
+    const db = createDatabase(conn);
+    const run = db.run();
+
+    await deletes(GroupTable).run(db.get());
+
+    const i0 = insert(GroupTable, ['id', 'name']).values({ id: 3, name: 'Group 3' });
+    const i1 = insert(GroupTable, ['id', 'name']).values({ id: 4, name: 'Group 4' });
+
+    await run([i0, i1]);
+
+    const currentCount = await 
+      from(GroupTable)
+      .count()
+      .run(db.get())
+    ;
+
+    expect(currentCount).toBe(2);
+  });
+
+  it('getMany', async () =>
+  {
+    const conn = await getConnection();
+    const db = createDatabase(conn);
+    const getMany = db.many();
+
+    const s0 = from(GroupTable).count();
+    const s1 = from(GroupTable).select('*').first();
+    
+    const [r0, r1] = await getMany(s0, s1);
+
+    expect(r0).toBe(2);
+    expect(r1).toStrictEqual({
+      id: 3,
+      name: 'Group 3'
+    });
+  });
+
 });

@@ -88,17 +88,20 @@ export class DialectOutput
     return params;
   }
 
-  public getParams(params: Record<string, any>): any[]
+  public getParams(params?: Record<string, any>): any[]
   {
     const copy = this.params.slice();
 
-    for (const param in params)
+    if (params)
     {
-      const i = this.paramIndices[param];
-
-      if (isNumber(i))
+      for (const param in params)
       {
-        copy[i] = params[param];
+        const i = this.paramIndices[param];
+
+        if (isNumber(i))
+        {
+          copy[i] = params[param];
+        }
       }
     }
 

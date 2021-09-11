@@ -1,3 +1,4 @@
+import { Tuple } from '.';
 import { Expr, ExprValueObjects, ExprValueTuples, DataTypeInputs, DataTypeInputType } from './internal';
 
 /**
@@ -95,6 +96,14 @@ export interface DatabaseQueryProvider
   count<P extends DatabaseParameters>(params?: P): <R>(expr: Expr<R>) => Promise<DatabaseAffected<ExprValueObjects<R>>>;
 
   /**
+   * Executes the query and returns the number of affected rows with the results.
+   * 
+   * @param params The parameter values in the query, if any.
+   * @returns A function to be passed to Expr.run to return a promise of results and the number of affected records.
+   */
+  countMany<P extends DatabaseParameters>(params?: P): <E extends Tuple<Expr<any>>>(...exprs: E) => Promise<{ [I in keyof E]: E[I] extends Expr<infer R> ? DatabaseAffected<ExprValueObjects<R>> : unknown }>;
+
+  /**
    * Executes the query and returns the number of affected rows with the results as tuples.
    * 
    * @param params The parameter values in the query, if any.
@@ -109,6 +118,14 @@ export interface DatabaseQueryProvider
    * @returns A function to be passed to Expr.run to return a promise of results.
    */
   get<P extends DatabaseParameters>(params?: P): <R>(expr: Expr<R>) => Promise<ExprValueObjects<R>>;
+
+   /**
+    * Executes multiple queries and returns the results.
+    * 
+    * @param params The parameter values in the query, if any.
+    * @returns A function to be passed to Expr.run to return a promise of results.
+    */
+  many<P extends DatabaseParameters>(params?: P): <E extends Tuple<Expr<any>>>(...exprs: E) => Promise<{ [I in keyof E]: E[I] extends Expr<infer R> ? ExprValueObjects<R> : unknown }>;
 
   /**
    * Executes the query and returns the results as tuples.
@@ -135,6 +152,14 @@ export interface DatabaseQueryProvider
    * @returns A function to be passed to Expr.run to generate a stream handler.
    */ 
   streamTuples<P extends DatabaseParameters>(batchSize: number, params?: P): <R>(expr: Expr<R>) => DatabaseStreamHandler<ExprValueTuples<R>>;
+
+  /**
+   * Runs one or more queries.
+   * 
+   * @param params The parameter values in the queries, if any.
+   * @returns A function to be passed the expressions to run.
+   */
+  run<P extends DatabaseParameters>(params?: P): (exprs: Expr<any>[]) => Promise<void>;
 
 }
 

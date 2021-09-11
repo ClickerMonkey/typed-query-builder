@@ -59,6 +59,11 @@ export interface PgsqlOptions<P>
    */
   preparedName?: string;
 
+  /**
+   * Don't bother parsing any results, I don't care!
+   */
+  ignoreResults?: boolean;
+
 }
 
 
@@ -104,6 +109,44 @@ export function exec<P = any>(access: Pool | Client, options?: PgsqlOptions<P>):
     }
   };
 }
+
+
+/**
+ * Executes an expression and returns the result.
+ * 
+ * **Example:**
+ * ```ts
+ * const result = await expr.run( exec(conn) );
+ * ```
+ * 
+ * @param access The connection, transaction, or prepared statement to stream the expression results from.
+ * @param options Options that control how the query is built or the results returned.
+ */
+ export function execMany<P = any>(access: Pool | Client, options: PgsqlOptions<P> & { affectedCount: true, arrayMode: true }): <E extends Expr<any>[]>(...exprs: E) => Promise<{ [I in keyof E]: E[I] extends Expr<infer R> ? AffectedResult<ExprValueTuples<R>> : unknown }>
+ export function execMany<P = any>(access: Pool | Client, options: PgsqlOptions<P> & { affectedCount: true }): <E extends Expr<any>[]>(...exprs: E) => Promise<{ [I in keyof E]: E[I] extends Expr<infer R> ? AffectedResult<ExprValueObjects<R>> : unknown }>
+ export function execMany<P = any>(access: Pool | Client, options: PgsqlOptions<P> & { arrayMode: true }): <E extends Expr<any>[]>(...exprs: E) => Promise<{ [I in keyof E]: E[I] extends Expr<infer R> ? ExprValueTuples<R> : unknown }>
+ export function execMany<P = any>(access: Pool | Client, options: PgsqlOptions<P> & { ignoreResults: true }): <E extends Expr<any>[]>(...exprs: E) => Promise<void>
+ export function execMany<P = any>(access: Pool | Client, options?: PgsqlOptions<P>): <E extends Expr<any>[]>(...exprs: E) => Promise<{ [I in keyof E]: E[I] extends Expr<infer R> ? ExprValueObjects<R> : unknown }>
+ export function execMany<P = any>(access: Pool | Client, options?: PgsqlOptions<P>): <E extends Expr<any>[]>(...exprs: E) => Promise<any>
+ {
+   return async <E extends Expr<any>[]>(...exprs: E) =>
+   {
+     const outputFactory = DialectPgsql.output(options);
+     const outputs = exprs.map(outputFactory);
+
+     return await Promise.all(outputs.map(output => {
+      const query: QueryConfig | QueryArrayConfig = {
+        text: output.query,
+        values: output.getParams(options?.params),
+        rowMode: options?.arrayMode ? 'array' : undefined,
+      };
+
+      return access.query(query)
+        .then(results => parseResult(output.expr, results, options))
+        .catch(ex => new Error(ex + '\n\nQuery: ' + output.query))
+     }));
+   };
+ }
 
 /**
  * The result passed to a stream listener.
@@ -308,6 +351,11 @@ export function prepare<P = any>(access: Pool | Client, options?: PgsqlOptions<P
 
 export function parseResult<R, P>(expr: Expr<R>, queryResult: QueryResult<ExprValueObjects<R>>, options?: PgsqlOptions<P>)
 {
+  if (options?.ignoreResults)
+  {
+    return;
+  }
+
   let result = DialectPgsql.getResult(expr, handleResult(expr, queryResult));
 
   if (options && options.detectJson)
@@ -355,18 +403,18 @@ export function parseResult<R, P>(expr: Expr<R>, queryResult: QueryResult<ExprVa
     : result;
 }
 
-export function handleResult<R, P>(expr: Expr<R>, result: QueryResult<ExprValueObjects<R>>): any
+export function handleResult<R, P>(expr: Expr<R>, result: QueryResult<ExprValueObjects<R>>, resultIndex: number = 0): any
 {
   if (expr instanceof QueryFirst)
   {
-    return result.rows[0] || null;
+    return result.rows[resultIndex] || null;
   }
 
   if (expr instanceof QueryFirstValue)
   {
-    for (const prop in result.rows[0])
+    for (const prop in result.rows[resultIndex])
     {
-      return result.rows[0][prop];
+      return result.rows[resultIndex][prop];
     }
   }
 
@@ -377,7 +425,7 @@ export function handleResult<R, P>(expr: Expr<R>, result: QueryResult<ExprValueO
 
   if (expr instanceof QueryJson)
   {
-    return result.rows[0];
+    return result.rows[resultIndex];
   }
 
   return result.rows;

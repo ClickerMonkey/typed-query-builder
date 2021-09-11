@@ -61,6 +61,7 @@ describe('generator', () =>
         'zcta5',
         'tract',
         'tabblock',
+        'tabblock20',
         'bg',
       ],
       tableNameAlias: camelCase,
