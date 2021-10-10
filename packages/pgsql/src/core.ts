@@ -1,7 +1,11 @@
 import { ExprValueTuples, Expr, ExprValueObjects, QueryFirst, QueryFirstValue, QueryList, QueryJson, isArray, isString, isPlainObject } from '@typed-query-builder/builder';
 import { DialectPgsql } from '@typed-query-builder/sql-pgsql';
-import { Client, Pool, QueryConfig, QueryArrayConfig, QueryResult } from 'pg';
+import { Client, Pool, QueryConfig, QueryArrayConfig, QueryResult, PoolClient } from 'pg';
 import Cursor from 'pg-cursor';
+
+
+
+export type PgsqlConnection = Client | Pool | PoolClient;
 
 /**
  * Options 
@@ -80,11 +84,11 @@ export type AffectedResult<R> = { affected: number, result: R };
  * @param access The connection, transaction, or prepared statement to stream the expression results from.
  * @param options Options that control how the query is built or the results returned.
  */
-export function exec<P = any>(access: Pool | Client, options: PgsqlOptions<P> & { affectedCount: true, arrayMode: true }): <R>(expr: Expr<R>) => Promise<AffectedResult<ExprValueTuples<R>>>
-export function exec<P = any>(access: Pool | Client, options: PgsqlOptions<P> & { affectedCount: true }): <R>(expr: Expr<R>) => Promise<AffectedResult<ExprValueObjects<R>>>
-export function exec<P = any>(access: Pool | Client, options: PgsqlOptions<P> & { arrayMode: true }): <R>(expr: Expr<R>) => Promise<ExprValueTuples<R>>
-export function exec<P = any>(access: Pool | Client, options?: PgsqlOptions<P>): <R>(expr: Expr<R>) => Promise<ExprValueObjects<R>>
-export function exec<P = any>(access: Pool | Client, options?: PgsqlOptions<P>): <R>(expr: Expr<R>) => Promise<any>
+export function exec<P = any>(access: PgsqlConnection, options: PgsqlOptions<P> & { affectedCount: true, arrayMode: true }): <R>(expr: Expr<R>) => Promise<AffectedResult<ExprValueTuples<R>>>
+export function exec<P = any>(access: PgsqlConnection, options: PgsqlOptions<P> & { affectedCount: true }): <R>(expr: Expr<R>) => Promise<AffectedResult<ExprValueObjects<R>>>
+export function exec<P = any>(access: PgsqlConnection, options: PgsqlOptions<P> & { arrayMode: true }): <R>(expr: Expr<R>) => Promise<ExprValueTuples<R>>
+export function exec<P = any>(access: PgsqlConnection, options?: PgsqlOptions<P>): <R>(expr: Expr<R>) => Promise<ExprValueObjects<R>>
+export function exec<P = any>(access: PgsqlConnection, options?: PgsqlOptions<P>): <R>(expr: Expr<R>) => Promise<any>
 {
   return async <R>(e: Expr<R>) =>
   {
@@ -122,12 +126,12 @@ export function exec<P = any>(access: Pool | Client, options?: PgsqlOptions<P>):
  * @param access The connection, transaction, or prepared statement to stream the expression results from.
  * @param options Options that control how the query is built or the results returned.
  */
- export function execMany<P = any>(access: Pool | Client, options: PgsqlOptions<P> & { affectedCount: true, arrayMode: true }): <E extends Expr<any>[]>(...exprs: E) => Promise<{ [I in keyof E]: E[I] extends Expr<infer R> ? AffectedResult<ExprValueTuples<R>> : unknown }>
- export function execMany<P = any>(access: Pool | Client, options: PgsqlOptions<P> & { affectedCount: true }): <E extends Expr<any>[]>(...exprs: E) => Promise<{ [I in keyof E]: E[I] extends Expr<infer R> ? AffectedResult<ExprValueObjects<R>> : unknown }>
- export function execMany<P = any>(access: Pool | Client, options: PgsqlOptions<P> & { arrayMode: true }): <E extends Expr<any>[]>(...exprs: E) => Promise<{ [I in keyof E]: E[I] extends Expr<infer R> ? ExprValueTuples<R> : unknown }>
- export function execMany<P = any>(access: Pool | Client, options: PgsqlOptions<P> & { ignoreResults: true }): <E extends Expr<any>[]>(...exprs: E) => Promise<void>
- export function execMany<P = any>(access: Pool | Client, options?: PgsqlOptions<P>): <E extends Expr<any>[]>(...exprs: E) => Promise<{ [I in keyof E]: E[I] extends Expr<infer R> ? ExprValueObjects<R> : unknown }>
- export function execMany<P = any>(access: Pool | Client, options?: PgsqlOptions<P>): <E extends Expr<any>[]>(...exprs: E) => Promise<any>
+ export function execMany<P = any>(access: PgsqlConnection, options: PgsqlOptions<P> & { affectedCount: true, arrayMode: true }): <E extends Expr<any>[]>(...exprs: E) => Promise<{ [I in keyof E]: E[I] extends Expr<infer R> ? AffectedResult<ExprValueTuples<R>> : unknown }>
+ export function execMany<P = any>(access: PgsqlConnection, options: PgsqlOptions<P> & { affectedCount: true }): <E extends Expr<any>[]>(...exprs: E) => Promise<{ [I in keyof E]: E[I] extends Expr<infer R> ? AffectedResult<ExprValueObjects<R>> : unknown }>
+ export function execMany<P = any>(access: PgsqlConnection, options: PgsqlOptions<P> & { arrayMode: true }): <E extends Expr<any>[]>(...exprs: E) => Promise<{ [I in keyof E]: E[I] extends Expr<infer R> ? ExprValueTuples<R> : unknown }>
+ export function execMany<P = any>(access: PgsqlConnection, options: PgsqlOptions<P> & { ignoreResults: true }): <E extends Expr<any>[]>(...exprs: E) => Promise<void>
+ export function execMany<P = any>(access: PgsqlConnection, options?: PgsqlOptions<P>): <E extends Expr<any>[]>(...exprs: E) => Promise<{ [I in keyof E]: E[I] extends Expr<infer R> ? ExprValueObjects<R> : unknown }>
+ export function execMany<P = any>(access: PgsqlConnection, options?: PgsqlOptions<P>): <E extends Expr<any>[]>(...exprs: E) => Promise<any>
  {
    return async <E extends Expr<any>[]>(...exprs: E) =>
    {
@@ -182,9 +186,9 @@ export type StreamHandler<R> = <A>(listener: StreamListener<R, A>) => Promise<A[
  * @param options Options that control how the query is built or the results returned.
  * @returns A function which when invoked with another function will execute the expression and for each result returned will call the given function.
  */
-export function stream<P = any>(access: Pool | Client, options: PgsqlOptions<P> & { arrayMode: true }): <R>(expr: Expr<R>) => StreamHandler<ExprValueTuples<R>>
-export function stream<P = any>(access: Pool | Client, options?: PgsqlOptions<P>): <R>(expr: Expr<R>) => StreamHandler<ExprValueObjects<R>>
-export function stream<P = any>(access: Pool | Client, options?: PgsqlOptions<P>): <R>(expr: Expr<R>) => StreamHandler<any>
+export function stream<P = any>(access: PgsqlConnection, options: PgsqlOptions<P> & { arrayMode: true }): <R>(expr: Expr<R>) => StreamHandler<ExprValueTuples<R>>
+export function stream<P = any>(access: PgsqlConnection, options?: PgsqlOptions<P>): <R>(expr: Expr<R>) => StreamHandler<ExprValueObjects<R>>
+export function stream<P = any>(access: PgsqlConnection, options?: PgsqlOptions<P>): <R>(expr: Expr<R>) => StreamHandler<any>
 {
   return <R>(e: Expr<R>) =>
   {
@@ -285,11 +289,11 @@ export interface PreparedQuery<R, P = any>
  * @param options Options that control how the query is built or the results returned.
  * @returns An object that can be executed multiple times, once finished it must be released.
  */
-export function prepare<P = any>(access: Pool | Client, options: PgsqlOptions<P> & { affectedCount: true }): <R>(expr: Expr<any>) => Promise<PreparedQuery<AffectedResult<ExprValueObjects<R>>, P>>
-export function prepare<P = any>(access: Pool | Client, options: PgsqlOptions<P> & { affectedCount: true, arrayMode: true }): <R>(expr: Expr<any>) => Promise<PreparedQuery<AffectedResult<ExprValueTuples<R>>, P>>
-export function prepare<P = any>(access: Pool | Client, options: PgsqlOptions<P> & { arrayMode: true }): <R>(expr: Expr<R>) => Promise<PreparedQuery<ExprValueTuples<R>, P>>
-export function prepare<P = any>(access: Pool | Client, options?: PgsqlOptions<P>): <R>(expr: Expr<R>) => Promise<PreparedQuery<ExprValueObjects<R>, P>>
-export function prepare<P = any>(access: Pool | Client, options?: PgsqlOptions<P>): <R>(expr: Expr<R>) => Promise<PreparedQuery<any, P>>
+export function prepare<P = any>(access: PgsqlConnection, options: PgsqlOptions<P> & { affectedCount: true }): <R>(expr: Expr<any>) => Promise<PreparedQuery<AffectedResult<ExprValueObjects<R>>, P>>
+export function prepare<P = any>(access: PgsqlConnection, options: PgsqlOptions<P> & { affectedCount: true, arrayMode: true }): <R>(expr: Expr<any>) => Promise<PreparedQuery<AffectedResult<ExprValueTuples<R>>, P>>
+export function prepare<P = any>(access: PgsqlConnection, options: PgsqlOptions<P> & { arrayMode: true }): <R>(expr: Expr<R>) => Promise<PreparedQuery<ExprValueTuples<R>, P>>
+export function prepare<P = any>(access: PgsqlConnection, options?: PgsqlOptions<P>): <R>(expr: Expr<R>) => Promise<PreparedQuery<ExprValueObjects<R>, P>>
+export function prepare<P = any>(access: PgsqlConnection, options?: PgsqlOptions<P>): <R>(expr: Expr<R>) => Promise<PreparedQuery<any, P>>
 {
   return async <R>(e: Expr<R>) =>
   {

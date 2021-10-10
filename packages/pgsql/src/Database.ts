@@ -1,7 +1,5 @@
-import { Pool, Client } from 'pg';
 import { Database, DatabaseQueryProvider, DatabaseParameters, DatabaseResultProvider } from '@typed-query-builder/builder';
-import { prepare, exec, stream, execMany } from './index';
-import { loadTypes } from './types';
+import { prepare, exec, stream, execMany, PgsqlConnection, loadTypes } from './index';
 
 
 export interface PgsqlDatabaseOptions
@@ -55,7 +53,7 @@ export interface PgsqlDatabaseOptions
  * @param db 
  * @param options 
  */
-export function createDatabase(db: Pool | Client, options?: PgsqlDatabaseOptions): Database
+export function createDatabase(db: PgsqlConnection, options?: PgsqlDatabaseOptions): Database
 {
   const extendParams = (options: PgsqlDatabaseOptions, params?: DatabaseParameters): PgsqlDatabaseOptions => ({
     ...options,
@@ -65,7 +63,7 @@ export function createDatabase(db: Pool | Client, options?: PgsqlDatabaseOptions
     },
   });
 
-  const getQueryProvider = (db: Pool | Client, options: PgsqlDatabaseOptions): DatabaseQueryProvider => ({
+  const getQueryProvider = (db: PgsqlConnection, options: PgsqlDatabaseOptions): DatabaseQueryProvider => ({
     prepare: (initialParams, preparedName) => {
       const finalOptions = extendParams(options, initialParams);
     
@@ -121,7 +119,7 @@ export function createDatabase(db: Pool | Client, options?: PgsqlDatabaseOptions
     },
   });
 
-  const getResultProvider = (db: Pool | Client, options: PgsqlDatabaseOptions): DatabaseResultProvider => ({
+  const getResultProvider = (db: PgsqlConnection, options: PgsqlDatabaseOptions): DatabaseResultProvider => ({
     ...getQueryProvider(db, options),
     params: (parameters) => {
       return getQueryProvider(db, extendParams(options, parameters));

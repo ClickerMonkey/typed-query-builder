@@ -1,10 +1,12 @@
 import { DataTypeMeta, DataTypeNames, DataTypeInputs, DataTemporal, getDataTypeMeta, getDataTypeFromInput, isFunction, DataPoint, DataPath, DataPolygon, DataSegment, DataBox, isString, DataLine, isNumber, DataTypePoint, DataCircle, DataInterval } from '@typed-query-builder/builder';
-import { Client, types, Pool } from 'pg';
+import { types } from 'pg';
 import TypeOverrides from 'pg/lib/type-overrides';
 import array from 'postgres-array';
 import Interval from 'postgres-interval';
 import * as wkx from 'wkx';
 import { Buffer } from 'buffer';
+import { PgsqlConnection } from './core';
+
 
 // Define our parsers
 // Define types and how they map to PostgreSQL
@@ -537,7 +539,7 @@ export function setTypes(options: PgsqlTypeOptions): void
   }
 }
 
-export async function loadTypes(conn: Client | Pool): Promise<void>
+export async function loadTypes(conn: PgsqlConnection): Promise<void>
 {
   const dynamicDefs = Object.values(PgsqlTypes)
     .reduce((all, defs) => all.concat(defs), [])

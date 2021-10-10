@@ -14,6 +14,7 @@ export * from './exprs/Kind';
 export * from './query/Order';
 export * from './Traverser';
 export * from './Database';
+export * from './DatabaseIntercept';
 
 export * from './exprs/Expr';
 export * from './exprs/Scalar';

@@ -1,5 +1,5 @@
-import { Client, Pool } from 'pg';
 import { DataTypeInputs } from '@typed-query-builder/builder';
+import { PgsqlConnection } from './core';
 import '@typed-query-builder/sql-mssql';
 
 
@@ -85,7 +85,7 @@ interface SysColumn
   primary: boolean;
 }
 
-export async function generate(conn: Client | Pool, options: Partial<GeneratorOptions> = {}): Promise<GeneratorTable[]>
+export async function generate(conn: PgsqlConnection, options: Partial<GeneratorOptions> = {}): Promise<GeneratorTable[]>
 {
   const opt: GeneratorOptions = {
     tableNameAlias: x => x,
